@@ -387,6 +387,18 @@ input[type=text]:focus,input[type=number]:focus,textarea:focus,select:focus{outl
 .tab-btn:hover{background:var(--bg-card);}
 .tab-btn.active{color:var(--text-gold);font-weight:700;border-bottom-color:var(--border-gold);background:var(--bg-highlight);}
 #hamburger-wrap{position:relative;}
+/* First-open attract animation — pulses/glows for a few seconds to point
+   brand-new players at the menu, then clears itself (or clears the
+   moment they actually click it — see toggleHamburgerMenu). */
+@keyframes hamburgerAttract{
+  0%,100%{box-shadow:0 0 0 0 rgba(255,196,64,.55);transform:scale(1);}
+  50%{box-shadow:0 0 16px 7px rgba(255,196,64,.85);transform:scale(1.08);}
+}
+#hamburger-btn.attract{animation:hamburgerAttract 1s ease-in-out infinite;border-color:#ffd76e;}
+/* If the menu gets opened while the button above is still blinking, the
+   Tutorial item inside picks up the same pulse — it's the actual
+   destination the button was pointing at. */
+#menu-tutorial-btn.attract{animation:hamburgerAttract 1s ease-in-out infinite;border-radius:8px;}
 .hamburger-bars{display:inline-flex;flex-direction:column;gap:3px;vertical-align:middle;}
 .hamburger-bars span{display:block;width:16px;height:3px;border-radius:99px;background:var(--text-emph);}
 #hamburger-menu{display:none;position:absolute;top:calc(100% + 6px);right:0;background:var(--bg-modal);border:1px solid var(--border-card);border-radius:10px;box-shadow:0 8px 24px rgba(15,40,55,.25);min-width:210px;padding:6px;z-index:2100;}
@@ -954,7 +966,7 @@ input[type=text]:focus,input[type=number]:focus,textarea:focus,select:focus{outl
           </div>
           <div class="menu-sep"></div>
           <div class="menu-settings-title">Help</div>
-          <button class="menu-item" onclick="closeHamburgerMenu();openTutorialModal()"><i class="ti ti-book-2"></i> Tutorial</button>
+          <button class="menu-item" id="menu-tutorial-btn" onclick="this.classList.remove('attract');closeHamburgerMenu();openTutorialModal()"><i class="ti ti-book-2"></i> Tutorial</button>
         </div>
       </div>
     </div>
@@ -8730,6 +8742,8 @@ function renderTopStats(){
 // ── Hamburger menu (Save / Open / Settings) ─────────────────────────
 function toggleHamburgerMenu(event){
   if(event) event.stopPropagation();
+  const hbBtn = document.getElementById('hamburger-btn');
+  if(hbBtn) hbBtn.classList.remove('attract'); // they found it — stop pulsing
   document.getElementById('hamburger-menu').classList.toggle('open');
 }
 function closeHamburgerMenu(){
@@ -10422,6 +10436,25 @@ function _renderMerchantReputationTab(){
 renderIslandList();
 renderWater();
 renderTopStats();
+
+// First 5 seconds after the app opens, pulse/glow the hamburger menu
+// button to point brand-new players at it — clears itself on its own,
+// or the moment they actually click it (see toggleHamburgerMenu). The
+// Tutorial item inside the menu is armed with the same class right now
+// too (harmless while the menu's hidden) — if they open the menu before
+// the shared 5s timeout below clears both, Tutorial picks up the same
+// pulse, carrying the prompt from "open the menu" to "go to Tutorial."
+// Opening it after the window's already passed shows a normal, still menu.
+(function(){
+  const hbBtn = document.getElementById('hamburger-btn');
+  const tutBtn = document.getElementById('menu-tutorial-btn');
+  if(hbBtn) hbBtn.classList.add('attract');
+  if(tutBtn) tutBtn.classList.add('attract');
+  setTimeout(function(){
+    if(hbBtn) hbBtn.classList.remove('attract');
+    if(tutBtn) tutBtn.classList.remove('attract');
+  }, 5000);
+})();
 
 </script>
 </body>
