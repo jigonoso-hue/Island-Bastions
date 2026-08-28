@@ -120,9 +120,33 @@
   --text-green-dark:#1a6b1a;
   --text-danger-hover:#e05050;
 }
+/* Belt-and-suspenders against pinch/double-tap zoom, alongside the
+   maximum-scale=1/user-scalable=no viewport meta tag above. iOS Safari
+   has long treated that meta tag as a hint rather than a hard rule for
+   its own pinch gesture (an accessibility carve-out, not a bug it will
+   fix) — a pinch can still zoom the whole page layout instead of just
+   the content, which is what was producing the rendering glitches. Both
+   halves of the fix are needed: touch-action here stops the browser's
+   native double-tap-to-zoom and pinch handling at the CSS level, and
+   the gesturestart/change/end listeners further down (iOS Safari's own
+   nonstandard gesture events, only path left once touch-action alone
+   doesn't stop a pinch) catch what CSS can't. */
+html{touch-action:manipulation;}
 *{box-sizing:border-box;margin:0;padding:0;}
-body{background:var(--bg-body);color:var(--text-primary);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;overflow:hidden;height:100vh;}
-#app{display:flex;flex-direction:column;height:100vh;}
+/* 100vh, not 100dvh, so the fallback still works on browsers that don't
+   support dvh at all. Where dvh IS supported it's redeclared right after
+   so it wins the cascade. Plain 100vh on iOS Safari is the *largest*
+   possible viewport (toolbar hidden), so with an inner overflow-y:auto
+   panel like #water-grid the app shell claims more height than is
+   actually visible whenever the collapsible address-bar/toolbar is
+   showing — the bottom row of the mobile island grid renders below the
+   visible area, "cut off", until a scroll or resize happens to hide the
+   toolbar and reveal it (only for the same thing to happen again once a
+   new row pushes the bottom edge back down). 100dvh tracks the toolbar
+   live instead of assuming it's always hidden, so the shell's real
+   height always matches what's actually on screen. */
+body{background:var(--bg-body);color:var(--text-primary);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;overflow:hidden;height:100vh;height:100dvh;}
+#app{display:flex;flex-direction:column;height:100vh;height:100dvh;}
 #topbar{display:flex;align-items:center;justify-content:space-between;padding:8px 14px;background:var(--bg-panel);border-bottom:1px solid var(--border-panel);flex-shrink:0;}
 #topbar h1{font-size:14px;color:var(--text-gold);font-weight:700;}
 #topbar h1 span{color:var(--text-heading-2);font-weight:400;margin-left:8px;font-size:11px;}
@@ -1356,6 +1380,24 @@ const PROD_DATA = {"brewery": {"item": "Saltwater Stout", "output": "1 cask (60 
 
 </script>
 <script>
+// iOS Safari's pinch-to-zoom fires its own nonstandard gesture events
+// ahead of/instead of respecting the viewport meta tag's user-scalable
+// setting (see the touch-action:manipulation comment in the stylesheet
+// for why both halves of this fix exist). Blocking these is the actual
+// mechanism that stops a pinch from zooming the page.
+['gesturestart','gesturechange','gestureend'].forEach(function(evt){
+  document.addEventListener(evt, function(e){ e.preventDefault(); }, {passive:false});
+});
+// Safari also treats two fingers landing within ~300ms of each other as
+// the start of a pinch even before "gesturestart" fires, and a fast
+// double-tap as a zoom trigger independent of the gesture events above.
+// touch-action:manipulation (stylesheet) already suppresses the double-
+// tap case; this catches the rare two-finger-touch pinch start touch-
+// action doesn't.
+document.addEventListener('touchmove', function(e){
+  if(e.touches && e.touches.length > 1) e.preventDefault();
+}, {passive:false});
+
 // ── State ────────────────────────────────────────────────────────────
 let islands = [];          // {id, name, points:[{x,y}], seedR, tier, buildings:[{id,level,...},...], x, y}
 let selectedIslandId = null;
