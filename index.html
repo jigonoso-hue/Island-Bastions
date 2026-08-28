@@ -1115,12 +1115,21 @@ input[type=text]:focus,input[type=number]:focus,textarea:focus,select:focus{outl
   #water{display:none;}
   #water-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;
     padding:14px;overflow-y:auto;align-content:start;flex:1;}
-  /* Every tile. Island or the Add Island placeholder. Is forced square
-     by its own aspect-ratio off the (equal) column width, independent of
-     content. The island name is an overlaid caption instead of text
-     that sits below the art, so it never adds extra height that would
-     make one tile taller than its neighbors. */
- .water-grid-tile{aspect-ratio:1;background:var(--bg-card);border:1px solid var(--border-card);
+  /* Every tile. Island or the Add Island placeholder. Is forced square by
+     an explicit pixel height set in JS (see _syncWaterGridTileSize),
+     not CSS aspect-ratio. Grid's own "auto" row-track sizing pass
+     measures a tile's aspect-ratio square against the intrinsic size of
+     its content *before* the column width is definite; with an island
+     svg inside (a percentage-sized descendant with its own intrinsic
+     aspect ratio), that pass can land on a shorter row track than the
+     tile should be, and a grid item stretches to fill its row by
+     default — so every tile past the first row or two would render
+     squashed/clipped, sitting close enough to the row below that it
+     reads as islands overlapping/blocking each other. Setting the
+     height directly in pixels sidesteps that auto-sizing algorithm
+     entirely; the CSS here only supplies the width/layout, not the
+     square-ness. */
+ .water-grid-tile{background:var(--bg-card);border:1px solid var(--border-card);
     border-radius:14px;display:flex;align-items:center;justify-content:center;
     padding:8px;cursor:pointer;position:relative;overflow:hidden;}
  .water-grid-tile.selected{border-color:var(--border-gold);background:var(--bg-highlight);}
@@ -1147,7 +1156,7 @@ input[type=text]:focus,input[type=number]:focus,textarea:focus,select:focus{outl
      to the other corner. Only one ever shows (a Pirate Haven is by
      definition owned), so both share the same spot. */
  .wgt-unowned-flag,.wgt-pirate-flag{position:absolute;top:4px;left:4px;width:26px;height:26px;z-index:2;}
- .water-grid-add{aspect-ratio:1;border:2px dashed var(--border-card);border-radius:14px;
+ .water-grid-add{border:2px dashed var(--border-card);border-radius:14px;
     display:flex;flex-direction:column;align-items:center;justify-content:center;
     color:var(--text-muted);cursor:pointer;gap:6px;background:none;}
  .water-grid-add:active,.water-grid-tile:active{border-color:var(--border-strong);}
@@ -2861,7 +2870,33 @@ function renderWaterGrid(){
       + '<div class="wgt-name">'+isl.name+'</div></div>';
   }).join('');
   grid.innerHTML = html;
+  _syncWaterGridTileSize();
 }
+// Sets an explicit pixel height on every mobile grid tile (island tiles
+// and the Add Island placeholder alike), matching the tile's own
+// rendered width, instead of leaving squareness to CSS aspect-ratio.
+// Grid's implicit "auto" row-track sizing can under-measure a row that
+// holds an island svg (a percentage-sized descendant with its own
+// intrinsic aspect ratio) *before* the column width used to resolve
+// aspect-ratio is definite, and a grid item stretches to fill its row
+// by default — so aspect-ratio tiles past the first row or two would
+// come out squashed/clipped, sitting close enough to the row below to
+// read as islands overlapping/blocking each other. A JS-measured pixel
+// height sidesteps that algorithm rather than fighting it. Re-run on
+// resize/orientation change (see the listener below) since the column
+// width it's measuring off can change.
+function _syncWaterGridTileSize(){
+  const grid = document.getElementById('water-grid');
+  if(!grid || getComputedStyle(grid).display==='none') return;
+  const tile = grid.querySelector('.water-grid-tile, .water-grid-add');
+  if(!tile) return;
+  const w = tile.getBoundingClientRect().width;
+  if(!w) return;
+  grid.querySelectorAll('.water-grid-tile, .water-grid-add').forEach(function(el){
+    el.style.height = w+'px';
+  });
+}
+window.addEventListener('resize', _syncWaterGridTileSize);
 // Pointer Events (not mouse-only) so this drags with a finger on a phone
 // or tablet exactly the same way it drags with a mouse on desktop. One
 // event family covers both. setPointerCapture keeps the drag tracking
