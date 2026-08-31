@@ -2927,7 +2927,7 @@ function renderWaterGrid(){
   html += islands.map(function(isl){
     const svg = _renderIslandSVG(isl, 140, {sand:isl.sandColor, jungle:isl.jungleColor}, '-grid');
     const scalePct = MOBILE_TIER_SCALE_PCT[isl.tier] || Math.max(30, Math.round((_islandBoxSize(isl)/maxTierSize)*100));
-    return '<div class="water-grid-tile'+(isl.id===selectedIslandId ? ' selected': '')+'" onclick="selectIsland(\''+isl.id+'\')">'
+    return '<div id="water-grid-tile-'+isl.id+'" class="water-grid-tile'+(isl.id===selectedIslandId ? ' selected': '')+'" onclick="selectIsland(\''+isl.id+'\')">'
       + (_islandHasAvailableAction(isl) ? '<div class="wgt-action-buoy">'+_buoyHTML()+'</div>': '')
       + (isl.pirateHaven ? '<div class="wgt-pirate-flag">'+_pirateFlagClothHTML()+'</div>': (isl.owned===false ? '<div class="wgt-unowned-flag">'+_unownedFlagClothHTML()+'</div>': ''))
       + '<div class="wgt-svg-wrap"><div class="wgt-svg-inner" style="width:'+scalePct+'%;height:'+scalePct+'%;">'+svg+'</div></div>'
@@ -11134,10 +11134,23 @@ function _tourShowOvercrowding(){
 }
 let _tourSteps = [];
 let _tourStepIdx = 0;
+// The two "on the water" tour steps need to point at whichever of the
+// desktop free-form canvas token or the mobile grid tile is actually
+// showing (#water vs #water-grid switch visibility entirely by CSS
+// media query, never both at once). Pointing only at the desktop
+// #island-token-* id meant that on mobile _tourResolveTargets still
+// "found" it in the DOM — just hidden, collapsed to a zero-size box at
+// the top-left corner by its display:none ancestor — so the highlight
+// landed nowhere near the real, visible grid tile. Listing both ids
+// lets _tourResolveTargets's own hidden-element filter (see
+// getComputedStyle/offsetParent below) drop whichever one isn't
+// actually rendered and keep the one that is.
+function _tourIslandTokenSel(id){ return ['#island-token-'+id, '#water-grid-tile-'+id]; }
+const TUTORIAL_ISLAND_TOKEN_SEL = _tourIslandTokenSel(TUTORIAL_ISLAND_ID);
 function _beginIslandTour(){
   _tourSteps = [
     // ── On the water. No buoy, then a real Advance ──────────────────
-    { sel:'#island-token-'+TUTORIAL_ISLAND_ID, title:'Tutorial Isle, on the water', text:"Every island lives here once it's created. This one already has a few simulated weeks behind it. No buoy showing right now. Its one Recreational building already handled its Active Action for the week. That won't stay true forever, though.",
+    { sel:TUTORIAL_ISLAND_TOKEN_SEL, title:'Tutorial Isle, on the water', text:"Every island lives here once it's created. This one already has a few simulated weeks behind it. No buoy showing right now. Its one Recreational building already handled its Active Action for the week. That won't stay true forever, though.",
       before:function(){ closeIslandModal(); } },
     { sel:'#advance-btn', title:'Advance', text:"This is how time actually moves. Click Advance to simulate one week across every island at once. Let's do exactly that." },
     { sel:'#wr-stats-col', title:"This week's report", text:"<b>Income</b>, <b>Pop Change</b>, <b>Happiness</b>, and <b>Visitors</b>. The four headline numbers from the week that just happened, for this island specifically.",
@@ -11147,7 +11160,7 @@ function _beginIslandTour(){
     { sel:'#wr-panel-gossip', title:'Gossip', text:"Every other ambient rumor or report a building rolled. Not a named person, just word around town." },
     { sel:'#wr-panel-performance', title:'Performance', text:"The actual roll math and gp figures behind this week's Income, building by building, plus weather damage if any struck." },
     // ── Back to the water. The buoy's back ──────────────────────────
-    { sel:'#island-token-'+TUTORIAL_ISLAND_ID, title:'Back on the water', text:"Close the report and there's the buoy again. Advancing the week reset both Dockside Tavern's and Watch Post's Active Actions, so this island genuinely has fresh ones waiting right now. That's the cue to open it up and go handle them.",
+    { sel:TUTORIAL_ISLAND_TOKEN_SEL, title:'Back on the water', text:"Close the report and there's the buoy again. Advancing the week reset both Dockside Tavern's and Watch Post's Active Actions, so this island genuinely has fresh ones waiting right now. That's the cue to open it up and go handle them.",
       before:function(){ closeAnyModal(); closeIslandModal(); } },
     // ── Normal island workflow ────────────────────────────────────────
     { sel:'#island-modal-name', title:'Your island', text:"This is <b>Tutorial Isle</b> itself. Every number from here on is real, driven by the same history the report just showed.",
@@ -11269,18 +11282,19 @@ function _showTourStep(){
     if(_tourStepIdx < _tourSteps.length-1){ _tourStepIdx++; _showTourStep(); } else { _endTour(); }
     return;
   }
-  const hl = document.getElementById('tour-highlight');
+  // Bring every target into view before measuring/highlighting any of
+  // them. The highlight box below is computed in fixed viewport
+  // coordinates from a single getBoundingClientRect snapshot taken right
+  // now — it only ever gets recalculated when a step (re)shows, never
+  // tracks a scroll that happens afterward — so a target that starts out
+  // below the fold of a scrollable modal (island detail, chiefly) needs
+  // to already be on screen at this exact moment, not left for the user
+  // to go find by scrolling on their own. behavior:'auto' (not 'smooth')
+  // so this is an instant jump, already resolved by the time the rect
+  // below is read; 'nearest' only moves the scroll when the target
+  // genuinely isn't visible yet, instead of always re-centering it.
+  targets.forEach(function(t){ t.scrollIntoView({block:'nearest', inline:'nearest', behavior:'auto'}); });
   const tip = document.getElementById('tour-tooltip');
-  const rect = _tourUnionRect(targets);
-  if(rect){
-    hl.classList.remove('hidden');
-    hl.style.top = (rect.top-6)+'px';
-    hl.style.left = (rect.left-6)+'px';
-    hl.style.width = (rect.width+12)+'px';
-    hl.style.height = (rect.height+12)+'px';
-  } else {
-    hl.classList.add('hidden');
-  }
   const last = _tourStepIdx===_tourSteps.length-1;
   tip.innerHTML = '<div class="tour-tooltip-kicker">Step '+(_tourStepIdx+1)+' of '+_tourSteps.length+'</div>'
     +'<div class="tour-tooltip-title">'+step.title+'</div>'
@@ -11292,11 +11306,40 @@ function _showTourStep(){
         +'<button class="btn btn-gold" onclick="'+(last?'_endTour()':'_tourNext()')+'">'+(last?'Done':'Next')+(last?' <i class="ti ti-check"></i>':' <i class="ti ti-chevron-right"></i>')+'</button>'
       +'</span>'
     +'</div>';
+  // Remembered so _tourReposition (below) can re-measure the same
+  // targets from a scroll listener, not just once here.
+  _tourCurrentTargets = targets;
+  _tourReposition();
+}
+// Places the highlight box and tooltip off _tourCurrentTargets's current
+// on-screen position. Split out of _showTourStep so it can also run from
+// a scroll listener: the highlight is plain fixed-position CSS, with no
+// native way to keep itself pinned to a target that scrolls out from
+// under it, so anything that moves the page after a step is already
+// showing (the user scrolling further to read something, chiefly) would
+// otherwise leave it framing empty space instead of the real target —
+// which is exactly the "locked" complaint this exists to fix, not just
+// the initial scrollIntoView above. Both run off the same measurement so
+// they never disagree.
+function _tourReposition(){
+  const hl = document.getElementById('tour-highlight');
+  const tip = document.getElementById('tour-tooltip');
+  if(!hl || !tip) return;
+  const rect = _tourUnionRect(_tourCurrentTargets);
+  if(rect){
+    hl.classList.remove('hidden');
+    hl.style.top = (rect.top-6)+'px';
+    hl.style.left = (rect.left-6)+'px';
+    hl.style.width = (rect.width+12)+'px';
+    hl.style.height = (rect.height+12)+'px';
+  } else {
+    hl.classList.add('hidden');
+  }
   // Two-pass placement. The tooltip measures its own real height (text
   // length varies a lot step to step) before deciding whether it fits
-  // below the target or needs to go above it instead.
-  tip.style.top = '-9999px';
-  tip.style.left = '-9999px';
+  // below the target or needs to go above it instead. On a reposition-
+  // only pass (scroll) the tooltip's size hasn't changed, but re-reading
+  // it fresh each time is simpler and cheap enough not to bother caching.
   requestAnimationFrame(function(){
     const tw = tip.offsetWidth, th = tip.offsetHeight;
     let top, left;
@@ -11312,12 +11355,37 @@ function _showTourStep(){
     tip.style.left = left+'px';
   });
 }
+let _tourCurrentTargets = [];
+// 'scroll' doesn't bubble, so this has to be a capturing listener to
+// hear a scroll on any nested container (the island-modal-body, the
+// build-modal-grid, etc.), not just window-level scrolling. rAF-
+// throttled: a touch-scroll fires this repeatedly per frame, and only
+// the latest position matters.
+let _tourScrollRaf = null;
+function _tourOnScroll(){
+  if(_tourScrollRaf) return;
+  _tourScrollRaf = requestAnimationFrame(function(){
+    _tourScrollRaf = null;
+    if(document.getElementById('tour-blocker')) _tourReposition();
+  });
+}
+document.addEventListener('scroll', _tourOnScroll, true);
 // step.sel can be a single CSS selector or an array of them. Resolves
-// each to its element (missing ones just drop out silently).
+// each to its element (missing ones just drop out silently). Elements
+// that exist in the DOM but aren't actually rendered right now (inside
+// a display:none ancestor — the desktop water canvas vs. the mobile
+// grid, chiefly, only one ever visible at a time under the same CSS
+// breakpoint that swaps the rest of the layout) drop out too:
+// offsetParent is null for any element under a display:none ancestor
+// (with the standard, harmless false-positive for position:fixed
+// elements, none of which are ever tour targets), so keeping a hidden
+// one around would union its collapsed 0×0-at-the-origin box into the
+// highlight instead of just being ignored.
 function _tourResolveTargets(sel){
   if(!sel) return [];
   const sels = Array.isArray(sel) ? sel: [sel];
-  return sels.map(function(s){ return document.querySelector(s); }).filter(Boolean);
+  return sels.map(function(s){ return document.querySelector(s); })
+    .filter(function(el){ return el && el.offsetParent !== null; });
 }
 // A container marked data-tour-content (the Add Building grid, which
 // uses flex:1 to fill the modal and so reports a bounding box far
