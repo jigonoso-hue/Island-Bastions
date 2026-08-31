@@ -1159,10 +1159,11 @@ input[type=text]:focus,input[type=number]:focus,textarea:focus,select:focus{outl
  .water-grid-tile.selected{border-color:var(--border-gold);background:var(--bg-highlight);}
  .wgt-svg-wrap{width:100%;height:100%;display:flex;align-items:center;justify-content:center;}
   /* The inner box is a percentage of the (guaranteed-square) wrap above
-    . Set inline per island, scaled off the same TIER_BOX_SIZE ratios
-     the desktop canvas uses, so a Small island still reads visibly
-     smaller than a Massive one even though every tile around it is the
-     same size. Equal % on a square parent keeps the svg itself square. */
+    . Set inline per island, off a scale spread wider than the desktop
+     canvas's own tier ratios (see renderWaterGrid), so a Small island
+     still reads visibly smaller than a Massive one even though every
+     tile around it is the same size. Equal % on a square parent keeps
+     the svg itself square. */
  .wgt-svg-inner{display:flex;}
  .wgt-svg-inner svg{width:100%;height:100%;display:block;}
  .wgt-name{position:absolute;left:0;right:0;bottom:0;font-size:11.5px;font-weight:700;
@@ -2896,15 +2897,23 @@ function renderWaterGrid(){
   const grid = document.getElementById('water-grid');
   if(!grid) return;
   // Every tile is the same square size (see CSS), but the island art
-  // inside is scaled by the same Small/Medium/Large/Massive ratios
-  // TIER_BOX_SIZE gives the desktop canvas, relative to the biggest
-  // tier. So a Small island still visibly reads smaller than a Massive
-  // one sitting right next to it, just inside an equal-size frame.
+  // inside is scaled so a Small island still visibly reads smaller than
+  // a Massive one sitting right next to it, just inside an equal-size
+  // frame. Deliberately its own, wider mobile-only scale (not the
+  // TIER_BOX_SIZE ratios the desktop canvas uses in actual pixels) —
+  // those ratios (Small 46% up to Massive 100%) read fine at desktop
+  // canvas sizes, but shrunk into a ~170px phone tile the gap between
+  // neighboring tiers stops being visible at a glance. Spreading the
+  // same four tiers across a wider 30–100% band exaggerates that gap
+  // back to something legible on a small screen, purely a mobile-grid
+  // presentation choice — it doesn't touch how size is computed or
+  // rendered anywhere else (desktop canvas, building capacity, etc).
+  const MOBILE_TIER_SCALE_PCT = { Small: 30, Medium: 52, Large: 76, Massive: 100 };
   const maxTierSize = TIER_BOX_SIZE.Massive;
   let html = '<div class="water-grid-add" onclick="openCreateIslandModal()"><i class="ti ti-plus"></i><span>Add Island</span></div>';
   html += islands.map(function(isl){
     const svg = _renderIslandSVG(isl, 140, {sand:isl.sandColor, jungle:isl.jungleColor}, '-grid');
-    const scalePct = Math.max(35, Math.round((_islandBoxSize(isl)/maxTierSize)*100));
+    const scalePct = MOBILE_TIER_SCALE_PCT[isl.tier] || Math.max(30, Math.round((_islandBoxSize(isl)/maxTierSize)*100));
     return '<div class="water-grid-tile'+(isl.id===selectedIslandId ? ' selected': '')+'" onclick="selectIsland(\''+isl.id+'\')">'
       + (_islandHasAvailableAction(isl) ? '<div class="wgt-action-buoy">'+_buoyHTML()+'</div>': '')
       + (isl.pirateHaven ? '<div class="wgt-pirate-flag">'+_pirateFlagClothHTML()+'</div>': (isl.owned===false ? '<div class="wgt-unowned-flag">'+_unownedFlagClothHTML()+'</div>': ''))
