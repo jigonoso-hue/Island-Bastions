@@ -748,8 +748,21 @@ input[type=text]:focus,input[type=number]:focus,textarea:focus,select:focus{outl
    that frames whatever real DOM element the current step targets (via
    the giant box-shadow trick. The box itself has no shadow, everything
    past its edges gets covered by a 9999px spread), and a tooltip that
-   measures its own size before placing itself so it never has to guess. */
-#tour-blocker{position:fixed;inset:0;z-index:4998;background:transparent;}
+   measures its own size before placing itself so it never has to guess.
+   #tour-blocker itself is pointer-events:none — every step is entirely
+   self-driving (each "before" hook opens whatever modal/state the step
+   needs; the user only ever navigates via the tooltip's own Next/Back/
+   Skip), so nothing underneath is ever meant to be clickable during a
+   tour. A full-page pointer-events:auto div doing that job the obvious
+   way — just sitting on top and eating every pointer event — also eats
+   every touch-scroll gesture aimed at whatever's underneath it, which
+   on a phone is exactly the scrollable modal body a lot of these steps
+   are pointing at: content further down it becomes unreachable, with no
+   way out short of reloading. The _tourBlockClick/_tourBlockPointerdown
+   listeners in the JS below do the actual click/drag-blocking job
+   instead, narrowly (click and pointerdown only), so native touch
+   scrolling on the real page underneath is never intercepted. */
+#tour-blocker{position:fixed;inset:0;z-index:4998;background:transparent;pointer-events:none;}
 #tour-highlight{position:fixed;z-index:4999;border:2px solid var(--text-gold);border-radius:10px;box-shadow:0 0 0 9999px rgba(5,10,15,.68);pointer-events:none;transition:top .18s ease,left .18s ease,width .18s ease,height .18s ease;}
 #tour-highlight.hidden{opacity:0;}
 #tour-tooltip{position:fixed;z-index:5000;width:320px;background:var(--bg-modal);border:1px solid var(--border-gold);border-radius:12px;padding:16px 18px;box-shadow:0 10px 32px rgba(0,0,0,.4);}
@@ -11204,6 +11217,20 @@ function _beginIslandTour(){
   _tourStepIdx = 0;
   _showTourStep();
 }
+// Blocks any click/tap or drag-start that lands outside the tour's own
+// tooltip, while never touching touchstart/touchmove/wheel — so native
+// scrolling on the real page underneath (an open modal's scroll body,
+// chiefly) keeps working. Capture phase so this runs before the real
+// element's own onclick/pointerdown handler ever gets a chance to fire,
+// and stopPropagation there is what actually keeps that handler from
+// running at all (see #tour-blocker's CSS comment for why this replaced
+// a plain full-page pointer-events:auto div).
+function _tourBlockClick(e){
+  const tip = document.getElementById('tour-tooltip');
+  if(tip && tip.contains(e.target)) return; // tooltip's own Next/Back/Skip
+  e.preventDefault();
+  e.stopPropagation();
+}
 function _tourEnsureShell(){
   if(document.getElementById('tour-blocker')) return;
   const blocker = document.createElement('div');
@@ -11215,6 +11242,8 @@ function _tourEnsureShell(){
   const tip = document.createElement('div');
   tip.id = 'tour-tooltip';
   document.body.appendChild(tip);
+  document.addEventListener('click', _tourBlockClick, true);
+  document.addEventListener('pointerdown', _tourBlockClick, true);
 }
 function _showTourStep(){
   _tourEnsureShell();
@@ -11319,6 +11348,8 @@ function _tourPrev(){
 }
 function _endTour(){
   closeAnyModal();
+  document.removeEventListener('click', _tourBlockClick, true);
+  document.removeEventListener('pointerdown', _tourBlockClick, true);
   ['tour-blocker','tour-highlight','tour-tooltip'].forEach(function(id){
     const el = document.getElementById(id);
     if(el) el.remove();
