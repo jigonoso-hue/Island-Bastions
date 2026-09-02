@@ -2601,6 +2601,26 @@ function _showTraitTip(e, tid){
     +'<hr style="border:none;border-top:.5px solid var(--border-card);margin:5px 0;">'
     +'<span style="font-size:10px;color:var(--text-gold);">'+(_traitEffectSummary(t)||'N/A')+'</span>');
 }
+// Mobile-only stand-in for _showTraitTip's hover (see _openTraitPicker).
+// Same name/flavor/effect content, just in the existing themed alert
+// overlay instead of a hover tooltip, with real Add Trait/Close choices
+// instead of a click that's already committed to picking it. Reuses
+// #alert-modal-backdrop directly (innerHTML, not the plain-text
+// _showAlertModal/_showConfirmModal helpers) since this needs the same
+// bolded name + colored effect line the hover tip gets, not a plain
+// message string.
+function _showMobileTraitDetail(tid){
+  const t = _traitDef(tid);
+  if(!t) return;
+  document.getElementById('alert-modal-message').innerHTML =
+    '<b>'+t.name+'</b><br><span style="font-size:11px;color:var(--text-muted);">'+t.flavor+'</span>'
+    +'<hr style="border:none;border-top:.5px solid var(--border-card);margin:8px 0;">'
+    +'<span style="font-size:11px;color:var(--text-gold);">'+(_traitEffectSummary(t)||'N/A')+'</span>';
+  document.getElementById('alert-modal-btns').innerHTML =
+    '<button class="btn" onclick="_closeAlertModal()">Close</button>'
+    +'<button class="btn btn-gold" onclick="_closeAlertModal();_pickTraitForSlot(\''+tid+'\')">Add Trait</button>';
+  document.getElementById('alert-modal-backdrop').classList.add('open');
+}
 // The trait picker is a second screen sharing the same #modal-backdrop.
 // clicking a slot swaps the Create Island modal out for a full trait
 // list (name + hover tooltip explaining exactly what it does), then
@@ -2620,13 +2640,24 @@ function _openTraitPicker(slotIndex){
   visible.forEach(function(t){ const c = t.category||'Other'; (grouped[c] = grouped[c]||[]).push(t); });
   const orderedCats = TRAIT_CATEGORY_ORDER.filter(function(c){ return grouped[c]; })
     .concat(Object.keys(grouped).filter(function(c){ return TRAIT_CATEGORY_ORDER.indexOf(c)===-1; }));
+  // Desktop picks a trait the instant its box is clicked — hovering
+  // already showed the full name/flavor/effect via _showTraitTip first,
+  // so the click itself is a deliberate, already-informed choice. Mobile
+  // has no hover at all, so that same tap would add the trait completely
+  // blind, with no way to see what it does first short of guessing from
+  // the name alone. There, route the tap through _showMobileTraitDetail
+  // instead: the same tip content in a popup with actual Add/Close
+  // choices, so mobile gets the same "see it, then decide" flow desktop
+  // gets for free from hover.
+  const isMobile = window.matchMedia('(max-width:820px)').matches;
   const gridHtml = orderedCats.map(function(cat){
     return '<div class="trait-picker-category-header">'+cat+'</div>'
       + grouped[cat].map(function(t){
         const usedElsewhere = _pendingTraits.indexOf(t.id)!==-1 && current!==t.id;
         const picked = current===t.id;
+        const tapHandler = isMobile ? '_showMobileTraitDetail(\''+t.id+'\')': '_pickTraitForSlot(\''+t.id+'\')';
         return '<div class="trait-picker-box'+(usedElsewhere?' disabled':'')+(picked?' picked':'')+'" '
-          +(usedElsewhere?'':'onclick="_pickTraitForSlot(\''+t.id+'\')" ')
+          +(usedElsewhere?'':'onclick="'+tapHandler+'" ')
           +'onmouseenter="_showTraitTip(event,\''+t.id+'\')" onmouseleave="hideTip()">'
           +(picked?'<span class="trait-picker-box-check">✓</span>':'')
           +'<span class="trait-slot-name">'+t.name+'</span>'
@@ -2635,7 +2666,7 @@ function _openTraitPicker(slotIndex){
   }).join('');
   bd.innerHTML = '<div class="modal" style="max-width:580px;max-height:80vh;overflow:hidden;display:flex;flex-direction:column;">'
     +'<h2>Choose a Trait</h2>'
-    +'<p style="font-size:11px;color:var(--text-muted);margin-bottom:10px;flex-shrink:0;">Hover a trait to see what it does.</p>'
+    +'<p style="font-size:11px;color:var(--text-muted);margin-bottom:10px;flex-shrink:0;">'+(isMobile?'Tap a trait to see what it does.':'Hover a trait to see what it does.')+'</p>'
     +'<div class="trait-picker-grid" style="flex:1;min-height:0;">'+gridHtml+'</div>'
     +'<div class="modal-btns" style="flex-shrink:0;">'
       +(current ? '<button class="btn" onclick="_pickTraitForSlot(null)">Clear Slot</button>': '')
