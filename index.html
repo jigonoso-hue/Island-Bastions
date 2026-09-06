@@ -2511,32 +2511,24 @@ function _renderIslandSVG(shape, size, colors, idSuffix){
   for(let i=0;i<pathD.length;i++){ seed = (seed*31 + pathD.charCodeAt(i)) >>> 0; }
   function _rand(){ seed = (seed*1103515245 + 12345) >>> 0; return (seed % 10000)/10000; }
   const greens = [-0.22,0.12,-0.4,0.28,-0.08,0.05].map(function(p){ return _shadeHex(jungle, p); });
-  // Canopy dot COUNT is keyed off the island's TIER, not its raw maxR/s
-  // — same reason TIER_BOX_SIZE is keyed off tier rather than avgR (see
-  // its own comment): the noise/bay/spur carving on the coastline means
-  // maxR doesn't reliably rank Small < Medium < Large < Massive at all
-  // (a "Massive" roll can easily land a smaller maxR than a "Large"
-  // one), so scaling density off it would make some bigger islands look
-  // sparser than smaller ones instead of denser. A bigger tier is
-  // covered by proportionally more foliage instead of the same 30 dots
-  // just spread wider across a bigger canvas. Dot RADIUS deliberately
-  // does NOT scale with `s` any more (it used to, `(7+..)*s` — the same
-  // dots, just blown up bigger on a bigger island, reading as a zoomed-
-  // in copy of the same few blobs rather than an actually bigger
-  // place). Every tier's TIER_BOX_SIZE was already tuned so maxR (and
-  // so vbHalf, this SVG's own viewBox size) grows in step with it on
-  // average — so a fixed, un-scaled radius here ends up rendering at
-  // roughly the same PIXEL size on every tier regardless of island size.
-  // Same-size dots + a rising count is what actually sells "more,
-  // smaller foliage on more coastline" — denser and finer-grained the
-  // bigger the island gets, rather than the same handful of shapes just
-  // stretched wider.
-  const canopyCount = TIER_CANOPY_COUNT[shape && shape.tier] || Math.round(Math.min(60, Math.max(16, 18*s*s)));
+  // Canopy dot COUNT and RADIUS range are both keyed off the island's
+  // TIER, not its raw maxR/s — same reason TIER_BOX_SIZE is keyed off
+  // tier rather than avgR (see its own comment): the noise/bay/spur
+  // carving on the coastline means maxR doesn't reliably rank Small <
+  // Medium < Large < Massive at all (a "Massive" roll can easily land a
+  // smaller maxR than a "Large" one), so scaling either off it risked
+  // some bigger islands ending up sparser, or blobbier, than smaller
+  // ones. Fewer, bigger blobs on a Small island reads as a rough little
+  // patch of scrub; more, smaller dots on a Massive one reads as a
+  // denser, fuller-looking forest actually covering real ground —
+  // rather than the same handful of same-size shapes just spread wider
+  // across a bigger canvas.
+  const canopyDef = TIER_CANOPY[shape && shape.tier] || { count: Math.round(Math.min(60, Math.max(16, 18*s*s))), r: [7, 15] };
   let canopy = '';
-  for(let i=0;i<canopyCount;i++){
+  for(let i=0;i<canopyDef.count;i++){
     const rx = (_rand()*2-1)*92*s;
     const ry = (_rand()*2-1)*92*s;
-    const r = 7 + _rand()*8;
+    const r = canopyDef.r[0] + _rand()*(canopyDef.r[1]-canopyDef.r[0]);
     const c = greens[Math.floor(_rand()*greens.length)];
     canopy += '<circle cx="'+rx.toFixed(1)+'" cy="'+ry.toFixed(1)+'" r="'+r.toFixed(1)+'" fill="'+c+'" opacity="'+(0.55+_rand()*0.35).toFixed(2)+'"/>';
   }
@@ -2981,8 +2973,16 @@ function _islandCoastBottomPx(shape, boxSize){
 const TIER_BOX_SIZE = { Small: 168, Medium: 224, Large: 288, Massive: 368 };
 // How many jungle-canopy speckles _renderIslandSVG draws for each tier.
 // See its own comment for why this is keyed off tier here too, not off
-// the shape's own (unreliable) maxR.
-const TIER_CANOPY_COUNT = { Small: 16, Medium: 24, Large: 36, Massive: 52 };
+// the shape's own (unreliable) maxR. r is [min,max] dot radius in SVG
+// units — shrinks tier over tier so a bigger island reads as covered in
+// smaller, denser foliage rather than the same size blobs just spread
+// wider or, worse, blown up bigger.
+const TIER_CANOPY = {
+  Small:   { count: 14, r: [10, 17] },
+  Medium:  { count: 26, r: [8, 13] },
+  Large:   { count: 44, r: [6, 10] },
+  Massive: { count: 68, r: [4, 7] }
+};
 function _islandBoxSize(isl){
   return TIER_BOX_SIZE[isl && isl.tier] || 280;
 }
@@ -3001,10 +3001,10 @@ function renderWater(){
     el.style.top = (isl.y-half)+'px';
     el.style.width = size+'px';
     el.style.height = size+'px';
-    // +6px: a small, constant breathing gap past the actual coast,
+    // +16px: a small, constant breathing gap past the actual coast,
     // same for every tier (see _islandCoastBottomPx and the .iname-label
     // CSS comment for why this isn't a plain fixed "bottom" offset).
-    const labelTop = _islandCoastBottomPx(isl, size) + 6;
+    const labelTop = _islandCoastBottomPx(isl, size) + 16;
     el.innerHTML = _renderIslandSVG(isl, size, {sand:isl.sandColor, jungle:isl.jungleColor}, '-canvas') + '<div class="iname-label" style="top:'+labelTop+'px;">'+isl.name+'</div>' + _dockShipHTML() + (isl.pirateHaven ? _pirateFlagHTML(): '') + (isl.owned===false ? _unownedFlagHTML(): '') + (_islandHasAvailableAction(isl) ? _buoyHTML(): '');
     el.onclick = function(e){
       e.stopPropagation();
