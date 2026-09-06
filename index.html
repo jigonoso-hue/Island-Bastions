@@ -180,19 +180,38 @@ body{background:var(--bg-body);color:var(--text-primary);font-family:-apple-syst
    element carry BOTH classes at once. The actual markup only ever put
    iname-label on a child <div> nested inside .island-token, so the rule
    never matched anything: no absolute positioning, no centering, just
-   the label falling into normal document flow whereever the SVG art
-   before it happened to leave the cursor, wildly off to one side. Split
-   into its own descendant selector so the centering actually applies,
-   and turned into an actual ribbon/scroll banner (clip-path notches on
-   both ends, gold border) sitting close under the island rather than
-   the plain pill this was before — bottom is tighter (-13px vs -18px)
-   so it reads as sitting just past the coastline, not floating well
-   below the island. */
-.iname-label{position:absolute;bottom:-13px;left:50%;transform:translateX(-50%);
+   the label falling into normal document flow wherever the SVG art
+   before it happened to leave the cursor, wildly off to one side.
+   Split into its own descendant selector so the centering actually
+   applies, and shaped into a ribbon/scroll banner: a dashed-stitched
+   body plus forked pennant tails on both ends (::before/::after, each
+   a small strip with a triangular notch clipped out of its inner edge)
+   instead of a plain rounded pill.
+   `top` is NOT a fixed offset — every island's box has the same 35%
+   headroom margin baked into its own viewBox (see _renderIslandSVG's
+   vbHalf), which is a CONSTANT FRACTION of box size, not a constant
+   pixel count. A fixed "bottom:-13px" therefore put the label a small,
+   consistent gap under a Small island's box but a much bigger one under
+   a Massive island's much bigger box, even though the actual coastline
+   sits proportionally the same distance from each box's edge — reading
+   as every bigger tier's banner drifting further "south" of its coast.
+   renderWater() computes each island's real coastline-bottom pixel
+   position from its own shape data (_islandCoastBottomPx) and sets
+   `top` inline per island instead, so the gap under the actual drawn
+   coast is the same small number of pixels for every tier. */
+.iname-label{position:absolute;left:50%;transform:translateX(-50%);
+  display:flex;align-items:center;justify-content:center;height:20px;
   font-size:10px;font-weight:700;color:var(--text-gold);white-space:nowrap;
-  background:var(--bg-label);border:1.5px solid var(--border-gold);
-  padding:3px 16px;box-shadow:0 2px 6px rgba(0,0,0,.25);
-  clip-path:polygon(7px 0,calc(100% - 7px) 0,100% 50%,calc(100% - 7px) 100%,7px 100%,0 50%);}
+  background:var(--bg-label);border-top:1.5px dashed var(--border-gold);
+  border-bottom:1.5px dashed var(--border-gold);padding:0 14px;
+  box-shadow:0 2px 6px rgba(0,0,0,.25);}
+.iname-label::before,.iname-label::after{content:"";position:absolute;top:0;bottom:0;width:11px;
+  background:var(--bg-label);border-top:1.5px dashed var(--border-gold);
+  border-bottom:1.5px dashed var(--border-gold);}
+.iname-label::before{left:-10px;border-right:none;
+  clip-path:polygon(0 0,100% 0,38% 50%,100% 100%,0 100%);}
+.iname-label::after{right:-10px;border-left:none;
+  clip-path:polygon(100% 0,0 0,62% 50%,0 100%,100% 100%);}
 .dock-ship-bob{position:absolute;right:9%;bottom:27%;width:14%;height:14%;display:none;pointer-events:none;}
 .island-token.selected.dock-ship-bob{display:block;animation:ship-bob 2.6s ease-in-out .85s infinite;}
 .dock-ship-in{width:100%;height:100%;animation:ship-dock-in .85s cubic-bezier(.2,.7,.3,1) forwards;filter:drop-shadow(0 3px 4px rgba(20,40,20,.4));}
@@ -2920,6 +2939,24 @@ function _buoyHTML(){
 // its edge) hugs its visibly smaller coastline instead of floating in a
 // mostly-empty box sized for a Massive one, and the four tiers read as
 // clearly different sizes instead of near-identical blobs.
+// Where this island's own drawn coastline actually bottoms out, in
+// pixels down from the TOP of its size×size token box. Mirrors the
+// exact viewBox fit _renderIslandSVG computes for this same shape
+// (maxR*1.35 headroom) so the two agree pixel-for-pixel, but derives it
+// from the shape's own points instead of the rendered SVG — no need to
+// touch the DOM, and it works identically for the mobile grid's copy of
+// the same shape too. See the .iname-label CSS comment for why this
+// (not a fixed CSS offset) is what the name label's `top` is set from.
+function _islandCoastBottomPx(shape, boxSize){
+  let maxR = 10, maxY = 0;
+  shape.points.forEach(function(p){
+    const r = Math.sqrt(p.x*p.x+p.y*p.y);
+    if(r>maxR) maxR = r;
+    if(p.y>maxY) maxY = p.y;
+  });
+  const vbHalf = maxR*1.35;
+  return (boxSize/2) * (1 + maxY/vbHalf);
+}
 const TIER_BOX_SIZE = { Small: 168, Medium: 224, Large: 288, Massive: 368 };
 function _islandBoxSize(isl){
   return TIER_BOX_SIZE[isl && isl.tier] || 280;
@@ -2939,7 +2976,11 @@ function renderWater(){
     el.style.top = (isl.y-half)+'px';
     el.style.width = size+'px';
     el.style.height = size+'px';
-    el.innerHTML = _renderIslandSVG(isl, size, {sand:isl.sandColor, jungle:isl.jungleColor}, '-canvas') + '<div class="iname-label">'+isl.name+'</div>' + _dockShipHTML() + (isl.pirateHaven ? _pirateFlagHTML(): '') + (isl.owned===false ? _unownedFlagHTML(): '') + (_islandHasAvailableAction(isl) ? _buoyHTML(): '');
+    // +6px: a small, constant breathing gap past the actual coast,
+    // same for every tier (see _islandCoastBottomPx and the .iname-label
+    // CSS comment for why this isn't a plain fixed "bottom" offset).
+    const labelTop = _islandCoastBottomPx(isl, size) + 6;
+    el.innerHTML = _renderIslandSVG(isl, size, {sand:isl.sandColor, jungle:isl.jungleColor}, '-canvas') + '<div class="iname-label" style="top:'+labelTop+'px;">'+isl.name+'</div>' + _dockShipHTML() + (isl.pirateHaven ? _pirateFlagHTML(): '') + (isl.owned===false ? _unownedFlagHTML(): '') + (_islandHasAvailableAction(isl) ? _buoyHTML(): '');
     el.onclick = function(e){
       e.stopPropagation();
       if(el._wasDragged && el._wasDragged()) return; // just finished dragging it. don't also open the modal
