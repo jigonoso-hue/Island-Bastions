@@ -2523,6 +2523,18 @@ function _renderIslandSVG(shape, size, colors, idSuffix){
   // denser, fuller-looking forest actually covering real ground —
   // rather than the same handful of same-size shapes just spread wider
   // across a bigger canvas.
+  // Position SPREAD, unlike count/radius, stays tied to this shape's
+  // own actual `s` (maxR/100) rather than a fixed nominal number — a
+  // fixed spread was tried and made things worse, since the box/viewBox
+  // fit already normalizes every tier's rendered coastline to roughly
+  // the same on-screen proportions (vbHalf is always maxR*1.35, so the
+  // coast always fills ~74% of its box regardless of tier), meaning
+  // `s`-relative spread already places dots correctly across whatever
+  // this particular shape's real interior is. A fixed spread instead
+  // scattered most dots past the real coastline entirely on several
+  // tiers, where the jungle clip-path (see the <g clip-path=...> below)
+  // silently discarded them — nearly emptying out Large/Massive rather
+  // than filling them in.
   const canopyDef = TIER_CANOPY[shape && shape.tier] || { count: Math.round(Math.min(60, Math.max(16, 18*s*s))), r: [7, 15] };
   let canopy = '';
   for(let i=0;i<canopyDef.count;i++){
@@ -2971,17 +2983,20 @@ function _islandCoastBottomPx(shape, boxSize){
   return (boxSize/2) * (1 + maxY/vbHalf);
 }
 const TIER_BOX_SIZE = { Small: 168, Medium: 224, Large: 288, Massive: 368 };
-// How many jungle-canopy speckles _renderIslandSVG draws for each tier.
-// See its own comment for why this is keyed off tier here too, not off
-// the shape's own (unreliable) maxR. r is [min,max] dot radius in SVG
-// units — shrinks tier over tier so a bigger island reads as covered in
-// smaller, denser foliage rather than the same size blobs just spread
-// wider or, worse, blown up bigger.
+// How many jungle-canopy speckles _renderIslandSVG draws for each tier,
+// and their [min,max] radius in SVG units. See its own comment (and
+// _renderIslandSVG's, on why position spread does NOT come from here)
+// for why count/radius are keyed off tier rather than the shape's own
+// unreliable maxR. Counts climb steeply Small→Medium→Large but taper
+// off Large→Massive (a smaller relative jump) since a flatter ramp
+// there reads as a natural continuation of the same trend rather than
+// a sudden leap; every step is still a real, visible increase in
+// density plus a real decrease in individual dot size.
 const TIER_CANOPY = {
-  Small:   { count: 14, r: [10, 17] },
-  Medium:  { count: 26, r: [8, 13] },
-  Large:   { count: 44, r: [6, 10] },
-  Massive: { count: 68, r: [4, 7] }
+  Small:   { count: 26, r: [8, 15] },
+  Medium:  { count: 42, r: [7, 13] },
+  Large:   { count: 58, r: [6, 11] },
+  Massive: { count: 74, r: [5, 9] }
 };
 function _islandBoxSize(isl){
   return TIER_BOX_SIZE[isl && isl.tier] || 280;
