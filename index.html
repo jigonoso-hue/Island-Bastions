@@ -2503,7 +2503,7 @@ function _renderIslandSVG(shape, size, colors, idSuffix){
   let maxR = 10;
   shape.points.forEach(function(p){ const r = Math.sqrt(p.x*p.x+p.y*p.y); if(r>maxR) maxR = r; });
   const vbHalf = maxR * 1.35; // headroom for the 1.22x water-bleed halo + sand ring
-  const s = maxR/100; // scale factor so the canopy speckle sizing below (tuned for ~100-unit shapes) tracks this shape's actual scale
+  const s = maxR/100; // scale factor so the canopy speckle field below spreads across this shape's own coordinate space, whatever its actual size
   // Deterministic pseudo-random speckle field (seeded off the path string
   // itself) so every render of the same island gets the same jungle
   // texture instead of the canopy dots jittering on every re-render.
@@ -2511,11 +2511,32 @@ function _renderIslandSVG(shape, size, colors, idSuffix){
   for(let i=0;i<pathD.length;i++){ seed = (seed*31 + pathD.charCodeAt(i)) >>> 0; }
   function _rand(){ seed = (seed*1103515245 + 12345) >>> 0; return (seed % 10000)/10000; }
   const greens = [-0.22,0.12,-0.4,0.28,-0.08,0.05].map(function(p){ return _shadeHex(jungle, p); });
+  // Canopy dot COUNT is keyed off the island's TIER, not its raw maxR/s
+  // — same reason TIER_BOX_SIZE is keyed off tier rather than avgR (see
+  // its own comment): the noise/bay/spur carving on the coastline means
+  // maxR doesn't reliably rank Small < Medium < Large < Massive at all
+  // (a "Massive" roll can easily land a smaller maxR than a "Large"
+  // one), so scaling density off it would make some bigger islands look
+  // sparser than smaller ones instead of denser. A bigger tier is
+  // covered by proportionally more foliage instead of the same 30 dots
+  // just spread wider across a bigger canvas. Dot RADIUS deliberately
+  // does NOT scale with `s` any more (it used to, `(7+..)*s` — the same
+  // dots, just blown up bigger on a bigger island, reading as a zoomed-
+  // in copy of the same few blobs rather than an actually bigger
+  // place). Every tier's TIER_BOX_SIZE was already tuned so maxR (and
+  // so vbHalf, this SVG's own viewBox size) grows in step with it on
+  // average — so a fixed, un-scaled radius here ends up rendering at
+  // roughly the same PIXEL size on every tier regardless of island size.
+  // Same-size dots + a rising count is what actually sells "more,
+  // smaller foliage on more coastline" — denser and finer-grained the
+  // bigger the island gets, rather than the same handful of shapes just
+  // stretched wider.
+  const canopyCount = TIER_CANOPY_COUNT[shape && shape.tier] || Math.round(Math.min(60, Math.max(16, 18*s*s)));
   let canopy = '';
-  for(let i=0;i<30;i++){
+  for(let i=0;i<canopyCount;i++){
     const rx = (_rand()*2-1)*92*s;
     const ry = (_rand()*2-1)*92*s;
-    const r = (7 + _rand()*11)*s;
+    const r = 7 + _rand()*8;
     const c = greens[Math.floor(_rand()*greens.length)];
     canopy += '<circle cx="'+rx.toFixed(1)+'" cy="'+ry.toFixed(1)+'" r="'+r.toFixed(1)+'" fill="'+c+'" opacity="'+(0.55+_rand()*0.35).toFixed(2)+'"/>';
   }
@@ -2958,6 +2979,10 @@ function _islandCoastBottomPx(shape, boxSize){
   return (boxSize/2) * (1 + maxY/vbHalf);
 }
 const TIER_BOX_SIZE = { Small: 168, Medium: 224, Large: 288, Massive: 368 };
+// How many jungle-canopy speckles _renderIslandSVG draws for each tier.
+// See its own comment for why this is keyed off tier here too, not off
+// the shape's own (unreliable) maxR.
+const TIER_CANOPY_COUNT = { Small: 16, Medium: 24, Large: 36, Massive: 52 };
 function _islandBoxSize(isl){
   return TIER_BOX_SIZE[isl && isl.tier] || 280;
 }
