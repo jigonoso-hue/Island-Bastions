@@ -62,6 +62,14 @@
   --text-olive:#4a7038;
   --text-green-dark:#1a6b1a;
   --text-danger-hover:#a8302a;
+  --cat-housing:#8a4a24;
+  --cat-farming:#4a6b1e;
+  --cat-production:#7a4d08;
+  --cat-recreational:#8a2f52;
+  --cat-tourism:#1a6b7a;
+  --cat-guilds:#5a3a8a;
+  --cat-expansion:#1f6b55;
+  --cat-civic:#2f4a8a;
 }
 [data-theme="dark"]{
   --bg-body:#050f1a;
@@ -119,6 +127,14 @@
   --text-olive:#6a9a50;
   --text-green-dark:#1a6b1a;
   --text-danger-hover:#e05050;
+  --cat-housing:#c97b4a;
+  --cat-farming:#7fa84a;
+  --cat-production:#c8961e;
+  --cat-recreational:#d1608a;
+  --cat-tourism:#4fb0c9;
+  --cat-guilds:#8b6bc9;
+  --cat-expansion:#3fa793;
+  --cat-civic:#5578c9;
 }
 /* Belt-and-suspenders against pinch/double-tap zoom, alongside the
    maximum-scale=1/user-scalable=no viewport meta tag above. iOS Safari
@@ -712,6 +728,31 @@ input[type=text]:focus,input[type=number]:focus,textarea:focus,select:focus{outl
    black no matter the theme and nearly invisible against a dark-mode
    token. */
 .building-token-icon svg{width:48px;height:48px;stroke:var(--text-gold);color:var(--text-gold);}
+/* One accent color per building category (see --cat-* in :root/
+   [data-theme="dark"]), so the eye can sort the grid into families —
+   housing, farming, production, and so on — before even reading a
+   single label. Border and glyph both switch together; background
+   stays the shared highlight tint so the grid doesn't turn into a
+   patchwork of different card colors, just different-colored icons on
+   a consistent card. Higher specificity than the plain .building-
+   token-icon rules above (two classes vs one) so it wins the cascade
+   without needing !important. */
+.building-token-icon.cat-housing{border-color:var(--cat-housing);}
+.building-token-icon.cat-housing svg{stroke:var(--cat-housing);color:var(--cat-housing);}
+.building-token-icon.cat-farming{border-color:var(--cat-farming);}
+.building-token-icon.cat-farming svg{stroke:var(--cat-farming);color:var(--cat-farming);}
+.building-token-icon.cat-production{border-color:var(--cat-production);}
+.building-token-icon.cat-production svg{stroke:var(--cat-production);color:var(--cat-production);}
+.building-token-icon.cat-recreational{border-color:var(--cat-recreational);}
+.building-token-icon.cat-recreational svg{stroke:var(--cat-recreational);color:var(--cat-recreational);}
+.building-token-icon.cat-tourism{border-color:var(--cat-tourism);}
+.building-token-icon.cat-tourism svg{stroke:var(--cat-tourism);color:var(--cat-tourism);}
+.building-token-icon.cat-guilds{border-color:var(--cat-guilds);}
+.building-token-icon.cat-guilds svg{stroke:var(--cat-guilds);color:var(--cat-guilds);}
+.building-token-icon.cat-expansion{border-color:var(--cat-expansion);}
+.building-token-icon.cat-expansion svg{stroke:var(--cat-expansion);color:var(--cat-expansion);}
+.building-token-icon.cat-civic{border-color:var(--cat-civic);}
+.building-token-icon.cat-civic svg{stroke:var(--cat-civic);color:var(--cat-civic);}
 /* Trait-locked/wildcard buildings. A glittering star instead of an
    ordinary icon: the star itself gently glows, and three little sparkle
    dots twinkle around it on staggered timers so it never looks static. */
@@ -4950,6 +4991,15 @@ const BUILDING_ART_IMAGES = {
   ancestral_longhouse: "data:image/webp;base64,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",
 };
 
+// One accent color per building category (housing/farming/production/
+// recreational/tourism/guilds/expansion/civic), so the building grid
+// reads as 8 distinct families at a glance instead of everything in
+// one flat gold. Values live in :root/[data-theme="dark"] as --cat-*
+// custom properties; this just turns a building into the class name
+// that picks the right one.
+function _catClass(b){
+  return b && b.cat ? ' cat-'+b.cat: '';
+}
 function _buildingIconSVG(b, isUnique){
   // Full isometric art exists for some buildings now (BUILDING_ART_IMAGES,
   // currently the 8 Housing buildings) but isn't wired into the main
@@ -5037,7 +5087,7 @@ function _renderInfraTokens(isl){
         // (so you can see what's there), it just doesn't open anything.
         const clickable = isl.owned!==false;
         return '<button class="building-token'+(underConstruction?' constructing':'')+(clickable?'':' readonly')+'" id="building-token-'+c.b.id+'-'+c.idx+'" onmouseenter="showBuildingTip(event,\''+c.b.id+'\','+level+')" onmouseleave="hideTip()"'+(clickable?' onclick="_openBuildingTokenModal(\''+isl.id+'\','+c.idx+')"':'')+'>'
-          +'<div class="building-token-icon">'+_buildingIconSVG(c.b, isUnique)+(actionAvailable ? '<span class="building-token-action-flag">!</span>': '')+(underConstruction ? '<span class="building-token-construction-flag"><i class="ti ti-hammer"></i></span>': '')+'</div>'
+          +'<div class="building-token-icon'+_catClass(c.b)+'">'+_buildingIconSVG(c.b, isUnique)+(actionAvailable ? '<span class="building-token-action-flag">!</span>': '')+(underConstruction ? '<span class="building-token-construction-flag"><i class="ti ti-hammer"></i></span>': '')+'</div>'
           +'<div class="building-token-name">'+(underConstruction ? c.b.name: _buildingDisplayName(c.b, level))+'</div>'
           +(underConstruction ? '<div class="building-token-lv construction">'+weeksLeft+'wk'+(weeksLeft===1?'':'s')+'</div>': (participates ? '<div class="building-token-lv">Lv.'+level+'</div>': ''))
         +'</button>';
@@ -5209,7 +5259,7 @@ function _renderBuildTokenGrid(){
     const atCap = !!(b.maxPerIsland && (built+qty)>=b.maxPerIsland);
     const isUnique = !!(b.requiresTrait || b.requiresUnlock);
     return '<button class="building-token'+(atCap?' at-cap':'')+'" id="build-token-'+b.id+'" onmouseenter="showBuildingTip(event,\''+b.id+'\')" onmouseleave="hideTip()" onclick="'+(atCap?'':'_incrementBuildCart(\''+b.id+'\')')+'">'
-      +'<div class="building-token-icon">'+_buildingIconSVG(b, isUnique)+(qty>0?'<span class="build-token-qty">'+qty+'</span>':'')+'</div>'
+      +'<div class="building-token-icon'+_catClass(b)+'">'+_buildingIconSVG(b, isUnique)+(qty>0?'<span class="build-token-qty">'+qty+'</span>':'')+'</div>'
       +'<div class="building-token-name">'+b.name+'</div>'
     +'</button>';
   }).join(''): '<p class="wr-empty-note">No buildings in this category.</p>';
@@ -5271,7 +5321,7 @@ function _renderCommitRows(){
     const isUnique = !!(b.requiresTrait||b.requiresUnlock);
     return '<div class="commit-row">'
       +'<div class="commit-row-weeks">'+weeks+' Week'+(weeks===1?'':'s')+'</div>'
-      +'<div class="commit-row-building"><div class="building-token-icon" style="width:44px;height:44px;">'+_buildingIconSVG(b,isUnique)+'</div><div>'+b.name+'</div></div>'
+      +'<div class="commit-row-building"><div class="building-token-icon'+_catClass(b)+'" style="width:44px;height:44px;">'+_buildingIconSVG(b,isUnique)+'</div><div>'+b.name+'</div></div>'
       +'<div class="commit-row-qty"><button class="btn" onclick="_adjustCartQty(\''+id+'\',-1)">-</button><span>'+qty+'</span><button class="btn" onclick="_adjustCartQty(\''+id+'\',1)">+</button></div>'
       +'<div class="commit-row-cost">'+(unitCost*qty).toLocaleString()+'GP</div>'
     +'</div>';
@@ -5394,7 +5444,7 @@ function _renderQueueRows(){
     const isUnique = !!(b.requiresTrait||b.requiresUnlock);
     return '<div class="commit-row">'
       +'<div class="commit-row-weeks">'+g.weeksLeft+' wk'+(g.weeksLeft===1?'':'s')+' left</div>'
-      +'<div class="commit-row-building"><div class="building-token-icon" style="width:44px;height:44px;">'+_buildingIconSVG(b,isUnique)+'</div><div>'+b.name+'</div></div>'
+      +'<div class="commit-row-building"><div class="building-token-icon'+_catClass(b)+'" style="width:44px;height:44px;">'+_buildingIconSVG(b,isUnique)+'</div><div>'+b.name+'</div></div>'
       +'<div class="commit-row-qty"><button class="btn" onclick="_adjustQueueQty(\''+g.id+'\','+g.weeksLeft+',-1)">-</button><span>'+g.count+'</span><button class="btn" onclick="_adjustQueueQty(\''+g.id+'\','+g.weeksLeft+',1)">+</button></div>'
       +'<div></div>'
     +'</div>';
