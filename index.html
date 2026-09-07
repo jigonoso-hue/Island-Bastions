@@ -1788,83 +1788,97 @@ function _grantDiscoveredTrait(isl, pool){
 // Weekly Report afterward (_openWeeklyReportModal). Pure choice stages (judging,
 // deciding) still resolve instantly since there's no roll to wait on.
 const TRAIT_QUESTS = {
+  // ── Haunted Ruins. Two stages, but each now carries the same weight
+  // of backstory the Obelisk/Cradle stages do: what the dig actually
+  // finds, and why sealing it back up is its own separate gamble.
   haunted_ruins: { name:'Seal What\'s Below', start:'excavate', stages:{
-    excavate:{ label:'Excavate the Depths', type:'roll', cost:20000, chance:0.20, next:'seal',
-      successText:'The dig finally breaks through into a sealed chamber. Whatever is down there has clearly been waiting a while.',
-      failText:'The tunnel gives out a few feet short of anything interesting. The crew climbs out unimpressed and slightly damp.' },
-    seal:{ label:'Seal What\'s Below', type:'roll', cost:10000, chance:0.55, next:null,
+    excavate:{ label:'Excavate the Depths', flavor:"Every old survey of the island marks this low rise as unremarkable, some collapsed stonework nobody bothered dating. None of those surveys explain why generations of islanders have quietly steered clear of digging it up until now.", type:'roll', cost:20000, chance:0.20, next:'seal',
+      successText:'The dig finally breaks through a false floor into a sealed chamber, dressed stone on every side and air that hasn\'t moved in longer than anyone wants to guess. Whatever is down there has clearly been waiting a while.',
+      failText:'The tunnel gives out a few feet short of anything interesting, propped timbers groaning the whole way down. The crew climbs out unimpressed, slightly damp, and privately relieved.' },
+    seal:{ label:'Seal What\'s Below', flavor:"The chamber walls are carved edge to edge in warding script nobody currently living can read with any real confidence. Three separate translators offered three different readings, and all three agreed on exactly one word: quickly.", type:'roll', cost:10000, chance:0.55, next:null,
       onComplete:{ clearsTrait:true, buildingBonus:{ id:'archaeologists_guild', dice:5, notoriety:5 } },
-      successText:'The old words hold. The passage seals itself shut with a low groan, like the island just let out a breath it had been holding for centuries.',
-      failText:'The seal does not take. Whatever is down there is apparently not in the mood to stay quiet just yet.' }
+      successText:'The old words hold, more or less, exactly the way three arguing translators hoped they would. The passage seals itself shut with a low groan, like the island just let out a breath it had been holding for centuries.',
+      failText:'The seal does not take. Whatever is down there is apparently not in the mood to stay quiet just yet, and the crew backs out of the chamber a good deal faster than they went in.' }
   }},
+  // ── Cursed Ground. Same two-stage shape, built around the idea that
+  // a rite half-finished is worse than no rite at all.
   cursed_ground: { name:'Consecrate the Grounds', start:'cleanse', stages:{
-    cleanse:{ label:'Perform the Cleansing Rite', type:'roll', cost:20000, chance:0.20, next:'consecrate',
-      successText:'The rite actually works, more or less on the first real attempt. Even the priest looks surprised.',
-      failText:'The rite fizzles out halfway through. The priest insists this is completely normal and asks for the fee anyway.' },
-    consecrate:{ label:'Consecrate the Grounds', type:'roll', cost:10000, chance:0.55, next:null,
+    cleanse:{ label:'Perform the Cleansing Rite', flavor:"Nothing grows right on this stretch of ground, hasn't for as long as anyone can trace it back. Crops wither at the same unlucky angle every season, like something under the soil is leaning against them on purpose.", type:'roll', cost:20000, chance:0.20, next:'consecrate',
+      successText:'The rite actually works, more or less, on the first real attempt, which surprises absolutely everyone, the priest included, who was quietly prepared for a much longer contract.',
+      failText:'The rite fizzles out halfway through, the salt circle going cold for no reason anyone present can explain. The priest insists this is completely normal and asks for the fee anyway.' },
+    consecrate:{ label:'Consecrate the Grounds', flavor:'A rite left half-finished is, by every account anyone is willing to give, worse than no rite at all. The ground stays sour, and now it knows, in whatever way ground knows things, that someone already came looking to fix it once.', type:'roll', cost:10000, chance:0.55, next:null,
       onComplete:{ clearsTrait:true, buildingBonus:{ id:'necromancers_study', dice:5, notoriety:5 } },
-      successText:'The grounds go quiet in a good way for once. Whatever was wrong here finally lets go.',
-      failText:'The consecration does not stick. The land remains politely, stubbornly cursed.' }
+      successText:'The grounds go quiet in a good way for once. The wrongness lifts like a held breath finally let go, and next season\'s planting, everyone privately agrees, gets watched very closely.',
+      failText:'The consecration does not stick. The land remains politely, stubbornly cursed, and faintly insulted that anyone thought a second attempt would go differently.' }
   }},
+  // ── The Split Reef. Three stages instead of two, each one leaning
+  // into the reef's own track record of wrecking prior attempts.
   split_reef: { name:'Bridge the Reef', start:'survey', stages:{
-    survey:{ label:'Survey a Crossing', type:'roll', cost:12000, chance:0.45, next:'build',
-      successText:'A workable crossing turns up faster than expected, right where the old maps insisted not to look.',
-      failText:'The survey crew spends a week wading around and comes back with nothing but a very confused crab.' },
-    build:{ label:'Build the Reef Bridge', type:'roll', cost:35000, chance:0.55, next:'crossing',
-      successText:'The bridge goes up more or less on schedule, and both halves of the harbor finally shake hands.',
-      failText:'Half the bridge ends up in the reef before the ribbon cutting. Back to the drawing board, and the budget.' },
-    crossing:{ label:'The First Crossing', type:'free', cost:0, chance:1, onComplete:{ clearsTrait:true },
-      successText:'The first cart rolls across without incident, which everyone agrees to call a triumph.' }
+    survey:{ label:'Survey a Crossing', flavor:"The reef wall has split this harbor clean in half for longer than either side's oldest families can agree on. Every prior attempt at a crossing has ended in the reef itself, one way or another, and both halves of the island have their own version of why.", type:'roll', cost:12000, chance:0.45, next:'build',
+      successText:'A workable crossing turns up faster than expected, right where the old maps insisted, loudly, not to look, which either means the old maps were wrong or means something changed its mind.',
+      failText:'The survey crew spends a week wading around the reef and comes back with nothing but wet boots, three competing theories, and a very confused crab nobody can identify.' },
+    build:{ label:'Build the Reef Bridge', flavor:"Building on a reef that has personally wrecked at least four prior attempts, by the most generous count anyone will give, is either an act of stubborn engineering or a dare nobody's willing to say out loud.", type:'roll', cost:35000, chance:0.55, next:'crossing',
+      successText:'The bridge goes up more or less on schedule, and both halves of the harbor shake hands across it for the first time anyone alive remembers, awkwardly, but they shake.',
+      failText:'Half the bridge ends up back in the reef before the ribbon cutting, which at least keeps the reef\'s perfect record intact. Back to the drawing board, and the budget.' },
+    crossing:{ label:'The First Crossing', flavor:"First crossings on a reef with this reputation traditionally go one of two ways, and everyone lined up on the near bank is trying very hard not to think about which two.", type:'free', cost:0, chance:1, onComplete:{ clearsTrait:true },
+      successText:'The first cart rolls across without incident, which everyone present agrees, with visible relief, to call a triumph.' }
   }},
+  // ── The Sleeping Titan. Same shape as the Obelisk/Cradle at a
+  // smaller scale: one early choice (Bind vs Wake) splitting into two
+  // short paths that reconverge on completely different endings.
   the_sleeping_titan: { name:'Wake or Bind', start:'chart', stages:{
-    chart:{ label:'Chart the Depths', type:'roll', cost:15000, chance:0.35, next:'contact',
-      successText:'The old shaft is still there, mostly intact, leading down toward something genuinely enormous.',
-      failText:'The old shaft collapses about twenty feet in. Nobody is hurt, but nobody is thrilled either.' },
-    contact:{ label:'First Contact', type:'choice', cost:0, chance:1, choices:[
-      { id:'bind', label:'Bind It', next:'wards' },
-      { id:'wake', label:'Wake It', next:'tribute' }
+    chart:{ label:'Chart the Depths', flavor:"The old mining shaft under the peak was sealed off two generations back for reasons nobody wrote down, which has never once stopped anyone curious enough to go looking for what it was sealed against.", type:'roll', cost:15000, chance:0.35, next:'contact',
+      successText:"The old shaft is still there, mostly intact, sloping down further than any mine this island ever actually needed, toward something the survey lanterns can't quite reach the bottom of.",
+      failText:'The old shaft collapses about twenty feet in, dust and old timber coming down in a rush. Nobody is hurt, but nobody is thrilled either, and the mountain keeps its secret a while longer.' },
+    contact:{ label:'First Contact', flavor:"Whatever is down there is not asleep in any way that leaves much room for a third option. Bind it back down for good, or wake it and see what the mountain's actually been sitting on. The island has to pick one.", type:'choice', cost:0, chance:1, choices:[
+      { id:'bind', label:'Bind It', hint:"Cheaper, safer, permanent. Whatever's down there stays down there for good.", next:'wards' },
+      { id:'wake', label:'Wake It', hint:'Expensive and risky, and there is no putting it back once it\'s up.', next:'tribute' }
     ]},
-    wards:{ label:'Forge the Binding Wards', type:'roll', cost:40000, chance:0.25, next:'seal_titan',
-      successText:'The binding wards actually hold when tested, which frankly surprises the people who built them.',
-      failText:'The wards crack the moment they finish cooling. Back to the workshop, and the ledger takes another hit.' },
-    seal_titan:{ label:'Seal the Titan', type:'free', cost:0, chance:1,
+    wards:{ label:'Forge the Binding Wards', flavor:"Binding wards this size have never actually been forged on this island before. The smiths are working from a diagram nobody's tested past the theoretical stage, on a deadline set by something that is, technically, still asleep.", type:'roll', cost:40000, chance:0.25, next:'seal_titan',
+      successText:'The binding wards actually hold when tested, which frankly surprises the people who built them almost as much as it surprises the thing they\'re built to hold.',
+      failText:'The wards crack the moment they finish cooling, hairline fractures running through metal that should not fracture that easily. Back to the workshop, and the ledger takes another hit.' },
+    seal_titan:{ label:'Seal the Titan', flavor:'Setting the finished wards is the last step and, everyone quietly hopes, the easier one. Putting something back to sleep is supposed to be gentler than the reverse.', type:'free', cost:0, chance:1,
       onComplete:{ clearsTrait:true, unlocksBuilding:['titanbound_wardstone'] },
-      successText:'The wards settle into place and the mountain goes back to being, quietly, just a mountain.' },
-    tribute:{ label:'Offer the First Tribute', type:'roll', cost:60000, chance:0.15, next:'titan_rises', failTreasuryPercent:0.10,
-      successText:'The tribute is accepted without complaint, for once. Something enormous settles back down to sleep, mostly satisfied.',
-      failText:'The tribute is apparently not enough. Something enormous is briefly, extremely awake, and helps itself to a little extra on the way back down.' },
-    titan_rises:{ label:'The Titan Rises', type:'free', cost:0, chance:1,
+      successText:'The wards settle into place with a low hum that fades to nothing, and the mountain goes back to being, quietly, just a mountain. For now.' },
+    tribute:{ label:'Offer the First Tribute', flavor:"Nobody on the island has ever actually negotiated with something this large before, and 'offer the first tribute' is doing a great deal of work covering for the fact that nobody really knows what a fair opening offer looks like.", type:'roll', cost:60000, chance:0.15, next:'titan_rises', failTreasuryPercent:0.10,
+      successText:'The tribute is accepted without complaint, for once. Something enormous settles back down to sleep, mostly satisfied, and the mountain goes still again.',
+      failText:'The tribute is apparently not enough. Something enormous is briefly, extremely awake, and helps itself to a little extra on the way back down, the treasury feels every bit of it.' },
+    titan_rises:{ label:'The Titan Rises', flavor:"There was never a version of 'wake it' that ended with things staying the same size they started. The only real question left is how much room the island is about to need.", type:'free', cost:0, chance:1,
       onComplete:{ clearsTrait:true, tierJump:true, crime:15, unlocksBuilding:['titans_bastion'] },
-      successText:'The ground itself rearranges to make room. Nobody sleeps that night, but the island is bigger by morning.' }
+      successText:'The ground itself rearranges to make room, stone folding into new coastline like it was only ever waiting for permission. Nobody sleeps that night, but the island is bigger by morning.' }
   }},
+  // ── The Contested Isle. No rolls at all, just two old families and a
+  // ruling that can never make both of them happy.
   the_contested_isle: { name:'Settle the Claim', start:'hear', stages:{
-    hear:{ label:'Hear Both Sides', type:'free', cost:0, chance:1, next:'judge',
-      successText:'Both families show up, both bring paperwork, and both insist the paperwork proves them right.' },
-    judge:{ label:'Render Judgment', type:'choice', cost:0, chance:1, choices:[
-      { id:'familyA', label:'Favor Family A', next:'depart', unlocksBuilding:['ledgerhall'] },
-      { id:'familyB', label:'Favor Family B', next:'depart', unlocksBuilding:['gallery_row'] }
+    hear:{ label:'Hear Both Sides', flavor:"Both families arrive with generations of paperwork, family trees drawn in different handwriting going back further than the island's own official records, each insisting theirs is the older claim and the other's is, politely, fabricated.", type:'free', cost:0, chance:1, next:'judge',
+      successText:'Both families show up, both bring paperwork, and both insist, with total, practiced sincerity, that the paperwork proves them right.' },
+    judge:{ label:'Render Judgment', flavor:"There is no version of this ruling that both families walk away from equally happy, and everyone in the room knows it. The only real choice is which house's version of history the island decides to make official.", type:'choice', cost:0, chance:1, choices:[
+      { id:'familyA', label:'Favor Family A', hint:'Family A\'s claim wins. Their long-standing rival does not take it gracefully.', next:'depart', unlocksBuilding:['ledgerhall'] },
+      { id:'familyB', label:'Favor Family B', hint:'Family B\'s claim wins. Their long-standing rival does not take it gracefully.', next:'depart', unlocksBuilding:['gallery_row'] }
     ]},
-    depart:{ label:'The Losing House', type:'free', cost:0, chance:1, onComplete:{ clearsTrait:true },
-      successText:'The losing side grumbles for exactly as long as tradition demands, then gets back to business.' }
+    depart:{ label:'The Losing House', flavor:'Losing a claim this old does not mean a family disappears, only that they get back to business a little quieter, and keep the grudge somewhere close at hand for later.', type:'free', cost:0, chance:1, onComplete:{ clearsTrait:true },
+      successText:'The losing side grumbles for exactly as long as tradition demands, then gets back to business, filing the loss away for the next generation to bring up again.' }
   }},
+  // ── The Bound Spirit. Four stages building toward one permanent
+  // choice: let generations of resentment go, or double down on it.
   bound_spirit: { name:'The Spirit\'s Reckoning', start:'listen', stages:{
-    listen:{ label:'Listen to the Whispers', type:'roll', cost:5000, chance:0.5, next:'records',
-      successText:'Someone finally sits still long enough to make out actual words in the wind. They are not friendly words, but they are words.',
-      failText:'A whole night spent listening produces nothing but a headache and a strong urge to sleep with the windows shut.' },
-    records:{ label:'Uncover the Old Records', type:'roll', cost:15000, chance:0.35, next:'confront',
-      successText:'A water-stained ledger in the old archive names exactly what was bound here, and roughly why.',
-      failText:'The archive turns out to be mostly rat nests and tax records from a war nobody remembers fighting.' },
-    confront:{ label:'Confront the Spirit', type:'roll', cost:10000, chance:0.4, next:'decide',
-      successText:'The spirit finally deigns to speak plainly. It has grievances. It has a lot of grievances.',
-      failText:'The spirit refuses to show itself and the whole confrontation amounts to shouting at an empty field.' },
+    listen:{ label:'Listen to the Whispers', flavor:"The wind through the old boundary stones has never sounded quite right, a sort of half-formed complaint under the ordinary noise of weather, like something's been trying to get a word in for longer than anyone's been listening properly.", type:'roll', cost:5000, chance:0.5, next:'records',
+      successText:'Someone finally sits still long enough to make out actual words in the wind. They are not friendly words, but they are words, and that\'s more than anyone\'s managed before.',
+      failText:'A whole night spent listening produces nothing but a headache and a strong, sudden urge to sleep with the windows shut.' },
+    records:{ label:'Uncover the Old Records', flavor:"Whatever got bound here, someone on the island once knew enough about it to write the binding down, assuming the old archive hasn't eaten that particular ledger along with half its other contents.", type:'roll', cost:15000, chance:0.35, next:'confront',
+      successText:'A water-stained ledger in the back of the old archive names exactly what was bound here, and roughly why, in handwriting that gets noticeably shakier toward the end.',
+      failText:'The archive turns out to be mostly rat nests and tax records from a war nobody currently remembers fighting.' },
+    confront:{ label:'Confront the Spirit', flavor:"Knowing a name is supposed to make this part easier. Nobody involved seems especially reassured by that, standing at the boundary stones with a name they're not fully sure they want to say out loud.", type:'roll', cost:10000, chance:0.4, next:'decide',
+      successText:'The spirit finally deigns to speak plainly, once its name is used. It has grievances. It has, as it turns out, a great many grievances, and has clearly been keeping a list.',
+      failText:'The spirit refuses to show itself, and the whole confrontation amounts to several people shouting a name at an empty field.' },
     // A permanent choice, no roll. Lay It to Rest ends Bound Spirit
     // entirely and grants the island a brand-new trait (Blessed); Bind
     // It Deeper keeps Bound Spirit active but doubles both its bonus and
     // its cost (see boundDeeper handling in _applyQuestReward and the
     // weeklyHappinessDrain check in _processIslandTraitsWeekly).
-    decide:{ label:'Decide Its Fate', type:'choice', cost:0, chance:1, choices:[
-      { id:'rest', label:'Lay It to Rest', next:null, clearsTrait:true, addsTrait:'blessed', removesTrait:true },
-      { id:'bind_deeper', label:'Bind It Deeper', next:null, crime:-15, boundDeeper:true }
+    decide:{ label:'Decide Its Fate', flavor:'After generations of resentment, the spirit is willing to hear exactly one offer: let it go, and settle the debt for good, or bind it down harder and just live with an angrier version of the same arrangement.', type:'choice', cost:0, chance:1, choices:[
+      { id:'rest', label:'Lay It to Rest', hint:'Release it and settle the debt for good. What comes next is unknown, but the resentment ends here.', next:null, clearsTrait:true, addsTrait:'blessed', removesTrait:true },
+      { id:'bind_deeper', label:'Bind It Deeper', hint:'Double down on the binding instead. Stronger, but the resentment, and its cost, doubles too.', next:null, crime:-15, boundDeeper:true }
     ]}
   }},
   // ── The Standing Obelisk. Twelve stages defined, only six of them
