@@ -4245,23 +4245,18 @@ const BUILDING_ICONS = {
   // Scaled up ~1.3x around its own center (which already sat close to
   // (12,12)) so it actually fills the token instead of floating small
   // in the middle of it, while staying centered and inside the edges.
-  scallop_shell: '<g transform="translate(12,12) scale(1.3) translate(-12,-12)"><path d="M12 20C6 17 4 12 5 8 5.5 5.5 8 4 12 4 16 4 18.5 5.5 19 8 20 12 18 17 12 20Z" fill="none" stroke-width="1.6" stroke-linejoin="round"/><path d="M12 20L12 5M12 20L8.5 6M12 20L15.5 6M12 20L6.5 9M12 20L17.5 9" fill="none" stroke-width="1" stroke-linecap="round"/><circle cx="12" cy="19.3" r="1.1" fill="none" stroke-width="1.1"/></g>',
-  // Redrawn. The ridge bands on the first pass were nested inside a
-  // scaled <g> and ended up too faint to read at token size. Two full,
-  // separately-drawn spiral shells now (no shared scale transform), each
-  // pointed straight up with its own visible ridge bands. "Coral
-  // Spires" is plural, so two towers rather than one.
-  // Ridge bands bulged more and thickened. The first pass had them
-  // nearly flat, so they barely registered as anything at token size.
-  // Scaled up ~1.5x around its actual bbox center (11.5,9.5. Off-center
-  // in the raw coordinates) and re-centered onto (12,12) in the same
-  // move, so it both fills the token more and stops sitting high/left.
-  twin_spire_shell: '<g transform="translate(12,12) scale(1.5) translate(-11.5,-9.5)">'
-    +'<path d="M7 5c1.1 2.3 1.7 5.1 1.5 7.9-.2 1.8-.9 3-1.5 3.7-.6-.7-1.3-1.9-1.5-3.7C5.3 10.1 5.9 7.3 7 5z" fill="none" stroke-width="1.5" stroke-linejoin="round"/>'
-    +'<path d="M5.7 8.5c.7.7 1.5.7 2.3 0M5.4 11c.9.9 1.9.9 2.9 0M5.1 13.5c1.1 1 2.3 1 3.4 0" fill="none" stroke-width="1.1" stroke-linecap="round"/>'
-    +'<path d="M16 2c1.5 3 2.3 6.7 2 10.5-.25 2.4-1.2 4-2 5-.8-1-1.75-2.6-2-5C13.7 8.7 14.5 5 16 2z" fill="none" stroke-width="1.7" stroke-linejoin="round"/>'
-    +'<path d="M13.7 7.3c1.3.9 2.9.9 4.2 0M13.3 10.4c1.6 1.1 3.6 1.1 5.2 0M12.9 13.8c1.9 1.3 4.1 1.3 6 0" fill="none" stroke-width="1.2" stroke-linecap="round"/>'
-  +'</g>',
+  // Redrawn. The old shell-fan shape read as a scallop/clamshell rather
+  // than coral, and sat too close to Coral Spires' own fan-ridge look.
+  // Now an actual branching stony-coral cluster (a trunk forking into
+  // sub-branches that fork again) with a small fish and a couple of
+  // bubbles beside it, since this is a protected "reservation" rather
+  // than the quarried Coral Spires.
+  scallop_shell: '<path d="M12 20v-6" fill="none" stroke-width="1.6" stroke-linecap="round"/><path d="M12 14c0-2-2-2-3-4M12 14c0-2 2-2 3-4M12 16.7c-1.5-1-3-1-4-.3M12 16.7c1.5-1 3-1 4-.3" fill="none" stroke-width="1.3" stroke-linecap="round"/><path d="M9 10c-.3-1-1-1.6-1.8-1.8M15 10c.3-1 1-1.6 1.8-1.8M8 16.4c-.8-.4-1.6-.3-2.2.2M16 16.4c.8-.4 1.6-.3 2.2.2" fill="none" stroke-width="1" stroke-linecap="round"/><path d="M3 20h18" fill="none" stroke-width="1.1" stroke-linecap="round"/><ellipse cx="18.5" cy="6.2" rx="1.6" ry="1" fill="currentColor" stroke="none"/><path d="M20.1 6.2l1.3-1v2z" fill="currentColor" stroke="none"/><circle cx="5" cy="6" r="0.6" fill="none" stroke-width="0.7"/><circle cx="6.4" cy="4.2" r="0.4" fill="none" stroke-width="0.6"/>',
+  // Redrawn as two thick fluted pillar-coral columns with knobby rounded
+  // tops and horizontal ridge bands, standing on a reef base line — a
+  // quarried/architectural silhouette (columns) rather than the organic
+  // branching cluster now used for the Native Coral Reservation.
+  twin_spire_shell: '<path d="M7 20V9c0-2 .8-3.4 2-4 1.2.6 2 2 2 4v11z" fill="none" stroke-width="1.4" stroke-linejoin="round"/><path d="M7.3 12h3.4M7.2 15.5h3.6M7.1 18h3.8" fill="none" stroke-width="0.85"/><path d="M13 20V6c0-2.4 1-4 2.5-4.8 1.5.8 2.5 2.4 2.5 4.8v14z" fill="none" stroke-width="1.6" stroke-linejoin="round"/><path d="M13.3 9.5h4.4M13.2 13h4.6M13.1 16.5h4.8" fill="none" stroke-width="0.95"/><path d="M4 20h16" fill="none" stroke-width="1.2" stroke-linecap="round"/>',
   // ── 30 new icons, each a few shapes rather than one bare outline ──────
   perfume: '<path d="M9 9h6v9a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2z" fill="none" stroke-width="1.7" stroke-linejoin="round"/><rect x="10" y="4" width="4" height="3" rx="1" fill="none" stroke-width="1.4"/><path d="M11 7v2M13 7v2" fill="none" stroke-width="1.2"/><circle cx="17" cy="8" r="0.6" fill="currentColor" stroke="none"/><circle cx="6.5" cy="11" r="0.5" fill="currentColor" stroke="none"/>',
   candle: '<rect x="9.5" y="9" width="5" height="12" rx="1" fill="none" stroke-width="1.7"/><path d="M12 3c1.5 1.5 2 3 0 5-2-2-1.5-3.5 0-5z" fill="currentColor" stroke="none"/><path d="M9.5 12.5h5" fill="none" stroke-width="1.1"/>',
@@ -4285,7 +4280,12 @@ const BUILDING_ICONS = {
   // Colonial mansion, not just a generic big house: a proper triangular
   // pediment roof, symmetric cross-mullioned windows on both sides, and
   // two portico columns flanking the front door.
-  manor: '<path d="M4 9.3l8-5.3 8 5.3" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><rect x="5" y="9" width="14" height="11" fill="none" stroke-width="1.6" stroke-linejoin="round"/><rect x="6.1" y="10.3" width="2.6" height="2.8" fill="none" stroke-width="0.9"/><line x1="6.1" y1="11.7" x2="8.7" y2="11.7" stroke-width="0.6"/><line x1="7.4" y1="10.3" x2="7.4" y2="13.1" stroke-width="0.6"/><rect x="15.3" y="10.3" width="2.6" height="2.8" fill="none" stroke-width="0.9"/><line x1="15.3" y1="11.7" x2="17.9" y2="11.7" stroke-width="0.6"/><line x1="16.6" y1="10.3" x2="16.6" y2="13.1" stroke-width="0.6"/><path d="M8.2 14.6h7.6v1.3H8.2z" fill="currentColor" stroke="none"/><rect x="10.3" y="15.9" width="3.4" height="4.1" fill="none" stroke-width="1.2"/><line x1="8.6" y1="20" x2="8.6" y2="14.6" stroke-width="1.4" stroke-linecap="round"/><line x1="15.4" y1="20" x2="15.4" y2="14.6" stroke-width="1.4" stroke-linecap="round"/>',
+  // Redrawn, deliberately bigger and grander than the single-block Row
+  // Homes/Cottage Row silhouettes: a tall central hall with its own
+  // pediment roof, flanked by two lower wings spanning nearly the full
+  // token width, plus a columned portico over the entrance — a manor
+  // estate, not just a bigger house.
+  manor: '<path d="M1.5 11l3-3 3 3" fill="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><rect x="2" y="11" width="6" height="9" fill="none" stroke-width="1.3"/><rect x="3.4" y="13.4" width="2" height="2" fill="none" stroke-width="0.85"/><path d="M15.5 11l3-3 3 3" fill="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><rect x="16" y="11" width="6" height="9" fill="none" stroke-width="1.3"/><rect x="18.6" y="13.4" width="2" height="2" fill="none" stroke-width="0.85"/><path d="M8 7l4-4 4 4" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><rect x="8" y="7" width="8" height="13" fill="none" stroke-width="1.6"/><rect x="10.5" y="8.8" width="3" height="2.6" fill="none" stroke-width="0.95"/><path d="M9.5 15h5" fill="none" stroke-width="1" stroke-linecap="round"/><line x1="10" y1="20" x2="10" y2="15" stroke-width="1.1" stroke-linecap="round"/><line x1="14" y1="20" x2="14" y2="15" stroke-width="1.1" stroke-linecap="round"/><rect x="10.8" y="16.2" width="2.4" height="3.8" fill="none" stroke-width="1"/>',
   silo: '<path d="M7 21V9a5 5 0 0 1 10 0v12z" fill="none" stroke-width="1.7" stroke-linejoin="round"/><path d="M7 13h10M7 17h10" fill="none" stroke-width="1"/>',
   tree: '<path d="M12 3c-4 0-6 3-6 6s2 4 6 4 6-1 6-4-2-6-6-6z" fill="none" stroke-width="1.6" stroke-linejoin="round"/><path d="M12 13v8" fill="none" stroke-width="1.6" stroke-linecap="round"/><circle cx="9.5" cy="8" r="0.8" fill="currentColor" stroke="none"/><circle cx="14.5" cy="9" r="0.8" fill="currentColor" stroke="none"/>',
   greenhouse: '<path d="M3 12L12 5l9 7v9H3z" fill="none" stroke-width="1.6" stroke-linejoin="round"/><path d="M12 5v16M3 12h18M6.5 9.5v11.5M17.5 9.5v11.5" fill="none" stroke-width="0.9"/>',
@@ -4637,7 +4637,11 @@ const BESPOKE_BUILDING_ICONS = {
   // Two units instead of three, bigger and bolder throughout (1.6 stroke
   // vs the old 1.3), with a full-height party-wall divider between them
   //. Reads clearly as attached row houses even at a small token size.
-  row_homes: '<path d="M2 10l4-5 4 5" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M2.5 9.5v10h7v-10" fill="none" stroke-width="1.6" stroke-linejoin="round"/><path d="M11 10l4-5 4 5" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M11.5 9.5v10h7v-10" fill="none" stroke-width="1.6" stroke-linejoin="round"/><line x1="9.5" y1="19.4" x2="9.5" y2="9.7" stroke-width="1.1"/><rect x="4.2" y="14.5" width="2.2" height="5" fill="none" stroke-width="1.1"/><rect x="13.2" y="14.5" width="2.2" height="5" fill="none" stroke-width="1.1"/>',
+  // Redrawn as three narrow attached units (matching "Row Homes" being
+  // plural) with a stepped shared roofline instead of two identical
+  // boxes — each unit its own height, full-height party walls between
+  // them, so it reads as an actual terrace rather than a duplex.
+  row_homes: '<path d="M2 10l3-4 3 4" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M2.3 9.7v10.3h5.4v-10.3" fill="none" stroke-width="1.5" stroke-linejoin="round"/><path d="M8 9l3-5 3 5" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M8.3 8.7v11.3h5.4v-11.3" fill="none" stroke-width="1.5" stroke-linejoin="round"/><path d="M14 10l3-4 3 4" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M14.3 9.7v10.3h5.4v-10.3" fill="none" stroke-width="1.5" stroke-linejoin="round"/><line x1="7.6" y1="20" x2="7.6" y2="9.7" stroke-width="1.05"/><line x1="13.6" y1="20" x2="13.6" y2="8.7" stroke-width="1.05"/><rect x="4.1" y="16.2" width="1.7" height="3.8" fill="none" stroke-width="1"/><rect x="10.1" y="15.5" width="1.7" height="4.5" fill="none" stroke-width="1"/><rect x="16.1" y="16.2" width="1.7" height="3.8" fill="none" stroke-width="1"/>',
   // A solid filled scalloped awning band (not a thin outlined zigzag) is
   // the strong, unmistakable "storefront" signature at a glance, instead
   // of getting lost among symmetric windows.
