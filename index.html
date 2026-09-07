@@ -4674,27 +4674,68 @@ const BESPOKE_BUILDING_ICONS = {
   // Dockside Tavern. Added a foam line and rising bubbles inside the
   // mug, plus a wavy waterline at the base — the "dockside" half of the
   // name, not just any tavern's mug.
-  dockside_tavern: '<path d="M5 8h11v9a3 3 0 0 1-3 3H8a3 3 0 0 1-3-3z" fill="none" stroke-width="1.8" stroke-linejoin="round"/><path d="M16 10h2a2 2 0 0 1 0 4h-2" fill="none" stroke-width="1.8"/><path d="M5.5 8c-.8-1.5 0-2.5 1-3.5" fill="none" stroke-width="1.3" stroke-linecap="round"/><path d="M5.6 11.3h9.8" fill="none" stroke-width="1.1" stroke-linecap="round"/><circle cx="9" cy="14.5" r="0.6" fill="currentColor" stroke="none"/><circle cx="12" cy="16" r="0.5" fill="currentColor" stroke="none"/><path d="M3 21c1.4-1.2 2.8-1.2 4.2 0s2.8 1.2 4.2 0 2.8-1.2 4.2 0 2.8 1.2 4.2 0" fill="none" stroke-width="1" stroke-linecap="round"/>',
+  // Full redo (first enrichment pass was judged still too plain). A
+  // proper toast: two mugs clinking with a foam splash between them,
+  // standing on a dock-plank floor — a scene, not one mug with an
+  // accent added on.
+  dockside_tavern: '<path d="M3 10h7v7a2.5 2.5 0 0 1-2.5 2.5h-2A2.5 2.5 0 0 1 3 17z" fill="none" stroke-width="1.6" stroke-linejoin="round" transform="rotate(-12 6.5 13)"/><path d="M10 12h1.6a1.6 1.6 0 0 1 0 3.2H10" fill="none" stroke-width="1.4" transform="rotate(-12 6.5 13)"/><path d="M14 10h7v7a2.5 2.5 0 0 1-2.5 2.5h-2A2.5 2.5 0 0 1 14 17z" fill="none" stroke-width="1.6" stroke-linejoin="round" transform="rotate(12 17.5 13)"/><path d="M21 12h1.6a1.6 1.6 0 0 1 0 3.2H21" fill="none" stroke-width="1.4" transform="rotate(12 17.5 13)"/><path d="M10.5 8l1-2 1 2 1-1.6 1 2" fill="none" stroke-width="1.1" stroke-linecap="round"/><path d="M1 21h22M4 21v-2M9 21v-2M15 21v-2M20 21v-2" fill="none" stroke-width="1.2" stroke-linecap="round"/>',
   // Public Garden. A real bench (legs, not a bare line) and a pair of
   // blossom dots flanking the topiary, alongside the original leaf
   // sprigs.
-  public_garden: '<path d="M4 20h16" fill="none" stroke-width="1.6" stroke-linecap="round"/><circle cx="12" cy="7" r="2.6" fill="none" stroke-width="1.4"/><path d="M12 9.6V16" fill="none" stroke-width="1.3" stroke-linecap="round"/><path d="M7 20v-3.4h10V20" fill="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M7 16.6v-2M17 16.6v-2" fill="none" stroke-width="1.1" stroke-linecap="round"/><path d="M9 6c-1.4 0-2.2-1-2.2-2.2 1.4 0 2.2 1 2.2 2.2zM15 6c1.4 0 2.2-1 2.2-2.2-1.4 0-2.2 1-2.2 2.2z" fill="none" stroke-width="1.1"/><circle cx="6" cy="10.5" r="0.7" fill="currentColor" stroke="none"/><circle cx="18" cy="10.5" r="0.7" fill="currentColor" stroke="none"/>',
+  // Full redo. A two-tier fountain with water fanning up from the
+  // center, flanked by flower dots — a real garden centerpiece instead
+  // of a single topiary ball.
+  // Second pass — the water-jet fan read as a trident/antlers at actual
+  // size. Simplified to a real two-tier fountain: a wide base basin, a
+  // pedestal, a small upper basin, and two short water arcs actually
+  // connecting the two basins (not spraying free in the air).
+  public_garden: '<path d="M4 21h16" fill="none" stroke-width="1.6" stroke-linecap="round"/><ellipse cx="12" cy="19" rx="7.5" ry="1.6" fill="none" stroke-width="1.3"/><path d="M6 19v-1.8h12V19" fill="none" stroke-width="1.3"/><path d="M12 17.2V11" fill="none" stroke-width="1.3" stroke-linecap="round"/><ellipse cx="12" cy="10.4" rx="4" ry="1.1" fill="none" stroke-width="1.2"/><path d="M9 10.4v-1.6h6v1.6" fill="none" stroke-width="1.1"/><path d="M9.3 9.4c-1.6.6-2.4 2-2.2 3.6M14.7 9.4c1.6.6 2.4 2 2.2 3.6" fill="none" stroke-width="1" stroke-linecap="round"/><path d="M12 8.8V6.6" fill="none" stroke-width="1.1" stroke-linecap="round"/>',
   // Smugglers' Den. A rope X-tie across the crate lid and hoop bands on
   // the barrel, on top of the original crate/barrel pair.
-  smugglers_den: '<rect x="4" y="13" width="9" height="7" rx="1" fill="none" stroke-width="1.6"/><path d="M4 13l4.5-4 4.5 4" fill="none" stroke-width="1.3" stroke-linejoin="round"/><path d="M4.8 13.6l7.4 5.8M12.2 13.6l-7.4 5.8" fill="none" stroke-width="0.9"/><rect x="16" y="9" width="3" height="9" rx="0.4" fill="none" stroke-width="1.3" stroke-linejoin="round"/><path d="M16 12h3M16 15h3" fill="none" stroke-width="0.9"/><rect x="16.5" y="6" width="2" height="3" fill="none" stroke-width="1.1"/>',
+  // Full redo — the crate/barrel version read as a plain envelope at
+  // actual size. A hooded dark-lantern (a lit dot inside), a
+  // rope-strapped crate, and a coiled length of rope: the actual gear
+  // of smuggling, not a generic pair of storage containers.
+  // Second pass — the tapered lantern body read as a spray canister,
+  // and the X-strapped crate lid still read as an envelope even redone.
+  // Widened/squared the lantern with real cage bars so it reads as a
+  // lantern, and swapped the crate's X-strap for a single lid seam.
+  // Third pass — the lantern kept reading as a thermos no matter how it
+  // was drawn. Swapped it for a hooded, cloaked figure (a shadowy glint
+  // where the eyes would be) — unambiguous as "someone doing this in
+  // secret" — standing over the crate, with the coiled rope alongside.
+  smugglers_den: '<path d="M7.5 14.5c0-4.5 2-8 4.5-8s4.5 3.5 4.5 8" fill="none" stroke-width="1.3" stroke-linejoin="round"/><path d="M9 14c0-4 1.3-7 3-7s3 3 3 7" fill="none" stroke-width="1.1"/><circle cx="12" cy="9.8" r="0.55" fill="currentColor" stroke="none"/><path d="M7 14.5h10v2.5a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2z" fill="none" stroke-width="1.3" stroke-linejoin="round"/><rect x="2" y="16" width="5.5" height="5.5" rx="0.4" fill="none" stroke-width="1.2"/><path d="M2 18.3h5.5" fill="none" stroke-width="0.9"/><path d="M17 19.3a2 2 0 1 1 4 0 1.5 1.5 0 1 1-3 0 1 1 0 1 1 2 0" fill="none" stroke-width="1"/>',
   // Backstreet Casino. Full real pip layouts (a 5-face and a 3-face)
   // instead of 4 loose scattered dots — actually reads as two dice now.
   backstreet_casino: '<rect x="4" y="10" width="9" height="9" rx="1.5" fill="none" stroke-width="1.6"/><rect x="11" y="4" width="9" height="9" rx="1.5" fill="none" stroke-width="1.6"/><circle cx="6.6" cy="12.6" r="0.65" fill="currentColor" stroke="none"/><circle cx="10.4" cy="12.6" r="0.65" fill="currentColor" stroke="none"/><circle cx="6.6" cy="16.4" r="0.65" fill="currentColor" stroke="none"/><circle cx="10.4" cy="16.4" r="0.65" fill="currentColor" stroke="none"/><circle cx="8.5" cy="14.5" r="0.65" fill="currentColor" stroke="none"/><circle cx="13.6" cy="6.6" r="0.65" fill="currentColor" stroke="none"/><circle cx="17.4" cy="6.6" r="0.65" fill="currentColor" stroke="none"/><circle cx="17.4" cy="10.4" r="0.65" fill="currentColor" stroke="none"/>',
   // Vice Den. An olive-on-a-pick sitting inside the glass, alongside
   // the existing sparkle marks.
-  vice_den: '<path d="M5 5h14l-7 8z" fill="none" stroke-width="1.6" stroke-linejoin="round"/><path d="M12 13v6M9 19h6" fill="none" stroke-width="1.5" stroke-linecap="round"/><circle cx="9.5" cy="7.2" r="1" fill="none" stroke-width="1.1"/><path d="M9.5 6.2v-2.4" fill="none" stroke-width="1"/><path d="M16 4c.8.8.8 1.6 0 2.4-.8-.8-.8-1.6 0-2.4zM18.2 6.2c.6.6.6 1.2 0 1.8-.6-.6-.6-1.2 0-1.8z" fill="none" stroke-width="1"/>',
+  // Full redo. The martini stays (with its olive garnish), joined by a
+  // fanned playing card with a suit pip and a curling smoke wisp — a
+  // small collage of vices instead of one glass alone.
+  vice_den: '<path d="M4 4h11l-5.5 6.5z" fill="none" stroke-width="1.5" stroke-linejoin="round"/><path d="M9.5 10.5v6M7 16.5h5" fill="none" stroke-width="1.3" stroke-linecap="round"/><circle cx="7.2" cy="6" r="0.9" fill="none" stroke-width="1"/><path d="M7.2 5.1v-2" fill="none" stroke-width="0.9"/><path d="M13 12l6-2 1.5 5-6 2z" fill="none" stroke-width="1.2" stroke-linejoin="round"/><path d="M13.5 14l5-1.6" fill="none" stroke-width="0.8"/><circle cx="16" cy="13.5" r="0.6" fill="currentColor" stroke="none"/><path d="M17.5 4c1 .6 1 1.6 0 2.2 1 .6 1 1.6 0 2.2" fill="none" stroke-width="1" stroke-linecap="round"/>',
   // Beer Garden. A foam line inside the (smaller) mug and a second,
   // vine-connected hop leaf next to the original one.
-  beer_garden: '<path d="M5 9h9v8a3 3 0 0 1-3 3H8a3 3 0 0 1-3-3z" fill="none" stroke-width="1.7" stroke-linejoin="round"/><path d="M14 11h2a2 2 0 0 1 0 4h-2" fill="none" stroke-width="1.5"/><path d="M5.4 12h8.2" fill="none" stroke-width="1" stroke-linecap="round"/><path d="M17 5c1.6 0 2.6 1 2.6 2.6-1.6 0-2.6-1-2.6-2.6z" fill="none" stroke-width="1.2" stroke-linejoin="round"/><path d="M20.4 4.4c1 0 1.6.6 1.6 1.6-1 0-1.6-.6-1.6-1.6z" fill="none" stroke-width="1"/><path d="M17 5v6" fill="none" stroke-width="1" stroke-linecap="round"/>',
+  // Full redo. A trestle table with two full mugs on it, under a
+  // leafy hop-vine trellis arching overhead — an actual beer garden,
+  // not a single mug with a leaf.
+  beer_garden: '<path d="M3 6.5c3-2.4 15-2.4 18 0" fill="none" stroke-width="1.3" stroke-linecap="round"/><path d="M5 6.5c1 1.8 1 3.6-.4 5.4M19 6.5c-1 1.8-1 3.6.4 5.4M12 5.3c0 2.2-.5 3.6-.5 5.4" fill="none" stroke-width="1" stroke-linecap="round"/><path d="M3 16h18M3 16l-1.4 4.6M21 16l1.4 4.6M6 16l-.9 4.6M18 16l.9 4.6" fill="none" stroke-width="1.2" stroke-linecap="round"/><path d="M8 11h3.2v4.2a1.2 1.2 0 0 1-1.2 1.2H9.2A1.2 1.2 0 0 1 8 15.2z" fill="none" stroke-width="1.2" stroke-linejoin="round"/><path d="M13.4 11h3.2v4.2a1.2 1.2 0 0 1-1.2 1.2h-0.8a1.2 1.2 0 0 1-1.2-1.2z" fill="none" stroke-width="1.2" stroke-linejoin="round"/>',
   // The Fighting Pit. A small spark/star burst in the corner — a bit
   // of action instead of a
   // static pair of gloves.
-  fighting_pit: '<path d="M6 12V8a3 3 0 0 1 6 0v4" fill="none" stroke-width="1.6" stroke-linecap="round"/><path d="M6 12h9a3 3 0 0 1 3 3v1a5 5 0 0 1-5 5H10a5 5 0 0 1-5-5v-2a2 2 0 0 1 1-2z" fill="none" stroke-width="1.6" stroke-linejoin="round"/><path d="M9 8v4M12 8v4" fill="none" stroke-width="1.1"/><path d="M19.5 5.5l.6 1.6 1.6.6-1.6.6-.6 1.6-.6-1.6-1.6-.6 1.6-.6z" fill="currentColor" stroke="none"/>',
+  // Full redo. The glove stays (it reads fine on its own), now set
+  // inside an actual ring — an elliptical floor with rope-post ticks —
+  // instead of floating with just a spark next to it.
+  // Second pass — the ring-plus-glove combo read as a hanging lamp
+  // (the thumb loop as a handle, the mitt as a shade). Two gloves
+  // bumping fists instead, with an impact star between them: unambiguous
+  // as boxing, and inherently symmetric so nothing reads as a handle.
+  // Third pass — two side-by-side gloves with their thumb loops on top
+  // read as a pair of glasses. Back to the original single glove (the
+  // one shape here that always read fine), enriched with motion lines
+  // trailing behind it — a punch already thrown — instead of a second
+  // glove or a ring that both created a different illusion.
+  fighting_pit: '<path d="M6 12V8a3 3 0 0 1 6 0v4" fill="none" stroke-width="1.6" stroke-linecap="round"/><path d="M6 12h9a3 3 0 0 1 3 3v1a5 5 0 0 1-5 5H10a5 5 0 0 1-5-5v-2a2 2 0 0 1 1-2z" fill="none" stroke-width="1.6" stroke-linejoin="round"/><path d="M9 8v4M12 8v4" fill="none" stroke-width="1.1"/><path d="M2 9.5h3M1.5 12.5h3.5M2 15.5h3" fill="none" stroke-width="1.1" stroke-linecap="round"/><path d="M19.5 4.2l.6 1.6 1.6.6-1.6.6-.6 1.6-.6-1.6-1.6-.6 1.6-.6z" fill="currentColor" stroke="none"/>',
   grand_casino_resort: '<circle cx="12" cy="12" r="8" fill="none" stroke-width="1.6"/><circle cx="12" cy="12" r="2.3" fill="none" stroke-width="1.3"/><path d="M12 4v2.3M12 17.7V20M4 12h2.3M17.7 12H20" fill="none" stroke-width="1.1" stroke-linecap="round"/>',
   bounty_board: '<circle cx="12" cy="12" r="8" fill="none" stroke-width="1.6"/><circle cx="12" cy="12" r="4.5" fill="none" stroke-width="1.4"/><circle cx="12" cy="12" r="1" fill="currentColor" stroke="none"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3" fill="none" stroke-width="1.2" stroke-linecap="round"/>',
   chart_press: '<path d="M4 6a2 2 0 0 1 2-2h13v16H6a2 2 0 0 1-2-2z" fill="none" stroke-width="1.5" stroke-linejoin="round"/><path d="M19 4v16" fill="none" stroke-width="1.4"/><path d="M12 8v8M8 12h8" fill="none" stroke-width="1" stroke-linecap="round"/><path d="M12 9l1 2-1 2-1-2z" fill="currentColor" stroke="none"/>',
@@ -4738,7 +4779,10 @@ const BESPOKE_BUILDING_ICONS = {
   // their shared-key siblings AND richer than the base shape alone.
   // Open-Air Theater. The classic comedy/tragedy mask pair, now with a
   // curtain swag arcing over the top — a stage, not just two masks.
-  open_air_theater: '<path d="M3 9c0-3 3-5 5-5" fill="none" stroke-width="1.3" stroke-linecap="round"/><path d="M21 9c0-3-3-5-5-5" fill="none" stroke-width="1.3" stroke-linecap="round"/><path d="M4 6c0-2 2-3 4.2-3s4.2 1 4.2 3v5.5c0 2.6-1.9 4.2-4.2 4.2S4 14.1 4 11.5z" fill="none" stroke-width="1.4" stroke-linejoin="round"/><circle cx="6.4" cy="6.3" r="0.5" fill="currentColor" stroke="none"/><circle cx="9.2" cy="6.3" r="0.5" fill="currentColor" stroke="none"/><path d="M6.2 9.6q1.7 1.8 3.4 0" fill="none" stroke-width="1" stroke-linecap="round"/><path d="M11.6 11.3c0-2 1.9-3 4.2-3s4.2 1 4.2 3v5.5c0 2.6-1.9 4.2-4.2 4.2s-4.2-1.6-4.2-4.2z" fill="var(--bg-highlight)" stroke-width="1.4" stroke-linejoin="round"/><circle cx="14" cy="11.6" r="0.5" fill="currentColor" stroke="none"/><circle cx="16.8" cy="11.6" r="0.5" fill="currentColor" stroke="none"/><path d="M13.8 17.1q1.7-1.8 3.4 0" fill="none" stroke-width="1" stroke-linecap="round"/>',
+  // Full redo. The comedy/tragedy pair now sits inside an actual
+  // proscenium arch with footlight dots along the stage edge, instead
+  // of just floating with a curtain swag over them.
+  open_air_theater: '<path d="M2 21V9c0-4.4 4.5-8 10-8s10 3.6 10 8v12" fill="none" stroke-width="1.4" stroke-linejoin="round"/><path d="M2 21h20" fill="none" stroke-width="1.6" stroke-linecap="round"/><circle cx="5" cy="21" r="0.6" fill="currentColor" stroke="none"/><circle cx="9" cy="21" r="0.6" fill="currentColor" stroke="none"/><circle cx="15" cy="21" r="0.6" fill="currentColor" stroke="none"/><circle cx="19" cy="21" r="0.6" fill="currentColor" stroke="none"/><path d="M6 9.5c0-1.8 1.6-2.8 3.4-2.8s3.4 1 3.4 2.8v4c0 2-1.5 3.2-3.4 3.2S6 15.5 6 13.5z" fill="none" stroke-width="1.3" stroke-linejoin="round"/><circle cx="7.9" cy="9.8" r="0.45" fill="currentColor" stroke="none"/><circle cx="10.1" cy="9.8" r="0.45" fill="currentColor" stroke="none"/><path d="M7.7 12.5q1.5 1.5 3 0" fill="none" stroke-width="0.9" stroke-linecap="round"/><path d="M11.2 13.5c0-1.8 1.6-2.8 3.4-2.8s3.4 1 3.4 2.8v4c0 2-1.5 3.2-3.4 3.2s-3.4-1.2-3.4-3.2z" fill="var(--bg-highlight)" stroke-width="1.3" stroke-linejoin="round"/><circle cx="13.1" cy="13.8" r="0.45" fill="currentColor" stroke="none"/><circle cx="15.3" cy="13.8" r="0.45" fill="currentColor" stroke="none"/><path d="M12.9 18q1.5-1.5 3 0" fill="none" stroke-width="0.9" stroke-linecap="round"/>',
   // Music Hall. The base drum plus two real eighth-notes (stem, flag,
   // notehead) beside it, instead of the plain drum alone.
   music_hall: '<ellipse cx="9" cy="7" rx="6" ry="2.6" fill="none" stroke-width="1.5"/><path d="M3 7v6c0 1.4 2.7 2.6 6 2.6s6-1.2 6-2.6V7" fill="none" stroke-width="1.5"/><path d="M5.5 4.7l7 5M12.5 4.7l-7 5" fill="none" stroke-width="1" stroke-linecap="round"/><path d="M17 9v8.5" fill="none" stroke-width="1.4" stroke-linecap="round"/><circle cx="16" cy="18" r="1.6" fill="none" stroke-width="1.2"/><path d="M17 9c1.6-.4 2.6.4 2.6 1.8" fill="none" stroke-width="1"/><path d="M20 5.5v8.5" fill="none" stroke-width="1.4" stroke-linecap="round"/><circle cx="19" cy="14.5" r="1.6" fill="none" stroke-width="1.2"/><path d="M20 5.5c1.6-.4 2.6.4 2.6 1.8" fill="none" stroke-width="1"/>',
