@@ -4163,7 +4163,10 @@ function _renderBuildingCard(isl, entry, idx, b){
           const running = active.find(function(cl){ return cl.id===lineId; });
           if(running){
             return '<div class="edict-row"><div class="edict-row-top"><div class="edict-row-title">'+line.name+'</div></div>'
-              +'<div class="edict-row-status active">Under contract. '+running.weeksLeft+' week'+(running.weeksLeft===1?'':'s')+' left, then +'+line.payout.toLocaleString()+' gp</div></div>';
+              +'<div class="edict-row-status active">'+(running.weeksLeft>0
+                ? 'Under contract, full effect. '+running.weeksLeft+' week'+(running.weeksLeft===1?'':'s')+' left, then a fading week and +'+line.payout.toLocaleString()+' gp'
+                : 'Final week — winding down at half strength. Payout landed: +'+line.payout.toLocaleString()+' gp')
+              +'</div></div>';
           }
           const canPetition = _canPetitionCruiseLine(isl, lineId);
           return '<div class="edict-row"><div class="edict-row-top"><div class="edict-row-title">'+line.name+'</div>'
@@ -5644,14 +5647,15 @@ function _activeTraitEffects(isl){
 // two copies of the same line simultaneously (each occupies its own
 // slot until it completes, so a second petition for an already-running
 // line is simply refused). Petitioning is a cost+chance roll, the same
-// shape as a quest stage. A successful petition locks in for
-// CRUISE_LINE_WEEKS: every one of that line's effects (including
-// Bacchanal Express's crime cost) fades in a straight line from full
-// strength the week it's issued down toward nothing by its last week,
-// at which point it's replaced by one lump-sum payout (no lasting
-// trait, unlike a quest chain's blessing_of_* endings) and the slot
-// frees up for a fresh petition, including the same line again.
+// shape as a quest stage. A successful petition runs CRUISE_LINE_WEEKS
+// at full, flat strength (Bacchanal Express's +24 Crime is +24 every
+// one of those weeks, not fading) — then one extra fading week where
+// that same bonus/malus applies at CRUISE_LINE_TAPER_FRACTION strength
+// AND the fixed lump-sum payout lands in that same week (no lasting
+// trait, unlike a quest chain's blessing_of_* endings). The slot frees
+// up right after, for a fresh petition, including the same line again.
 const CRUISE_LINE_WEEKS = 4;
+const CRUISE_LINE_TAPER_FRACTION = 0.5;
 const CRUISE_LINES = {
   gilded_compass: { name:'The Gilded Compass', pitch:'Old-money luxury circuit. Slow, steady, and extremely well-dressed.',
     petitionCost:35000, petitionChance:0.6, payout:60000,
@@ -5669,20 +5673,19 @@ const CRUISE_LINES = {
     petitionCost:42000, petitionChance:0.5, payout:80000,
     effects:{ gpBonusPercent:10, categoryGpMultiplier:{ cat:'recreational', mult:2 }, crime:24 } }
 };
-// Every numeric field degrades linearly with however much of the
-// 4-week run is left (weeksLeft/CRUISE_LINE_WEEKS), the SAME direction
-// for a bonus (Gilded Compass's +14% GP fading toward +0%) as for a
-// cost (Bacchanal Express's +24 Crime fading toward +0). Multipliers
-// degrade toward 1 (no effect) rather than toward 0, so a
-// categoryGpMultiplier of 2 fades toward "no multiplier" instead of
-// toward "zero income". Shaped exactly like a trait's own .effects
-// object so every consumer below can just concat this onto
-// _activeTraitEffects(isl) instead of needing its own separate pass.
+// Full strength (frac 1) for every flat operating week; only its
+// last, fading week (cl.weeksLeft<=0, see _processCruiseLinesWeekly)
+// drops to CRUISE_LINE_TAPER_FRACTION. Multipliers taper toward 1 (no
+// effect) rather than toward 0, so a categoryGpMultiplier of 2 fades
+// toward "no multiplier" instead of toward "zero income". Shaped
+// exactly like a trait's own .effects object so every consumer below
+// can just concat this onto _activeTraitEffects(isl) instead of
+// needing its own separate pass.
 function _activeCruiseLineEffects(isl){
   return (isl.cruiseLines||[]).map(function(cl){
     const line = CRUISE_LINES[cl.id];
     if(!line) return null;
-    const frac = Math.max(0, Math.min(1, cl.weeksLeft / CRUISE_LINE_WEEKS));
+    const frac = cl.weeksLeft>0 ? 1: CRUISE_LINE_TAPER_FRACTION;
     const src = line.effects;
     const out = {};
     if(src.gpBonusPercent) out.gpBonusPercent = src.gpBonusPercent * frac;
@@ -7980,7 +7983,7 @@ function _petitionCruiseLine(islId, lineId, idx){
   const success = Math.random() < line.petitionChance;
   if(success){
     isl.cruiseLines.push({ id: lineId, weeksLeft: CRUISE_LINE_WEEKS });
-    _showAlertModal(line.name+' accepts the petition. The contract runs '+CRUISE_LINE_WEEKS+' weeks, then pays out.');
+    _showAlertModal(line.name+' accepts the petition. '+CRUISE_LINE_WEEKS+' weeks at full effect, then one fading week that also pays out.');
   } else {
     _showAlertModal(line.name+' turns the petition down this time. The '+line.petitionCost.toLocaleString()+' gp is spent regardless. Nothing\'s stopping another attempt next week.');
   }
@@ -7992,14 +7995,20 @@ function _confirmPetitionCruiseLine(islId, lineId, idx){
   const isl = islands.find(function(i){ return i.id===islId; });
   const line = CRUISE_LINES[lineId];
   if(!isl || !line || !_canPetitionCruiseLine(isl, lineId)) return;
-  _showConfirmModal('Petition '+line.name+'? Costs '+line.petitionCost.toLocaleString()+' gp, '+Math.round(line.petitionChance*100)+'% chance to succeed. Runs '+CRUISE_LINE_WEEKS+' weeks if accepted, degrading toward one final payout of '+line.payout.toLocaleString()+' gp.', function(){ _petitionCruiseLine(islId, lineId, idx); });
+  _showConfirmModal('Petition '+line.name+'? Costs '+line.petitionCost.toLocaleString()+' gp, '+Math.round(line.petitionChance*100)+'% chance to succeed. Runs '+CRUISE_LINE_WEEKS+' weeks at full effect if accepted, then one fading week that pays out '+line.payout.toLocaleString()+' gp.', function(){ _petitionCruiseLine(islId, lineId, idx); });
 }
 // Weekly tick, same pipeline slot as _processIslandTraitsWeekly (see
-// simulateWeek). Decrements first, same order Town Hall Edicts use, so
-// every other consumer of _activeCruiseLineEffects this same week sees
-// the already-ticked weeksLeft. A contract hitting 0 pays out and
-// drops out of isl.cruiseLines in the same tick, so its final week
-// contributes no lingering bonus, just the lump sum.
+// simulateWeek). Decrements first, same order Town Hall Edicts use.
+// Two-phase lifecycle: weeksLeft counts down flat through the
+// CRUISE_LINE_WEEKS operating weeks (full-strength effects the whole
+// way), then the tick that brings it to 0 is the fading week itself —
+// the payout is granted right there AND the contract is deliberately
+// kept in isl.cruiseLines (at weeksLeft 0) for the rest of that same
+// simulateWeek call, so _activeCruiseLineEffects still applies its
+// tapered bonus/malus to that week's own Bastion income further down
+// the pipeline. Only the NEXT week's tick (the first branch below)
+// actually drops it, now that its one fading week has already played
+// out and been paid.
 function _processCruiseLinesWeekly(isl){
   const events = [];
   const active = isl.cruiseLines||[];
@@ -8007,19 +8016,18 @@ function _processCruiseLinesWeekly(isl){
   active.forEach(function(cl){
     const line = CRUISE_LINES[cl.id];
     if(!line) return;
+    if(cl.weeksLeft<=0) return; // already had its fading week + payout last tick
     cl.weeksLeft--;
     if(cl.weeksLeft<=0){
       _ledger.gold = (_ledger.gold||0) + line.payout;
-      events.push({ island: isl.name, building: line.name, action:'Cruise Contract Complete', success:true, text:line.name+'\'s contract wraps up. Final payout: +'+line.payout.toLocaleString()+' gp.', rewards:[{gold:line.payout}] });
-      return;
-    }
-    // This week's degraded chance of a random incident (Star-Chaser
-    // Express only), scaled by however much strength the contract has
-    // left after this week's tick.
-    if(line.effects.weeklyEventChance){
-      const frac = cl.weeksLeft/CRUISE_LINE_WEEKS;
+      events.push({ island: isl.name, building: line.name, action:'Cruise Contract Complete', success:true, text:line.name+' winds down. Its last week runs at half strength, and the final payout lands: +'+line.payout.toLocaleString()+' gp.', rewards:[{gold:line.payout}] });
+    } else if(line.effects.weeklyEventChance && Math.random() < line.effects.weeklyEventChance.chance){
+      // Random incident chance (Star-Chaser Express only) applies at
+      // full strength every one of the flat operating weeks, same as
+      // every other effect — no roll at all during the fading week,
+      // since that's already handled by the branch above.
       const ev = line.effects.weeklyEventChance;
-      if(Math.random() < ev.chance*frac && ev.kind==='crimeSpike'){
+      if(ev.kind==='crimeSpike'){
         isl.eventCrimeMod = (isl.eventCrimeMod||0) + ev.amount;
         events.push({ island: isl.name, building: line.name, action:'Cruise Incident', success:false, text:line.name+'\'s passengers leave more than just their money behind. (+'+ev.amount+' Crime, decays over time)', rewards:[] });
       }
