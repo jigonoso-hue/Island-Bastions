@@ -4296,6 +4296,35 @@ const BUILDING_ICONS = {
   scroll: '<path d="M6 4h10a2 2 0 0 1 2 2v13a2 2 0 0 0 2 2M6 4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h12" fill="none" stroke-width="1.5" stroke-linejoin="round"/><path d="M8 9h7M8 12.5h7" fill="none" stroke-width="1.2" stroke-linecap="round"/>',
   ship: '<path d="M4 15h16l-2 5H6z" fill="none" stroke-width="1.6" stroke-linejoin="round"/><path d="M12 15V4" fill="none" stroke-width="1.6" stroke-linecap="round"/><path d="M12 5l6 8H12zM12 6l-5 7h5z" fill="none" stroke-width="1.2" stroke-linejoin="round"/>',
   drum: '<ellipse cx="12" cy="8" rx="7" ry="3" fill="none" stroke-width="1.6"/><path d="M5 8v8c0 1.7 3.1 3 7 3s7-1.3 7-3V8" fill="none" stroke-width="1.6"/><path d="M8 5l10 10M18 5L8 15" fill="none" stroke-width="1.1" stroke-linecap="round"/>',
+  // The 4 Expansion buildings used to split just two looks between them:
+  // Boardwalk and Wharf Extension both fell into the shared 'plank'
+  // rule (parallel deck boards — a fair read for Boardwalk, but Wharf
+  // Extension is pilings-over-water, not a flat promenade), while
+  // Hillside Terracing and Land Reclamation Project had no rule of their
+  // own at all and both fell all the way through to the plain generic
+  // CAT_ICONS.expansion glyph. Three new dedicated icons below give each
+  // of the 4 its own silhouette; Boardwalk keeps 'plank' (still the
+  // right shape for it) now that Wharf Extension has somewhere else to
+  // go.
+  // Wharf Extension. A side-view pier: a deck line on posts of
+  // deliberately uneven length (still "under construction"/extending
+  // outward, not a finished flat structure) over open water, instead of
+  // Boardwalk's flat parallel planks.
+  pier: '<path d="M2 8h20" fill="none" stroke-width="1.8" stroke-linecap="round"/>'
+    +'<path d="M5 8v8M10.5 8v5.5M15.5 8v8M20 8v5.5" fill="none" stroke-width="1.4" stroke-linecap="round"/>'
+    +'<path d="M2 19c1.6-1.4 3.2-1.4 4.8 0s3.2 1.4 4.8 0 3.2-1.4 4.8 0 3.2 1.4 4.8 0" fill="none" stroke-width="1.2" stroke-linecap="round"/>',
+  // Hillside Terracing. An ascending staircase outline with a short
+  // retaining-wall tick at each step, reading as cut, level terraces
+  // climbing a slope rather than a natural hillside.
+  terraces: '<path d="M2 20h5v-4.3h5v-4.3h5v-4.3h5" fill="none" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/>'
+    +'<path d="M2 20v-2M7 15.7v-2M12 11.4v-2M17 7.1v-2" fill="none" stroke-width="1.1" stroke-linecap="round"/>',
+  // Land Reclamation Project. A built-up embankment (trapezoid, with two
+  // internal fill-layer lines suggesting packed-in sediment) rising
+  // above open water, reading as land freshly filled in rather than a
+  // dock or a natural rise.
+  landfill: '<path d="M2 19c1.6-1.4 3.2-1.4 4.8 0s3.2 1.4 4.8 0 3.2-1.4 4.8 0 3.2 1.4 4.8 0" fill="none" stroke-width="1.2" stroke-linecap="round"/>'
+    +'<path d="M4.5 19v-3.5L9.5 9h5l5 6.5V19" fill="none" stroke-width="1.8" stroke-linejoin="round"/>'
+    +'<path d="M4.5 15.5h15M7.3 12.2h9.4" fill="none" stroke-width="1.1"/>',
 };
 const BUILDING_ICON_RULES = [
   // Newer, more specific icons get first pick. Checked before the older,
@@ -4308,6 +4337,9 @@ const BUILDING_ICON_RULES = [
   [/provisions|pantry/, 'crate'],
   [/smoke_works/, 'chimney'],
   [/bomb_deck|explos/, 'bomb'],
+  [/wharf_extension/, 'pier'],
+  [/hillside_terracing/, 'terraces'],
+  [/land_reclamation/, 'landfill'],
   [/oil_derrick/, 'oilrig'],
   [/gilded_table|captains_table/, 'table'],
   [/runic|wardstone|warding|vigil_warden/, 'rune'],
