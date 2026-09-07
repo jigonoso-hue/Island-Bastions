@@ -698,7 +698,7 @@ input[type=text]:focus,input[type=number]:focus,textarea:focus,select:focus{outl
    for its absolutely-positioned children per the CSS spec, so the badge
    was silently jumping to a different anchor the instant hover kicked in
    instead of moving in lockstep with the icon underneath it. */
-.building-token-icon{position:relative;width:70px;height:70px;border-radius:15px;background:var(--bg-highlight);border:1.5px solid var(--border-gold);display:flex;align-items:center;justify-content:center;transition:border-color .12s ease,transform .12s ease;}
+.building-token-icon{position:relative;width:78px;height:78px;border-radius:16px;background:var(--bg-highlight);border:1.5px solid var(--border-gold);display:flex;align-items:center;justify-content:center;transition:border-color .12s ease,transform .12s ease;}
 .building-token:hover.building-token-icon{border-color:var(--text-gold);transform:translateY(-2px);}
 /* Unowned islands. The token still shows what's built, it just isn't
    yours to open. No hover lift, no pointer cursor pretending it's a
@@ -711,7 +711,7 @@ input[type=text]:focus,input[type=number]:focus,textarea:focus,select:focus{outl
    ordinary text color instead of the token's own gold, rendering flat
    black no matter the theme and nearly invisible against a dark-mode
    token. */
-.building-token-icon svg{width:38px;height:38px;stroke:var(--text-gold);color:var(--text-gold);}
+.building-token-icon svg{width:48px;height:48px;stroke:var(--text-gold);color:var(--text-gold);}
 /* Trait-locked/wildcard buildings. A glittering star instead of an
    ordinary icon: the star itself gently glows, and three little sparkle
    dots twinkle around it on staggered timers so it never looks static. */
@@ -4251,12 +4251,24 @@ const BUILDING_ICONS = {
   // sub-branches that fork again) with a small fish and a couple of
   // bubbles beside it, since this is a protected "reservation" rather
   // than the quarried Coral Spires.
-  scallop_shell: '<path d="M12 20v-6" fill="none" stroke-width="1.6" stroke-linecap="round"/><path d="M12 14c0-2-2-2-3-4M12 14c0-2 2-2 3-4M12 16.7c-1.5-1-3-1-4-.3M12 16.7c1.5-1 3-1 4-.3" fill="none" stroke-width="1.3" stroke-linecap="round"/><path d="M9 10c-.3-1-1-1.6-1.8-1.8M15 10c.3-1 1-1.6 1.8-1.8M8 16.4c-.8-.4-1.6-.3-2.2.2M16 16.4c.8-.4 1.6-.3 2.2.2" fill="none" stroke-width="1" stroke-linecap="round"/><path d="M3 20h18" fill="none" stroke-width="1.1" stroke-linecap="round"/><ellipse cx="18.5" cy="6.2" rx="1.6" ry="1" fill="currentColor" stroke="none"/><path d="M20.1 6.2l1.3-1v2z" fill="currentColor" stroke="none"/><circle cx="5" cy="6" r="0.6" fill="none" stroke-width="0.7"/><circle cx="6.4" cy="4.2" r="0.4" fill="none" stroke-width="0.6"/>',
+  // Redrawn again, bigger/busier now that the token itself renders
+  // larger (48px, up from 38px). A full five-branch staghorn coral
+  // fanning up from a reef-mound base, each branch capped with a solid
+  // knob (the actual coral polyp), instead of the earlier thin two-fork
+  // twig that read as a wilted plant.
+  scallop_shell: '<path d="M12 20c-1-5-3-8-6-11" fill="none" stroke-width="1.5" stroke-linecap="round"/><circle cx="6" cy="9" r="0.95" fill="currentColor" stroke="none"/><path d="M12 20c-.5-6-1.5-10-2-14" fill="none" stroke-width="1.5" stroke-linecap="round"/><circle cx="10" cy="6" r="0.95" fill="currentColor" stroke="none"/><path d="M12 20c.2-7 .2-12 .5-16" fill="none" stroke-width="1.6" stroke-linecap="round"/><circle cx="12.5" cy="4" r="0.95" fill="currentColor" stroke="none"/><path d="M12 20c.7-6 2-10 3-13.5" fill="none" stroke-width="1.5" stroke-linecap="round"/><circle cx="15" cy="6.5" r="0.95" fill="currentColor" stroke="none"/><path d="M12 20c1-5 3.5-8 6-10.5" fill="none" stroke-width="1.5" stroke-linecap="round"/><circle cx="18" cy="9.5" r="0.95" fill="currentColor" stroke="none"/><path d="M4 20.3c2-1.5 4-1.5 5-.6 1.3-1.2 3.4-1.2 4.7 0 1-1.3 4-1.3 5 0 1.3-1 2.7-1 3.3.3" fill="none" stroke-width="1.1" stroke-linecap="round"/><ellipse cx="20" cy="4.4" rx="1.3" ry="0.85" fill="currentColor" stroke="none"/><path d="M21.2 4.4l1.1-.85v1.7z" fill="currentColor" stroke="none"/><circle cx="4" cy="5" r="0.55" fill="none" stroke-width="0.65"/><circle cx="5.2" cy="3.3" r="0.4" fill="none" stroke-width="0.6"/>',
   // Redrawn as two thick fluted pillar-coral columns with knobby rounded
   // tops and horizontal ridge bands, standing on a reef base line — a
   // quarried/architectural silhouette (columns) rather than the organic
   // branching cluster now used for the Native Coral Reservation.
-  twin_spire_shell: '<path d="M7 20V9c0-2 .8-3.4 2-4 1.2.6 2 2 2 4v11z" fill="none" stroke-width="1.4" stroke-linejoin="round"/><path d="M7.3 12h3.4M7.2 15.5h3.6M7.1 18h3.8" fill="none" stroke-width="0.85"/><path d="M13 20V6c0-2.4 1-4 2.5-4.8 1.5.8 2.5 2.4 2.5 4.8v14z" fill="none" stroke-width="1.6" stroke-linejoin="round"/><path d="M13.3 9.5h4.4M13.2 13h4.6M13.1 16.5h4.8" fill="none" stroke-width="0.95"/><path d="M4 20h16" fill="none" stroke-width="1.2" stroke-linecap="round"/>',
+  // Redrawn again, bigger/busier now that the token renders larger.
+  // The old plain straight-sided columns with thin ridge lines read as
+  // a bar chart rather than coral. Now two rounded-top pillar-coral
+  // towers with actual polyp-texture dots dappearing to bump out of
+  // the surface, a reef-mound base, and a starfish + bubble beside them
+  // — clearly distinct from the branching-twig look of the Native
+  // Coral Reservation icon.
+  twin_spire_shell: '<path d="M4.5 20V12.5a2 2 0 0 1 4 0V20z" fill="none" stroke-width="1.5" stroke-linejoin="round"/><circle cx="5.2" cy="14.5" r="0.5" fill="currentColor" stroke="none"/><circle cx="6.8" cy="16.5" r="0.5" fill="currentColor" stroke="none"/><circle cx="5.2" cy="18.3" r="0.5" fill="currentColor" stroke="none"/><path d="M11 20V9a2.5 2.5 0 0 1 5 0v11z" fill="none" stroke-width="1.7" stroke-linejoin="round"/><circle cx="12" cy="11.5" r="0.55" fill="currentColor" stroke="none"/><circle cx="14" cy="13.5" r="0.55" fill="currentColor" stroke="none"/><circle cx="12" cy="15.8" r="0.55" fill="currentColor" stroke="none"/><circle cx="14" cy="18" r="0.55" fill="currentColor" stroke="none"/><path d="M2 20.3c2.5-1.5 5-1.5 6.3-.5 1.5-1.3 4-1.3 5.5 0 1.7-1.3 4.2-1.3 5.7.2 1.3-1 2.7-1 3.5.3" fill="none" stroke-width="1.1" stroke-linecap="round"/><path d="M19.3 3.6l.5 1.3 1.4.15-1.05.95.3 1.35-1.15-.75-1.15.75.3-1.35-1.05-.95 1.4-.15z" fill="currentColor" stroke="none"/><circle cx="18" cy="8.5" r="0.5" fill="none" stroke-width="0.6"/>',
   // ── 30 new icons, each a few shapes rather than one bare outline ──────
   perfume: '<path d="M9 9h6v9a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2z" fill="none" stroke-width="1.7" stroke-linejoin="round"/><rect x="10" y="4" width="4" height="3" rx="1" fill="none" stroke-width="1.4"/><path d="M11 7v2M13 7v2" fill="none" stroke-width="1.2"/><circle cx="17" cy="8" r="0.6" fill="currentColor" stroke="none"/><circle cx="6.5" cy="11" r="0.5" fill="currentColor" stroke="none"/>',
   candle: '<rect x="9.5" y="9" width="5" height="12" rx="1" fill="none" stroke-width="1.7"/><path d="M12 3c1.5 1.5 2 3 0 5-2-2-1.5-3.5 0-5z" fill="currentColor" stroke="none"/><path d="M9.5 12.5h5" fill="none" stroke-width="1.1"/>',
