@@ -4355,6 +4355,82 @@ const BUILDING_ICONS = {
   // reads as cultivated kelp specifically, not a fish silhouette.
   kelp: '<path d="M3 21h18" fill="none" stroke-width="1.3" stroke-linecap="round"/>'
     +'<path d="M6.5 21V11c0-2.6 2-4.4 0-7.2M12 21V9c0-2.6-2-4-0-7M17.5 21V12c0-2.6 2-4.4 0-7.2" fill="none" stroke-width="1.5" stroke-linecap="round"/>',
+  // Civic had the widest spread of any category: 8 of its 21 buildings
+  // (watch_post, watch_barracks, temple, almshouse, founders_shrine, and
+  // all 3 shrine/monument buildings) carried no rule of their own at
+  // all and fell straight through to the plain generic CAT_ICONS.civic
+  // columned-pediment glyph, plus harbor_lighthouse/beacon_keeper shared
+  // 'lighthouse' and titanbound_wardstone/vigil_wardens shared 'rune'.
+  // 11 new icons below give every one of those its own shape. (Every
+  // other Civic building already has a genuine bespoke SVG of its own —
+  // counting_house, trade_post, the_mint, grand_library, ledgerhall,
+  // town_hall, bounty_board — so those are untouched.)
+  // Watch Post. A peaked lookout tower on splayed legs, narrower and
+  // taller than a real building — reads as a simple field watchpost,
+  // not a barracks.
+  watchtower: '<path d="M12 2l3 5h-6z" fill="none" stroke-width="1.5" stroke-linejoin="round"/>'
+    +'<path d="M8 7h8l-1.3 14H9.3z" fill="none" stroke-width="1.6" stroke-linejoin="round"/>'
+    +'<path d="M8 11h8M8.6 15h6.8" fill="none" stroke-width="1.1"/>'
+    +'<path d="M9.3 21l-2.3-2M14.7 21l2.3-2" fill="none" stroke-width="1.3" stroke-linecap="round"/>',
+  // Watch Barracks. A shield with crossed spears through it — military
+  // housing, not the lookout post above. Distinct from the plain shield
+  // CAT_ICONS.guilds already uses (no crossing lines there).
+  shield_crest: '<path d="M12 3l7 3v5c0 5-3 8.5-7 10-4-1.5-7-5-7-10V6z" fill="none" stroke-width="1.6" stroke-linejoin="round"/>'
+    +'<path d="M8.5 8l7 8M15.5 8l-7 8" fill="none" stroke-width="1.3" stroke-linecap="round"/>',
+  // Temple. A torii-style shrine gate (two posts, a slightly upturned
+  // double lintel) instead of the column-and-pediment look
+  // CAT_ICONS.civic already uses for the fallback — a religious gate
+  // reads as its own thing rather than "generic civic building, but
+  // this one happens to have a rule".
+  temple_gate: '<path d="M2.5 6.5h19l-1.6-3.2M2.5 6.5l1.6-3.2" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>'
+    +'<path d="M5.5 9.7h13" fill="none" stroke-width="1.5" stroke-linecap="round"/>'
+    +'<path d="M6.7 6.5v14.5M17.3 6.5v14.5" fill="none" stroke-width="1.9" stroke-linecap="round"/>'
+    +'<circle cx="12" cy="8.1" r="1" fill="currentColor" stroke="none"/>',
+  // Almshouse. A plain house silhouette with a heart inside — shelter
+  // plus charity, distinct from Temple's gate and Hospital's cross.
+  charity_house: '<path d="M4 11l8-6 8 6" fill="none" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>'
+    +'<path d="M6 10.5V20h12v-9.5" fill="none" stroke-width="1.6" stroke-linejoin="round"/>'
+    +'<path d="M12 17c-2.5-1.8-4-3.2-4-5 0-1.3 1-2.2 2-2.2.9 0 1.6.6 2 1.3.4-.7 1.1-1.3 2-1.3 1 0 2 .9 2 2.2 0 1.8-1.5 3.2-4 5z" fill="none" stroke-width="1.2" stroke-linejoin="round"/>',
+  // Beacon Keeper. A raised brazier bowl with a flame, on its own
+  // stand — a tended signal fire, not Harbor Lighthouse's tapered tower
+  // (they used to share 'lighthouse' outright).
+  signal_beacon: '<path d="M12 3v5" fill="none" stroke-width="1.6" stroke-linecap="round"/>'
+    +'<path d="M12 3c-1.6 0-2.4 1.4-2.4 3 1 0 1.8-.5 2.4-1.4.6.9 1.4 1.4 2.4 1.4 0-1.6-.8-3-2.4-3z" fill="none" stroke-width="1.2" stroke-linejoin="round"/>'
+    +'<path d="M7 21l1.5-8h7L17 21" fill="none" stroke-width="1.6" stroke-linejoin="round"/>'
+    +'<path d="M5.5 13h13" fill="none" stroke-width="1.5" stroke-linecap="round"/>',
+  // Founder's Shrine. A bust on a pedestal — a memorial statue, not a
+  // standing stone (see the two obelisks/wardstone below) or a shrine
+  // gate.
+  founder_bust: '<path d="M12 4a3 3 0 0 1 3 3c0 1.6-1 2.6-1.6 3.4.9.5 1.6 1.7 1.6 3.1H9c0-1.4.7-2.6 1.6-3.1C10 9.6 9 8.6 9 7a3 3 0 0 1 3-3z" fill="none" stroke-width="1.4" stroke-linejoin="round"/>'
+    +'<path d="M7 21v-4h10v4z" fill="none" stroke-width="1.7" stroke-linejoin="round"/>',
+  // Titanbound Wardstone. An irregular, tapered standing monolith with
+  // carved rune lines — natural rough stone, not the perfectly tapered
+  // obelisks below, and not the swirly generic 'rune' glyph
+  // Vigil Wardens used to share with it.
+  wardstone_monolith: '<path d="M9 21V9l1.5-6h3L15 9v12z" fill="none" stroke-width="1.7" stroke-linejoin="round"/>'
+    +'<path d="M10 12h4M9.6 15.5h4.8M10.3 19h3.4" fill="none" stroke-width="1.1" stroke-linecap="round"/>',
+  // Vigil Wardens. A watchful eye — sentinel/watching, distinct from
+  // the wardstone's carved rock.
+  watch_eye: '<path d="M2 12c2.5-4.5 6-6.8 10-6.8s7.5 2.3 10 6.8c-2.5 4.5-6 6.8-10 6.8S4.5 16.5 2 12z" fill="none" stroke-width="1.6" stroke-linejoin="round"/>'
+    +'<circle cx="12" cy="12" r="3" fill="none" stroke-width="1.5"/><circle cx="12" cy="12" r="1" fill="currentColor" stroke="none"/>',
+  // The Obelisk of the Great Attractor. A slender, perfectly tapered
+  // obelisk with a small star hovering at its tip — the cosmic one of
+  // the three standing-monument buildings.
+  obelisk_star: '<path d="M10 21V6l2-3 2 3v15z" fill="none" stroke-width="1.7" stroke-linejoin="round"/>'
+    +'<path d="M12 1.5l.7 1.6 1.6.2-1.2 1.1.3 1.6-1.4-.8-1.4.8.3-1.6-1.2-1.1 1.6-.2z" fill="currentColor" stroke="none"/>',
+  // The Tideward Obelisk. A shorter, stouter obelisk rising out of two
+  // rows of stylized waves — sea-facing, distinct from the star-topped
+  // Great Attractor obelisk and the rough wardstone monolith.
+  obelisk_waves: '<path d="M9.5 15V6l2.5-4 2.5 4v9z" fill="none" stroke-width="1.7" stroke-linejoin="round"/>'
+    +'<path d="M2 15c1.8-1.6 3.6-1.6 5.4 0s3.6 1.6 5.4 0 3.6-1.6 5.4 0 3.6 1.6 5.4 0" fill="none" stroke-width="1.3" stroke-linecap="round"/>'
+    +'<path d="M2 19c1.8-1.6 3.6-1.6 5.4 0s3.6 1.6 5.4 0 3.6-1.6 5.4 0 3.6 1.6 5.4 0" fill="none" stroke-width="1.3" stroke-linecap="round"/>',
+  // The Deep Cult's Shrine. An altar with two curling tentacles rising
+  // off it and a watching eye/orb between them — the eldritch,
+  // sea-cult read the plain civic default could never give it.
+  tentacle_shrine: '<path d="M4 20h16M6 20v-3h12v3" fill="none" stroke-width="1.6" stroke-linejoin="round"/>'
+    +'<path d="M9 17c-1-2.5 0-4.5-2-6-1.3-1-1.3-2.6 0-3.4" fill="none" stroke-width="1.3" stroke-linecap="round"/>'
+    +'<path d="M15 17c1-2.5 0-4.5 2-6 1.3-1 1.3-2.6 0-3.4" fill="none" stroke-width="1.3" stroke-linecap="round"/>'
+    +'<circle cx="12" cy="8" r="1.6" fill="none" stroke-width="1.3"/>',
 };
 const BUILDING_ICON_RULES = [
   // Newer, more specific icons get first pick. Checked before the older,
@@ -4376,6 +4452,17 @@ const BUILDING_ICON_RULES = [
   [/kelp_ranch/, 'kelp'],
   [/oil_derrick/, 'oilrig'],
   [/gilded_table|captains_table/, 'table'],
+  [/watch_post/, 'watchtower'],
+  [/watch_barracks/, 'shield_crest'],
+  [/\btemple\b/, 'temple_gate'],
+  [/almshouse/, 'charity_house'],
+  [/beacon_keeper/, 'signal_beacon'],
+  [/founders_shrine/, 'founder_bust'],
+  [/titanbound_wardstone/, 'wardstone_monolith'],
+  [/vigil_wardens/, 'watch_eye'],
+  [/obelisk_great_attractor/, 'obelisk_star'],
+  [/obelisk_warden_seawall/, 'obelisk_waves'],
+  [/leviathan_cult_shrine/, 'tentacle_shrine'],
   [/runic|wardstone|warding|vigil_warden/, 'rune'],
   [/lens|voidglass/, 'lens'],
   [/artists_guild|chromatic_paint|_palette/, 'palette'],
@@ -4594,7 +4681,12 @@ const BESPOKE_BUILDING_ICONS = {
   chart_press: '<path d="M4 6a2 2 0 0 1 2-2h13v16H6a2 2 0 0 1-2-2z" fill="none" stroke-width="1.5" stroke-linejoin="round"/><path d="M19 4v16" fill="none" stroke-width="1.4"/><path d="M12 8v8M8 12h8" fill="none" stroke-width="1" stroke-linecap="round"/><path d="M12 9l1 2-1 2-1-2z" fill="currentColor" stroke="none"/>',
   lev_ink_press: '<path d="M6 11h7v6a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2z" fill="none" stroke-width="1.5" stroke-linejoin="round"/><rect x="7.5" y="8" width="4" height="3" fill="none" stroke-width="1.3"/><path d="M20 3c-4 0-8 3-9.5 8l-1.5 3 3-1.5C17 11 20 7 20 3z" fill="none" stroke-width="1.3" stroke-linejoin="round"/>',
   lev_thermal_press: '<rect x="5" y="4" width="14" height="4" rx="1" fill="none" stroke-width="1.5"/><rect x="5" y="16" width="14" height="4" rx="1" fill="none" stroke-width="1.5"/><path d="M7 8v8M17 8v8" fill="none" stroke-width="1.4"/><path d="M11 10c.6.9.6 1.8 0 2.7M13 10c.6.9.6 1.8 0 2.7" fill="none" stroke-width="1"/>',
-  grand_library: '<rect x="3" y="4" width="18" height="17" fill="none" stroke-width="1.5"/><path d="M7 4v17M11.5 4v17M16 4v17" fill="none" stroke-width="1.3"/>',
+  // A stack of 3 shelved books narrowing toward the top, with a small
+  // candle flame perched above — reads clearly as "books stacked" at a
+  // glance. The previous version (evenly spaced vertical bars across a
+  // tall rectangle) was meant as bookshelf slats but read as a plain
+  // fence or grille instead.
+  grand_library: '<rect x="4" y="16" width="16" height="3" rx="0.5" fill="none" stroke-width="1.4"/><rect x="5.5" y="12.3" width="13" height="3" rx="0.5" fill="none" stroke-width="1.4"/><rect x="7" y="8.6" width="10" height="3" rx="0.5" fill="none" stroke-width="1.4"/><path d="M12 8.6V4" fill="none" stroke-width="1.4" stroke-linecap="round"/><circle cx="12" cy="3" r="1" fill="currentColor" stroke="none"/>',
   cartographers_guild: '<path d="M9 5L4 7v13l5-2 6 2 5-2V5l-5 2-6-2z" fill="none" stroke-width="1.5" stroke-linejoin="round"/><path d="M9 5v13M15 7v13" fill="none" stroke-width="1.2"/><circle cx="12" cy="12" r="1.2" fill="currentColor" stroke="none"/>',
   necromancers_study: '<path d="M5 4.5c3-1.5 6-1.5 8 0v14c-2-1.5-5-1.5-8 0z" fill="none" stroke-width="1.4" stroke-linejoin="round"/><path d="M19 4.5c-2-1-4-1-5.5 0" fill="none" stroke-width="1.2"/><circle cx="9" cy="9" r="1.5" fill="none" stroke-width="1.1"/><circle cx="8.4" cy="8.7" r="0.4" fill="currentColor" stroke="none"/><circle cx="9.6" cy="8.7" r="0.4" fill="currentColor" stroke="none"/>',
   ledgerhall: '<rect x="4" y="4" width="12" height="16" rx="1" fill="none" stroke-width="1.5"/><path d="M7 8h6M7 11h6M7 14h4" fill="none" stroke-width="1.1" stroke-linecap="round"/><circle cx="18" cy="17" r="3" fill="none" stroke-width="1.4"/><path d="M18 15.5v3M16.8 17h2.4" fill="none" stroke-width="1"/>',
@@ -4621,7 +4713,12 @@ const BESPOKE_BUILDING_ICONS = {
   // sharing the plain double-coin icon.
   counting_house: '<rect x="4" y="4" width="16" height="16" rx="2" fill="none" stroke-width="1.6"/><circle cx="12" cy="12" r="4.5" fill="none" stroke-width="1.4"/><circle cx="12" cy="12" r="1" fill="currentColor" stroke="none"/><path d="M16.5 12h2" fill="none" stroke-width="1.3" stroke-linecap="round"/>',
   shadow_exchange: '<circle cx="12" cy="12" r="8" fill="none" stroke-width="1.6"/><path d="M7 10c1.5-1.5 3-1.5 4 0M13 10c1-1.5 2.5-1.5 4 0" fill="none" stroke-width="1.3" stroke-linecap="round"/><path d="M8 14c1.3 1 2.7 1 4 0" fill="none" stroke-width="1" stroke-linecap="round"/>',
-  trade_post: '<path d="M4 9l8-5 8 5" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><rect x="5" y="9" width="14" height="9" fill="none" stroke-width="1.5"/><path d="M9 18v-4h6v4" fill="none" stroke-width="1.3"/>',
+  // Two offset shipping crates with X-strapped lids — reads as "goods
+  // in transit" rather than a storefront, and stays clearly distinct
+  // from Counting House's vault and The Mint's coin press. The previous
+  // version (a house/storefront silhouette with a stamped seal on the
+  // roof) read as a plain building rather than anything trade-specific.
+  trade_post: '<rect x="3" y="11" width="8" height="8" rx="0.5" fill="none" stroke-width="1.5"/><path d="M3 11l4 4 4-4M7 11v8" fill="none" stroke-width="1.1"/><rect x="13" y="7" width="8" height="8" rx="0.5" fill="none" stroke-width="1.5"/><path d="M13 7l4 4 4-4M17 7v8" fill="none" stroke-width="1.1"/>',
   curio_bazaar: '<path d="M7 8h10l1 11a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2z" fill="none" stroke-width="1.6" stroke-linejoin="round"/><path d="M9 8V6a3 3 0 0 1 6 0v2" fill="none" stroke-width="1.4"/><circle cx="12" cy="13" r="1.3" fill="none" stroke-width="1.1"/>',
   fey_market: '<path d="M17 4a4.5 4.5 0 1 0 4 6.5A4.5 4.5 0 0 1 17 4z" fill="currentColor" stroke="none"/><path d="M4 20l1-7h6l1 7z" fill="none" stroke-width="1.5" stroke-linejoin="round"/><path d="M5.5 13h5" fill="none" stroke-width="1.2"/>',
   the_mint: '<rect x="9" y="3" width="6" height="7" fill="none" stroke-width="1.6"/><path d="M12 10v3" fill="none" stroke-width="1.5"/><circle cx="12" cy="17" r="4" fill="none" stroke-width="1.6"/><path d="M12 15v4M10 17h4" fill="none" stroke-width="1"/>',
