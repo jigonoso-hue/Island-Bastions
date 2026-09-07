@@ -513,7 +513,7 @@ body{background:var(--bg-body);color:var(--text-primary);font-family:-apple-syst
    since it needs to sit on top of the island detail popup that's
    already open underneath it, not replace it. */
 .tierup-backdrop{display:flex;position:fixed;inset:0;background:rgba(10,20,30,.6);z-index:9999;align-items:center;justify-content:center;}
-.tierup-card{position:relative;background:var(--bg-modal);border:2px solid var(--border-gold);border-radius:16px;padding:34px 30px 26px;max-width:340px;text-align:center;overflow:hidden;box-shadow:0 14px 44px rgba(0,0,0,.45);}
+.tierup-card{position:relative;background:var(--bg-modal);border:2px solid var(--border-gold);border-radius:16px;padding:34px 40px 28px;max-width:420px;text-align:center;overflow:hidden;box-shadow:0 14px 44px rgba(0,0,0,.45);}
 .tierup-confetti{position:absolute;inset:0;pointer-events:none;overflow:hidden;}
 .tierup-confetti-piece{position:absolute;top:-16px;width:7px;height:12px;opacity:.95;animation-name:tierup-fall;animation-timing-function:linear;animation-fill-mode:forwards;}
 @keyframes tierup-fall{
@@ -528,8 +528,25 @@ body{background:var(--bg-body);color:var(--text-primary);font-family:-apple-syst
   100%{transform:translateY(-400px) translateX(var(--tierup-drift,10px));opacity:0;}
 }
 .tierup-title{font-size:21px;font-weight:800;color:var(--text-gold);margin-bottom:5px;position:relative;z-index:1;}
-.tierup-tiername{font-size:12.5px;color:var(--text-muted);margin-bottom:16px;position:relative;z-index:1;}
-.tierup-quote{font-size:13px;font-style:italic;color:var(--text-primary);margin-bottom:22px;position:relative;z-index:1;line-height:1.55;}
+.tierup-tiername{font-size:12.5px;color:var(--text-muted);margin-bottom:18px;position:relative;z-index:1;}
+/* The quote's scroll — same forked-pennant-banner device as the water
+   view's own island nameplate (.iname-label), just built as a static
+   in-flow block instead of an absolutely-positioned overlay, sized up
+   to comfortably wrap several lines of a much longer, sillier quote
+   instead of one line of a short island name. */
+.tierup-scroll{position:relative;z-index:1;margin:4px 14px 22px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:13px;font-weight:700;font-style:italic;color:var(--text-gold);white-space:normal;
+  background:var(--bg-label);border-top:2px dashed var(--border-gold);
+  border-bottom:2px dashed var(--border-gold);padding:14px 22px;line-height:1.6;
+  box-shadow:0 3px 10px rgba(0,0,0,.3);}
+.tierup-scroll::before,.tierup-scroll::after{content:"";position:absolute;top:0;bottom:0;width:14px;
+  background:var(--bg-label);border-top:2px dashed var(--border-gold);
+  border-bottom:2px dashed var(--border-gold);}
+.tierup-scroll::before{left:-13px;border-right:none;
+  clip-path:polygon(0 0,100% 0,32% 50%,100% 100%,0 100%);}
+.tierup-scroll::after{right:-13px;border-left:none;
+  clip-path:polygon(100% 0,0 0,68% 50%,0 100%,100% 100%);}
 .tierup-close-btn{position:relative;z-index:1;}
 /* Themed alert() replacement. Highest z-index of anything in the app so
    it always sits on top of whatever modal triggered it (Add Building,
@@ -6074,21 +6091,26 @@ const BASTION_VISITOR_TIERS = [
 // quietly on its first open rather than celebrating a Tier it started
 // at, so only genuine climbs ever trigger it.
 const TIER_UP_QUOTES = [
-  "Word's gotten out. Try not to let it go to your head.",
-  'Somewhere, a cartographer is updating a map to include you.',
-  "You're officially someone's problem now. Congratulations.",
-  'The mainland has heard of you. It has opinions.',
-  'Bigger reputation, bigger crowds, bigger headaches. Welcome to the next Tier.',
-  'Someone, somewhere, is already lying about having been here first.',
-  'This is the part where everyone suddenly remembers they always believed in you.',
-  'Your island is now interesting enough to gossip about. That cuts both ways.',
-  "Congratulations. You're no longer a rumor.",
-  'The taverns on other islands are already telling exaggerated stories about this place.',
-  "You've been noticed. There's no going back from being noticed.",
-  'Somewhere a merchant is recalculating your prices upward. Sorry.',
-  "The name's starting to travel further than the boats do.",
-  'This is either very good news or the start of a very good story. Possibly both.',
-  'Fame, such as it is, has officially docked.'
+  "Officially, this counts as fame. Unofficially, three separate taverns are now arguing about who saw you first, and at least one of them is lying.",
+  "A cartographer somewhere just erased \"here be nothing of note\" and is currently drawing something considerably more flattering in its place.",
+  "You are now, by every meaningful measure, Somebody. Try not to let the crown go to your head, because there isn't one — this is purely a vibes-based promotion.",
+  "Word travels faster than ships do, apparently, because rumors about this island have already outpaced anything that actually happened here.",
+  "Congratulations. Every merchant within three ports has simultaneously decided your business is worth marking up \"for quality.\"",
+  "This is the part of the story where the bards show up, ask a lot of questions, and leave with a version of events that's maybe forty percent true.",
+  "Somewhere, a rival island's council is holding an emergency meeting about you, and it is not a flattering one.",
+  "You've crossed the invisible line between \"quiet little island\" and \"place people have actually heard of,\" and there is, regrettably, no going back.",
+  "A minor noble has already claimed to have vacationed here once, extensively, despite never once setting foot on this island.",
+  "The mainland press has run exactly one story about this place, and it is aggressively, suspiciously positive. Somebody paid for that.",
+  "Three separate sailors are now telling three separate, increasingly heroic versions of how they personally discovered this island first.",
+  "This is your official notice that people are now allowed to be jealous of you. Try to enjoy it while it lasts.",
+  "Somewhere out there, a guidebook is being hastily rewritten to include this island, and the author has never actually been here.",
+  "A modest fortune's worth of gossip just changed hands in a tavern two islands over, and somehow all of it was about you.",
+  "Congratulations, you've been promoted from \"rumor\" to \"destination,\" which mostly just means the rumors are now better funded.",
+  "This Tier bump comes with no crown, no title, and no actual authority — just a noticeably smugger tone from everyone who talks about you now.",
+  "A traveling bard has already composed a ballad about this island. It is, unfortunately, mostly about the fish.",
+  "You are now considered \"up and coming\" by people who, until this exact moment, could not have located you on a map.",
+  "Somewhere, a merchant's ledger just got a new line item labeled \"markup: because they've heard of us now.\"",
+  "This is fame, technically. Modest fame. The kind where two people recognize the name and one of them is definitely making it up."
 ];
 function _checkTierUpCelebration(){
   const isl = islands.find(function(i){ return i.id===selectedIslandId; });
@@ -6130,7 +6152,7 @@ function _showTierUpCelebration(isl, tier){
     +'<div class="tierup-confetti">'+piecesHtml+'</div>'
     +'<div class="tierup-title">🎉 Bastion Tier Up!</div>'
     +'<div class="tierup-tiername">'+isl.name+' is now a <b>'+tierName+'</b> (Tier '+tier+')</div>'
-    +'<div class="tierup-quote">“'+quote+'”</div>'
+    +'<div class="tierup-scroll">'+quote+'</div>'
     +'<button class="btn btn-gold tierup-close-btn" onclick="document.getElementById(\'tierup-backdrop\').remove()">Nice!</button>'
   +'</div>';
   bd.addEventListener('click', function(e){ if(e.target===bd) bd.remove(); });
