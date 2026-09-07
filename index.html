@@ -6091,60 +6091,61 @@ const BASTION_VISITOR_TIERS = [
 // quietly on its first open rather than celebrating a Tier it started
 // at, so only genuine climbs ever trigger it.
 // Keyed by the Tier just reached (2-5; Tier 1 is the starting point,
-// nothing to celebrate). 5 quotes per Tier, escalating in scale and
-// swagger right along with the Tier itself — Tier 2's are modest and
-// a little self-deprecating, Tier 5's are the real showpiece, since
-// Legendary Nexus is the actual ceiling: there's no Tier 6 to build
-// anticipation for, so this is the one place the joke gets to go all
-// the way.
+// nothing to celebrate). 10 quotes per Tier, all genuinely warm/
+// celebratory first and tongue-in-cheek second — congratulating the
+// player, not just listing an inconvenience fame brings — escalating
+// in scale right along with the Tier itself. Tier 5's lean into
+// Legendary Nexus being the actual ceiling (no Tier 6 to build
+// anticipation for), so that's the one place the bit gets to go all
+// the way to "you just won."
 const TIER_UP_QUOTES = {
   2: [
-    "Officially, this counts as fame. Unofficially, three separate taverns are now arguing about who saw you first, and at least one of them is lying.",
-    "This is fame, technically. Modest fame. The kind where two people recognize the name and one of them is definitely making it up.",
-    "A minor noble has already claimed to have vacationed here once, extensively, despite never once setting foot on this island.",
-    "Somewhere, a merchant's ledger just got a new line item labeled \"markup: because they've heard of us now.\"",
-    "You are now considered \"up and coming\" by people who, until this exact moment, could not have located you on a map.",
-    "A passing trader has started mentioning this island by name instead of just pointing vaguely and shrugging.",
-    "Someone actually asked for directions here on purpose today. Write that down, it may not happen again for a while.",
-    "A single, mildly enthusiastic footnote about this island has appeared in an otherwise unremarkable travel pamphlet.",
-    "Congratulations. You are now the third most interesting thing anyone brings up at that one dockside tavern two islands over.",
-    "A cartographer paused, briefly, before deciding this island was still not worth its own dot. Progress is progress."
+    "Look at you! An actual name people say out loud now, instead of just \"that island past the reef.\"",
+    "You did it. You're no longer \"nowhere.\" You're \"nowhere, but I've heard of it,\" which is basically everything.",
+    "Someone drew you on a map today. In pen. That's commitment.",
+    "A sailor just recommended this place to a friend without being paid to. Treasure that.",
+    "You're officially on the radar. A small radar. But a radar.",
+    "Somebody, somewhere, just said your island's name and nobody asked \"the where now?\" Growth.",
+    "A merchant remembered your name without checking a ledger first. That's basically royalty.",
+    "This calls for a toast. A modest one. But a real one.",
+    "You've graduated from \"rumor\" to \"thing people have actually heard of.\" Wear it proudly.",
+    "Not bad for a place that used to be a rounding error on somebody's map."
   ],
   3: [
-    "Word travels faster than ships do, apparently, because rumors about this island have already outpaced anything that actually happened here.",
-    "Congratulations. Every merchant within three ports has simultaneously decided your business is worth marking up \"for quality.\"",
-    "The mainland press has run exactly one story about this place, and it is aggressively, suspiciously positive. Somebody paid for that.",
-    "Three separate sailors are now telling three separate, increasingly heroic versions of how they personally discovered this island first.",
-    "A modest fortune's worth of gossip just changed hands in a tavern two islands over, and somehow all of it was about you.",
-    "A dockworkers' union on a neighboring island has formally lodged a complaint that your shipping schedule is \"showing off.\"",
-    "Two separate merchant guilds are now quietly undercutting each other just to be the ones who supply you first.",
-    "A minstrel troupe has rerouted their entire tour specifically to stop here, and they are not being subtle about why.",
-    "Somebody wrote a strongly worded letter to a regional gazette insisting this island is \"overrated,\" which is, itself, a form of flattery.",
-    "The local harbor now has a waiting list. A waiting list. Someone should frame that."
+    "Ships are choosing to stop here on purpose now. On purpose! Look how far you've come.",
+    "You're the kind of busy that makes other harbors a little jealous. Let them be jealous.",
+    "Someone just bragged about doing business with you. At a party. Unprompted. You made it.",
+    "There's an actual line to get into your harbor now. A good problem to have.",
+    "People are starting to plan trips around this place. Actual trips! With luggage!",
+    "Your name just got dropped in a conversation you weren't even part of, and it was a compliment.",
+    "Somebody wrote your island into a story, and you're the good part.",
+    "This island has officially become a stop, not just a spot you pass on the way to somewhere better.",
+    "You're being talked about at dinner tables now. That's the good kind of famous.",
+    "The gossip about this place has gotten so good that half of it doesn't even need embellishing anymore."
   ],
   4: [
-    "Somewhere, a rival island's council is holding an emergency meeting about you, and it is not a flattering one.",
-    "You are now, by every meaningful measure, Somebody. Try not to let the crown go to your head, because there isn't one — this is purely a vibes-based promotion.",
-    "This is the part of the story where the bards show up, ask a lot of questions, and leave with a version of events that's maybe forty percent true.",
-    "This is your official notice that people are now allowed to be jealous of you. Try to enjoy it while it lasts.",
-    "A traveling bard has already composed a ballad about this island. It is, unfortunately, mostly about the fish.",
-    "A foreign dignitary's itinerary now includes this island \"for appearances,\" which is diplomatic-speak for \"we're worried.\"",
-    "Someone has started forging goods with this island's name stamped on them, which the merchants' guild insists is \"basically a compliment.\"",
-    "A rival council has commissioned an official report titled, without apparent irony, \"The Problem.\" You are The Problem.",
-    "This island now comes up, unprompted, in at least one bar bet on every major trade route within a week's sail.",
-    "A retired admiral has come out of retirement specifically to have an opinion about you. It is not a kind one."
+    "You're a Hub now. A genuine, real, people-plan-their-routes-around-you Hub. Incredible.",
+    "Rival islands are nervous. Let them be nervous. You earned this.",
+    "Somebody just called this place \"important\" with a straight face, and meant it.",
+    "This island has main character energy now, and frankly, it's about time.",
+    "You've made it far enough that people pretend they always believed in you. Let them.",
+    "A council somewhere is discussing you seriously, possibly with a little envy. Savor that.",
+    "There's a bard writing about this place now, and it's actually a pretty good song.",
+    "You're the kind of famous where people namedrop you to sound impressive. Iconic.",
+    "This island has genuinely arrived. Throw yourself a parade. You've earned it twice over.",
+    "People used to point past this island. Now they point at it. Huge difference."
   ],
   5: [
-    "Legendary Nexus. That's the ceiling — there is no Tier 6, no matter how hard you push. Congratulations on reaching the actual, literal top of fame.",
-    "Every chart printed from this day forward marks this island in gold ink. The cartographers' guild would like it known this was not cheap.",
-    "Kings who have never once left their own throne rooms now claim, with total confidence, to be old personal friends of yours.",
-    "Somewhere, an entire university department has been founded solely to study why this island, of all islands, worked out. Nobody has a good answer yet.",
-    "This is it. The top. Bards don't write songs about you anymore — they write songs about the people who wrote the first songs about you.",
-    "A children's board game has been quietly released featuring a fictional island that is, suspiciously, exactly this island.",
-    "The word for \"impressive\" in at least one distant dialect has reportedly started to drift toward just being this island's name.",
-    "An order of monks has begun a pilgrimage here. Nobody asked them to. Nobody can talk them out of it either.",
-    "Scholars now argue, at length and with real venom, over which of your accomplishments to credit first. None of them agree, and all of them are furious about it.",
-    "This island has officially become a unit of measurement for ambition, as in: \"sure, but is it a Legendary-Nexus-sized dream, or a regular one?\""
+    "Legendary Nexus. The actual top. There's no Tier 6 — you didn't just win, you finished the whole game.",
+    "This island is now the kind of place other islands get compared to, and they always come up short.",
+    "Somewhere, a bard just retired, having accepted no song they write will ever top the one about you.",
+    "Kings ask about this place now. Actual kings. With crowns and everything.",
+    "You are, officially and unanimously, A Big Deal. Frame this moment.",
+    "This is the story people tell their grandkids about — \"I was there when it happened.\" You made history, on purpose, with an island.",
+    "Every map in the known world now marks this island first, out of respect.",
+    "This is what legendary actually looks like. Take a lap. You've earned every bit of it.",
+    "Somewhere, someone just named their kid after this island. That's not a joke. That's just where things are now.",
+    "You reached the very top, and it looks incredible on you."
   ]
 };
 function _checkTierUpCelebration(){
