@@ -506,6 +506,31 @@ body{background:var(--bg-body);color:var(--text-primary);font-family:-apple-syst
 #add-building-btn{width:100%;background:var(--bg-card);border:1px dashed var(--border-strong);border-radius:7px;color:var(--text-teal-4);font-size:11px;padding:8px;cursor:pointer;margin-top:6px;}
 #add-building-btn:hover{border-style:solid;}
 .modal-backdrop{display:none;position:fixed;inset:0;background:rgba(15,40,55,.55);z-index:2000;align-items:center;justify-content:center;}
+/* Bastion Tier-up celebration. Fires once, the first time an island is
+   opened after its Notoriety crosses into a new Tier (see
+   _checkTierUpCelebration/openIslandModal). Its own detached backdrop
+   at the highest z-index in the app rather than reusing .modal-backdrop,
+   since it needs to sit on top of the island detail popup that's
+   already open underneath it, not replace it. */
+.tierup-backdrop{display:flex;position:fixed;inset:0;background:rgba(10,20,30,.6);z-index:9999;align-items:center;justify-content:center;}
+.tierup-card{position:relative;background:var(--bg-modal);border:2px solid var(--border-gold);border-radius:16px;padding:34px 30px 26px;max-width:340px;text-align:center;overflow:hidden;box-shadow:0 14px 44px rgba(0,0,0,.45);}
+.tierup-confetti{position:absolute;inset:0;pointer-events:none;overflow:hidden;}
+.tierup-confetti-piece{position:absolute;top:-16px;width:7px;height:12px;opacity:.95;animation-name:tierup-fall;animation-timing-function:linear;animation-fill-mode:forwards;}
+@keyframes tierup-fall{
+  0%{transform:translateY(-16px) rotate(0deg);opacity:1;}
+  100%{transform:translateY(360px) rotate(600deg);opacity:.15;}
+}
+.tierup-balloon{position:absolute;bottom:-46px;width:24px;height:30px;border-radius:50%/58% 58% 42% 42%;animation-name:tierup-rise;animation-timing-function:linear;animation-fill-mode:forwards;}
+.tierup-balloon::after{content:'';position:absolute;left:50%;top:100%;width:1px;height:22px;background:rgba(255,255,255,.45);}
+@keyframes tierup-rise{
+  0%{transform:translateY(0) translateX(0);opacity:0;}
+  8%{opacity:.95;}
+  100%{transform:translateY(-400px) translateX(var(--tierup-drift,10px));opacity:0;}
+}
+.tierup-title{font-size:21px;font-weight:800;color:var(--text-gold);margin-bottom:5px;position:relative;z-index:1;}
+.tierup-tiername{font-size:12.5px;color:var(--text-muted);margin-bottom:16px;position:relative;z-index:1;}
+.tierup-quote{font-size:13px;font-style:italic;color:var(--text-primary);margin-bottom:22px;position:relative;z-index:1;line-height:1.55;}
+.tierup-close-btn{position:relative;z-index:1;}
 /* Themed alert() replacement. Highest z-index of anything in the app so
    it always sits on top of whatever modal triggered it (Add Building,
    Commit Construction, etc.) without closing that modal out from under
@@ -3234,6 +3259,7 @@ function selectIsland(id){
 function openIslandModal(){
   document.getElementById('island-modal-backdrop').classList.add('open');
   renderDetail();
+  _checkTierUpCelebration();
 }
 function closeIslandModal(){
   document.getElementById('island-modal-backdrop').classList.remove('open');
@@ -6038,6 +6064,78 @@ const BASTION_VISITOR_TIERS = [
   { tier:4, die:10, name:'Maritime Hub' },
   { tier:5, die:12, name:'Legendary Nexus' }
 ];
+// ── Bastion Tier-up celebration ─────────────────────────────────────
+// Fires once, the first time an island is opened after its Notoriety
+// has crossed into a new Bastion Tier since the last time it was
+// opened (see _checkTierUpCelebration, called from openIslandModal).
+// isl.lastCelebratedTier tracks the last Tier this island was already
+// congratulated for; a brand-new island (or an existing save loading
+// for the first time under this feature) just gets that baseline set
+// quietly on its first open rather than celebrating a Tier it started
+// at, so only genuine climbs ever trigger it.
+const TIER_UP_QUOTES = [
+  "Word's gotten out. Try not to let it go to your head.",
+  'Somewhere, a cartographer is updating a map to include you.',
+  "You're officially someone's problem now. Congratulations.",
+  'The mainland has heard of you. It has opinions.',
+  'Bigger reputation, bigger crowds, bigger headaches. Welcome to the next Tier.',
+  'Someone, somewhere, is already lying about having been here first.',
+  'This is the part where everyone suddenly remembers they always believed in you.',
+  'Your island is now interesting enough to gossip about. That cuts both ways.',
+  "Congratulations. You're no longer a rumor.",
+  'The taverns on other islands are already telling exaggerated stories about this place.',
+  "You've been noticed. There's no going back from being noticed.",
+  'Somewhere a merchant is recalculating your prices upward. Sorry.',
+  "The name's starting to travel further than the boats do.",
+  'This is either very good news or the start of a very good story. Possibly both.',
+  'Fame, such as it is, has officially docked.'
+];
+function _checkTierUpCelebration(){
+  const isl = islands.find(function(i){ return i.id===selectedIslandId; });
+  if(!isl) return;
+  const tier = _notorietyTier(isl);
+  if(isl.lastCelebratedTier===undefined){
+    isl.lastCelebratedTier = tier;
+    return;
+  }
+  if(tier > isl.lastCelebratedTier){
+    isl.lastCelebratedTier = tier;
+    _showTierUpCelebration(isl, tier);
+  }
+}
+function _showTierUpCelebration(isl, tier){
+  const tierName = (BASTION_VISITOR_TIERS[tier-1]||{}).name || 'a new Tier';
+  const quote = TIER_UP_QUOTES[Math.floor(Math.random()*TIER_UP_QUOTES.length)];
+  const colors = ['#e05050','#4fa3cc','#f0c040','#5ac878','#9060c0','#e0a850'];
+  let piecesHtml = '';
+  for(let i=0;i<28;i++){
+    const left = (Math.random()*100).toFixed(1);
+    const color = colors[Math.floor(Math.random()*colors.length)];
+    const delay = (Math.random()*0.4).toFixed(2);
+    const duration = (1.4+Math.random()*0.9).toFixed(2);
+    const rot = Math.floor(Math.random()*360);
+    piecesHtml += '<div class="tierup-confetti-piece" style="left:'+left+'%;background:'+color+';animation-delay:'+delay+'s;animation-duration:'+duration+'s;transform:rotate('+rot+'deg);"></div>';
+  }
+  for(let i=0;i<5;i++){
+    const left = (8 + i*19 + (Math.random()*8-4)).toFixed(1);
+    const color = colors[i % colors.length];
+    const delay = (Math.random()*0.6).toFixed(2);
+    const drift = (Math.random()*44-22).toFixed(0)+'px';
+    piecesHtml += '<div class="tierup-balloon" style="left:'+left+'%;background:'+color+';animation-delay:'+delay+'s;animation-duration:2.6s;--tierup-drift:'+drift+';"></div>';
+  }
+  const bd = document.createElement('div');
+  bd.className = 'tierup-backdrop';
+  bd.id = 'tierup-backdrop';
+  bd.innerHTML = '<div class="tierup-card">'
+    +'<div class="tierup-confetti">'+piecesHtml+'</div>'
+    +'<div class="tierup-title">🎉 Bastion Tier Up!</div>'
+    +'<div class="tierup-tiername">'+isl.name+' is now a <b>'+tierName+'</b> (Tier '+tier+')</div>'
+    +'<div class="tierup-quote">“'+quote+'”</div>'
+    +'<button class="btn btn-gold tierup-close-btn" onclick="document.getElementById(\'tierup-backdrop\').remove()">Nice!</button>'
+  +'</div>';
+  bd.addEventListener('click', function(e){ if(e.target===bd) bd.remove(); });
+  document.body.appendChild(bd);
+}
 // Breathtaking Views (and any future tierFloor trait) doesn't just borrow
 // a bigger die for its Tier. It genuinely starts (and stays) ahead of
 // what its raw Notoriety alone would earn. That has to be reflected in
@@ -8020,7 +8118,7 @@ function _processCruiseLinesWeekly(isl){
     cl.weeksLeft--;
     if(cl.weeksLeft<=0){
       _ledger.gold = (_ledger.gold||0) + line.payout;
-      events.push({ island: isl.name, building: line.name, action:'Cruise Contract Complete', success:true, text:line.name+' winds down. Its last week runs at half strength, and the final payout lands: +'+line.payout.toLocaleString()+' gp.', rewards:[{gold:line.payout}] });
+      events.push({ island: isl.name, building: line.name, action:'Cruise Contract Complete', success:true, text:line.name+' winds down. Its last week runs at half strength, and the final payout lands: +'+line.payout.toLocaleString()+' gp.', rewards:['+'+line.payout.toLocaleString()+' gp'] });
     } else if(line.effects.weeklyEventChance && Math.random() < line.effects.weeklyEventChance.chance){
       // Random incident chance (Star-Chaser Express only) applies at
       // full strength every one of the flat operating weeks, same as
