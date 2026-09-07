@@ -12143,7 +12143,12 @@ function openSaveModal(){
     +'<div class="modal-btns">'
       +'<button class="btn" onclick="closeAnyModal()">Cancel</button>'
       +'<button class="btn btn-gold" id="save-confirm-btn">Save</button>'
-    +'</div></div>';
+    +'</div>'
+    +'<hr style="border:none;border-top:.5px solid var(--border-card);margin:16px 0 12px;">'
+    +'<div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;">Or copy a code — paste it into Open on another device instead of sending a file.</div>'
+    +'<button class="btn" id="save-code-btn" style="width:100%;margin-bottom:8px;" onclick="_confirmSaveCode()">Generate &amp; Copy Code</button>'
+    +'<textarea id="save-code-output" readonly style="display:none;width:100%;min-height:70px;font-size:10.5px;font-family:monospace;resize:vertical;word-break:break-all;" onclick="this.select()"></textarea>'
+    +'</div>';
   setTimeout(function(){
     const inp = document.getElementById('save-name');
     if(inp){ inp.focus(); inp.select(); }
@@ -12151,16 +12156,19 @@ function openSaveModal(){
     if(btn) btn.onclick = _confirmSaveIslands;
   }, 40);
 }
-function _confirmSaveIslands(){
-  const raw = (document.getElementById('save-name') && document.getElementById('save-name').value) || 'isle-foundry-save';
-  const name = raw.trim().replace(/\.json$/i,'').replace(/[^a-zA-Z0-9_\-. ]/g,'_') || 'isle-foundry-save';
-  const saveData = {
+function _buildSaveData(){
+  return {
     version: 1,
     savedAt: new Date().toISOString(),
     islands: islands,
     ledger: _ledger,
     islandSeq: _islandSeq,
   };
+}
+function _confirmSaveIslands(){
+  const raw = (document.getElementById('save-name') && document.getElementById('save-name').value) || 'isle-foundry-save';
+  const name = raw.trim().replace(/\.json$/i,'').replace(/[^a-zA-Z0-9_\-. ]/g,'_') || 'isle-foundry-save';
+  const saveData = _buildSaveData();
   const blob = new Blob([JSON.stringify(saveData, null, 2)], {type:'application/json'});
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -12171,6 +12179,121 @@ function _confirmSaveIslands(){
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
   closeAnyModal();
+}
+// ── Save/load as a pasteable code, not just a file ──────────────────
+// Same save payload as the .json file, just packed into one line of
+// text so it can go through a chat/text message instead of needing an
+// actual file transfer. Gzip-compressed when the browser supports
+// CompressionStream (every current browser does; iOS Safari since
+// 16.4) since an island with a lot of buildings makes a JSON blob big
+// enough that a raw base64 dump would be an unwieldy wall of text —
+// gzip usually gets that down to a quarter or less. Falls back to
+// plain base64 (no compression) on anything older, tagged with a
+// different prefix so decode knows which path to take without
+// guessing or trying both.
+function _u8ToBase64(bytes){
+  let binary = '';
+  const chunkSize = 0x8000; // avoid apply()'s argument-count limit on big arrays
+  for(let i=0;i<bytes.length;i+=chunkSize){
+    binary += String.fromCharCode.apply(null, bytes.subarray(i, i+chunkSize));
+  }
+  return btoa(binary);
+}
+function _base64ToU8(b64){
+  const binary = atob(b64);
+  const bytes = new Uint8Array(binary.length);
+  for(let i=0;i<binary.length;i++) bytes[i] = binary.charCodeAt(i);
+  return bytes;
+}
+async function _saveDataToCode(saveData){
+  const json = JSON.stringify(saveData);
+  if(typeof CompressionStream !== 'undefined'){
+    try{
+      const cs = new CompressionStream('gzip');
+      const writer = cs.writable.getWriter();
+      writer.write(new TextEncoder().encode(json));
+      writer.close();
+      const compressed = new Uint8Array(await new Response(cs.readable).arrayBuffer());
+      return 'IFZ1'+_u8ToBase64(compressed);
+    }catch(e){ /* fall through to the uncompressed path below */ }
+  }
+  return 'IFJ1'+_u8ToBase64(new TextEncoder().encode(json));
+}
+async function _codeToSaveData(code){
+  code = code.trim();
+  const tag = code.slice(0,4);
+  const body = code.slice(4);
+  if(tag!=='IFZ1' && tag!=='IFJ1') throw new Error("That doesn't look like an Isle Foundry code.");
+  const bytes = _base64ToU8(body);
+  if(tag==='IFJ1') return JSON.parse(new TextDecoder().decode(bytes));
+  if(typeof DecompressionStream === 'undefined') throw new Error("This browser can't unpack a compressed code. Try a newer browser, or use the file instead.");
+  const ds = new DecompressionStream('gzip');
+  const writer = ds.writable.getWriter();
+  writer.write(bytes);
+  writer.close();
+  const buf = await new Response(ds.readable).arrayBuffer();
+  return JSON.parse(new TextDecoder().decode(buf));
+}
+// Shared by both the file-upload path and the pasted-code path below —
+// same validation, same "apply it and refresh every view" tail end.
+// Returns true on success, false (after setting the status message
+// itself) on failure, so callers don't need their own error branches.
+function _applyLoadedSaveData(data, status){
+  if(!data || !Array.isArray(data.islands)){
+    if(status){ status.style.color = '#e05050'; status.textContent = "That doesn't look like an Isle Foundry save. Missing island data."; }
+    return false;
+  }
+  islands = data.islands;
+  islands.forEach(_normalizeIslandBuildings);
+  if(data.ledger) Object.assign(_ledger, data.ledger);
+  if(!_ledger.pendingNotes) _ledger.pendingNotes = [];
+  if(!_ledger.actedThisTurn) _ledger.actedThisTurn = {};
+  if(data.islandSeq!==undefined) _islandSeq = data.islandSeq;
+  selectedIslandId = null;
+  renderIslandList();
+  renderWater();
+  renderDetail();
+  renderTopStats();
+  closeAnyModal();
+  return true;
+}
+async function _confirmSaveCode(){
+  const btn = document.getElementById('save-code-btn');
+  const out = document.getElementById('save-code-output');
+  if(btn){ btn.disabled = true; btn.textContent = 'Generating...'; }
+  try{
+    const code = await _saveDataToCode(_buildSaveData());
+    if(out){
+      out.style.display = 'block';
+      out.value = code;
+      out.focus();
+      out.select();
+    }
+    try{ await navigator.clipboard.writeText(code); if(btn) btn.textContent = 'Copied to clipboard!'; }
+    catch(e){ if(btn) btn.textContent = 'Code ready — copy it below'; }
+  }catch(e){
+    if(btn) btn.textContent = 'Could not generate code';
+  }finally{
+    if(btn) setTimeout(function(){ btn.disabled = false; btn.textContent = 'Generate & Copy Code'; }, 2200);
+  }
+}
+async function _loadFromPastedCode(){
+  const ta = document.getElementById('load-code-input');
+  const status = document.getElementById('load-status');
+  const code = ta && ta.value.trim();
+  if(!code){
+    if(status){ status.style.color = '#e05050'; status.textContent = 'Paste a code first.'; }
+    return;
+  }
+  if(status){ status.style.color = '#4a9a82'; status.textContent = 'Reading code...'; }
+  let data;
+  try{
+    data = await _codeToSaveData(code);
+  }catch(err){
+    if(status){ status.style.color = '#e05050'; status.textContent = err.message || "That code couldn't be read."; }
+    return;
+  }
+  _applyLoadedSaveData(data, status);
 }
 function openLoadModal(){
   const bd = document.getElementById('modal-backdrop');
@@ -12187,7 +12310,11 @@ function openLoadModal(){
       +'<div style="font-size:11px;color:var(--text-label);">or drag and drop a.json save file here</div>'
     +'</div>'
     +'<input id="load-file-input" type="file" accept=".json,application/json" style="display:none;" onchange="_handleIslandsFile(this)">'
-    +'<div id="load-status" style="font-size:11px;color:var(--text-muted);min-height:18px;margin-bottom:8px;"></div>'
+    +'<hr style="border:none;border-top:.5px solid var(--border-card);margin:4px 0 12px;">'
+    +'<div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;">Or paste a code someone shared with you</div>'
+    +'<textarea id="load-code-input" placeholder="Paste an Isle Foundry code here..." style="width:100%;min-height:60px;font-size:10.5px;font-family:monospace;resize:vertical;word-break:break-all;margin-bottom:8px;"></textarea>'
+    +'<button class="btn" style="width:100%;margin-bottom:4px;" onclick="_loadFromPastedCode()">Load Code</button>'
+    +'<div id="load-status" style="font-size:11px;color:var(--text-muted);min-height:18px;margin:8px 0;"></div>'
     +'<div class="modal-btns">'
       +'<button class="btn" onclick="closeAnyModal()">Cancel</button>'
     +'</div></div>';
@@ -12214,22 +12341,7 @@ function _handleIslandsFile(input){
       if(status){ status.style.color = '#e05050'; status.textContent = 'That file isn\'t valid JSON. Could not open it.'; }
       return;
     }
-    if(!data || !Array.isArray(data.islands)){
-      if(status){ status.style.color = '#e05050'; status.textContent = 'That file doesn\'t look like an Isle Foundry save. Missing island data.'; }
-      return;
-    }
-    islands = data.islands;
-    islands.forEach(_normalizeIslandBuildings);
-    if(data.ledger) Object.assign(_ledger, data.ledger);
-    if(!_ledger.pendingNotes) _ledger.pendingNotes = [];
-    if(!_ledger.actedThisTurn) _ledger.actedThisTurn = {};
-    if(data.islandSeq!==undefined) _islandSeq = data.islandSeq;
-    selectedIslandId = null;
-    renderIslandList();
-    renderWater();
-    renderDetail();
-    renderTopStats();
-    closeAnyModal();
+    _applyLoadedSaveData(data, status);
   };
   reader.onerror = function(){
     if(status){ status.style.color = '#e05050'; status.textContent = 'Could not read file.'; }
