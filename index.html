@@ -513,19 +513,28 @@ body{background:var(--bg-body);color:var(--text-primary);font-family:-apple-syst
    since it needs to sit on top of the island detail popup that's
    already open underneath it, not replace it. */
 .tierup-backdrop{display:flex;position:fixed;inset:0;background:rgba(10,20,30,.6);z-index:9999;align-items:center;justify-content:center;}
-.tierup-card{position:relative;background:var(--bg-modal);border:2px solid var(--border-gold);border-radius:16px;padding:34px 40px 28px;max-width:420px;text-align:center;overflow:hidden;box-shadow:0 14px 44px rgba(0,0,0,.45);}
-.tierup-confetti{position:absolute;inset:0;pointer-events:none;overflow:hidden;}
-.tierup-confetti-piece{position:absolute;top:-16px;width:7px;height:12px;opacity:.95;animation-name:tierup-fall;animation-timing-function:linear;animation-fill-mode:forwards;}
+.tierup-card{position:relative;z-index:1;background:var(--bg-modal);border:2px solid var(--border-gold);border-radius:16px;padding:34px 40px 28px;max-width:420px;width:88vw;text-align:center;box-shadow:0 14px 44px rgba(0,0,0,.45);}
+/* Whole-screen, not just the card. Its own fixed full-viewport layer,
+   a sibling of .tierup-card rather than nested inside it, so pieces
+   scatter and fall across the entire screen (behind mobile browser
+   chrome too) instead of being clipped to the card's own bounds. Sits
+   above the card (z-index 2 vs 1) so confetti visibly drifts in front
+   of the text, same as any real confetti cannon would. vw/vh-based
+   spread and fall/rise distance so it scales correctly to any screen
+   size, phones included, instead of the fixed-pixel distances a card-
+   sized effect could get away with. */
+.tierup-confetti{position:fixed;inset:0;z-index:2;pointer-events:none;overflow:hidden;}
+.tierup-confetti-piece{position:absolute;top:-4vh;width:8px;height:14px;opacity:.95;animation-name:tierup-fall;animation-timing-function:linear;animation-fill-mode:forwards;}
 @keyframes tierup-fall{
-  0%{transform:translateY(-16px) rotate(0deg);opacity:1;}
-  100%{transform:translateY(360px) rotate(600deg);opacity:.15;}
+  0%{transform:translateY(0) rotate(0deg);opacity:1;}
+  100%{transform:translateY(112vh) rotate(600deg);opacity:.15;}
 }
-.tierup-balloon{position:absolute;bottom:-46px;width:24px;height:30px;border-radius:50%/58% 58% 42% 42%;animation-name:tierup-rise;animation-timing-function:linear;animation-fill-mode:forwards;}
-.tierup-balloon::after{content:'';position:absolute;left:50%;top:100%;width:1px;height:22px;background:rgba(255,255,255,.45);}
+.tierup-balloon{position:absolute;bottom:-8vh;width:28px;height:35px;border-radius:50%/58% 58% 42% 42%;animation-name:tierup-rise;animation-timing-function:linear;animation-fill-mode:forwards;}
+.tierup-balloon::after{content:'';position:absolute;left:50%;top:100%;width:1px;height:26px;background:rgba(255,255,255,.45);}
 @keyframes tierup-rise{
   0%{transform:translateY(0) translateX(0);opacity:0;}
   8%{opacity:.95;}
-  100%{transform:translateY(-400px) translateX(var(--tierup-drift,10px));opacity:0;}
+  100%{transform:translateY(-118vh) translateX(var(--tierup-drift,10px));opacity:0;}
 }
 .tierup-title{font-size:21px;font-weight:800;color:var(--text-gold);margin-bottom:5px;position:relative;z-index:1;}
 .tierup-tiername{font-size:12.5px;color:var(--text-muted);margin-bottom:18px;position:relative;z-index:1;}
@@ -6166,32 +6175,40 @@ function _showTierUpCelebration(isl, tier){
   const pool = TIER_UP_QUOTES[tier] || TIER_UP_QUOTES[2];
   const quote = pool[Math.floor(Math.random()*pool.length)];
   const colors = ['#e05050','#4fa3cc','#f0c040','#5ac878','#9060c0','#e0a850'];
+  // Whole-screen count, not card-sized: enough pieces spread across a
+  // full phone-width viewport (left is a % of the fixed full-viewport
+  // .tierup-confetti layer now, not of the card) to still read as a
+  // real confetti burst rather than a sparse sprinkle.
   let piecesHtml = '';
-  for(let i=0;i<28;i++){
+  for(let i=0;i<60;i++){
     const left = (Math.random()*100).toFixed(1);
     const color = colors[Math.floor(Math.random()*colors.length)];
-    const delay = (Math.random()*0.4).toFixed(2);
-    const duration = (1.4+Math.random()*0.9).toFixed(2);
+    const delay = (Math.random()*0.5).toFixed(2);
+    const duration = (1.8+Math.random()*1.2).toFixed(2);
     const rot = Math.floor(Math.random()*360);
     piecesHtml += '<div class="tierup-confetti-piece" style="left:'+left+'%;background:'+color+';animation-delay:'+delay+'s;animation-duration:'+duration+'s;transform:rotate('+rot+'deg);"></div>';
   }
-  for(let i=0;i<5;i++){
-    const left = (8 + i*19 + (Math.random()*8-4)).toFixed(1);
+  for(let i=0;i<8;i++){
+    const left = (4 + i*12 + (Math.random()*8-4)).toFixed(1);
     const color = colors[i % colors.length];
-    const delay = (Math.random()*0.6).toFixed(2);
+    const delay = (Math.random()*0.7).toFixed(2);
     const drift = (Math.random()*44-22).toFixed(0)+'px';
-    piecesHtml += '<div class="tierup-balloon" style="left:'+left+'%;background:'+color+';animation-delay:'+delay+'s;animation-duration:2.6s;--tierup-drift:'+drift+';"></div>';
+    piecesHtml += '<div class="tierup-balloon" style="left:'+left+'%;background:'+color+';animation-delay:'+delay+'s;animation-duration:3.2s;--tierup-drift:'+drift+';"></div>';
   }
   const bd = document.createElement('div');
   bd.className = 'tierup-backdrop';
   bd.id = 'tierup-backdrop';
-  bd.innerHTML = '<div class="tierup-card">'
-    +'<div class="tierup-confetti">'+piecesHtml+'</div>'
-    +'<div class="tierup-title">🎉 Bastion Tier Up!</div>'
-    +'<div class="tierup-tiername">'+isl.name+' is now a <b>'+tierName+'</b> (Tier '+tier+')</div>'
-    +'<div class="tierup-scroll">'+quote+'</div>'
-    +'<button class="btn btn-gold tierup-close-btn" onclick="document.getElementById(\'tierup-backdrop\').remove()">Nice!</button>'
-  +'</div>';
+  // .tierup-confetti is a sibling of .tierup-card, not nested inside
+  // it, so it isn't clipped to the card's own bounds — it's its own
+  // fixed full-viewport layer that just happens to render on top of
+  // (and around) the card.
+  bd.innerHTML = '<div class="tierup-confetti">'+piecesHtml+'</div>'
+    +'<div class="tierup-card">'
+      +'<div class="tierup-title">🎉 Bastion Tier Up!</div>'
+      +'<div class="tierup-tiername">'+isl.name+' is now a <b>'+tierName+'</b> (Tier '+tier+')</div>'
+      +'<div class="tierup-scroll">'+quote+'</div>'
+      +'<button class="btn btn-gold tierup-close-btn" onclick="document.getElementById(\'tierup-backdrop\').remove()">Nice!</button>'
+    +'</div>';
   bd.addEventListener('click', function(e){ if(e.target===bd) bd.remove(); });
   document.body.appendChild(bd);
 }
