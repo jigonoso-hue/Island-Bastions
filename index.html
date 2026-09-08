@@ -589,7 +589,7 @@ input[type=text]:focus,input[type=number]:focus,textarea:focus,select:focus{outl
    different, older app. Town Hall keeps its own dedicated marble theme
    (.townhall-modal) instead and never gets this class. */
 .bldg-modal{position:relative;overflow:hidden;}
-.bldg-modal::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:var(--cat-accent,var(--border-gold));z-index:1;}
+.bldg-modal::before{content:'';position:absolute;top:0;left:0;right:0;height:7px;background:var(--cat-accent,var(--border-gold));z-index:1;}
 .bldg-modal::after{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 140% 80% at 50% -10%,color-mix(in srgb,var(--cat-accent,var(--border-gold)) 12%,transparent),transparent 60%);pointer-events:none;z-index:0;}
 .bldg-modal>*{position:relative;z-index:1;}
 .bldg-modal.cat-housing{--cat-accent:var(--cat-housing);}
@@ -600,10 +600,21 @@ input[type=text]:focus,input[type=number]:focus,textarea:focus,select:focus{outl
 .bldg-modal.cat-guilds{--cat-accent:var(--cat-guilds);}
 .bldg-modal.cat-expansion{--cat-accent:var(--cat-expansion);}
 .bldg-modal.cat-civic{--cat-accent:var(--cat-civic);}
-.bldg-modal-head{display:flex;align-items:center;gap:12px;margin-bottom:12px;}
+.bldg-modal-head{display:flex;align-items:center;gap:12px;margin-bottom:14px;padding-top:2px;}
 .bldg-modal-icon{width:48px;height:48px;border-radius:13px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:var(--bg-highlight);border:1.5px solid var(--cat-accent,var(--border-card));box-shadow:0 2px 8px rgba(0,0,0,.12);}
 .bldg-modal-icon svg{width:30px;height:30px;stroke:var(--cat-accent,var(--text-teal-4));color:var(--cat-accent,var(--text-teal-4));}
-.bldg-modal .building-row{background:var(--bg-highlight);border-color:var(--cat-accent,var(--border-card));border-width:.5px;}
+/* The whole info block used to sit inside one solid-filled highlight box —
+   level pill, category, effect text, and buttons all stacked into the
+   same flat panel with no hierarchy, which read as one big undifferentiated
+   callout rather than a few clearly separate facts. Now .bldg-card-body
+   is unfilled (just a light hairline border), and the effect line gets
+   its own small stat-chip treatment (see .bldg-stat-chip below) instead
+   of sharing a box with the buttons. */
+.bldg-modal .bldg-card-body{background:transparent;border-color:var(--border-card);}
+.bldg-meta-row{display:flex;justify-content:space-between;align-items:center;}
+.bldg-stat-chip{display:flex;align-items:center;gap:9px;background:var(--bg-card);border:1px solid var(--border-card);border-left:3px solid var(--cat-accent,var(--border-gold));border-radius:8px;padding:9px 11px;font-size:12px;line-height:1.4;color:var(--text-primary);}
+.bldg-stat-chip i{font-size:15px;color:var(--cat-accent,var(--text-teal-4));flex-shrink:0;}
+.bldg-actions-row{display:flex;gap:8px;flex-wrap:wrap;padding-top:9px;margin-top:1px;border-top:1px dashed var(--border-card);}
 .bldg-modal .btn-gold{background:linear-gradient(180deg,color-mix(in srgb,var(--text-gold) 14%,transparent),transparent);box-shadow:0 1px 0 rgba(255,255,255,.08) inset;}
 .bldg-modal .btn-gold:hover{background:linear-gradient(180deg,color-mix(in srgb,var(--text-gold) 22%,transparent),transparent);}
 /* Remove used to be a full "Remove" text pill sitting right at eye level
@@ -4321,8 +4332,8 @@ function _renderBuildingCard(isl, entry, idx, b){
   // detail view a tooltip would have shown). Just level, category,
   // basic effect info, and the actual buttons.
   const weeksLeft = entry.constructionWeeksLeft||0;
-  let html = '<div class="building-row" style="flex-direction:column;align-items:stretch;gap:9px;">'
-    +'<div style="display:flex;justify-content:space-between;align-items:center;">'
+  let html = '<div class="building-row bldg-card-body" style="flex-direction:column;align-items:stretch;gap:9px;">'
+    +'<div class="bldg-meta-row">'
       +'<div>'+(participates?'<span class="tier-pill" style="font-size:11px;">Lv.'+level+'</span> ':'')+'<span style="font-size:12px;color:var(--text-muted);">'+(CAT_LABELS[b.cat]||b.cat)+'</span>'+traitBadge+'</div>'
       +'<button class="btn bldg-remove-btn" title="Remove" onclick="removeBuilding(\''+isl.id+'\','+idx+')"><i class="ti ti-trash"></i></button>'
     +'</div>';
@@ -4334,7 +4345,15 @@ function _renderBuildingCard(isl, entry, idx, b){
       +'</div>';
     return html;
   }
-  html += (effectLabel ? '<div style="font-size:12px;color:var(--text-teal-2);">'+effectLabel+'</div>': '');
+  // The building's own effect (what it actually rolls/houses/services)
+  // used to just be a plain line of text sitting in the same solid-
+  // filled box as the buttons below it - level, category, stat, and
+  // actions all mashed into one flat panel with no visual hierarchy.
+  // Now it's its own small stat chip: an icon, colored to the building's
+  // category accent, with the effect text next to it - clearly a
+  // reported fact about the building, separate from the buttons that
+  // act on it.
+  html += (effectLabel ? '<div class="bldg-stat-chip"><i class="ti '+(BLDG_STAT_CHIP_ICON[b.cat]||'ti-chart-bar')+'"></i><span>'+effectLabel+'</span></div>': '');
   if(bid==='town_hall'){
     // Town Hall doesn't roll for income like other Civic buildings. Its
     // popover replaces the usual Active Action section with the Edicts
@@ -4433,7 +4452,7 @@ function _renderBuildingCard(isl, entry, idx, b){
        : '<button class="btn'+(acted?'':' btn-gold')+'" id="tour-action-btn" style="font-size:11px;padding:5px 10px;" onclick="openBastionActionModal(\''+isl.id+'\','+idx+')"><i class="ti ti-bolt"></i> '+(acted?'Acted: '+acted:'Active Action')+'</button>';
     }
     const maxLevel = b.maxLevel||5;
-    html += '<div style="display:flex;gap:8px;flex-wrap:wrap;">'
+    html += '<div class="bldg-actions-row">'
       +(level<maxLevel ? '<button class="btn" id="tour-levelup-btn" style="font-size:11px;padding:5px 10px;" onclick="_levelUpBuilding(\''+isl.id+'\','+idx+')"><i class="ti ti-arrow-up"></i> Level Up ('+upgradeCost.toLocaleString()+' gp)</button>': '<span style="font-size:11px;color:var(--text-muted);align-self:center;">'+(maxLevel===1?'No Upgrades':'Max Level')+'</span>')
       +actionBtnHtml
     +'</div>';
@@ -4448,6 +4467,10 @@ function _renderBuildingCard(isl, entry, idx, b){
 // separate from BUILDINGS' own catLabel (which carries its own little
 // colored dot icon meant for inline text, not a section header).
 const CAT_LABELS = { production:'Production', farming:'Farming', housing:'Housing', recreational:'Recreational', tourism:'Tourism', guilds:'Guilds', expansion:'Expansion', civic:'Civic' };
+// One small icon per category for the building card's own stat chip (see
+// _renderBuildingCard) - just enough to give the effect line a visual
+// anchor distinct from Tabler's generic bar-chart glyph.
+const BLDG_STAT_CHIP_ICON = { housing:'ti-users', farming:'ti-wheat', production:'ti-building-factory-2', recreational:'ti-ticket', tourism:'ti-map-pin', guilds:'ti-shield', expansion:'ti-arrows-maximize', civic:'ti-building-bank' };
 const CAT_ICONS = {
   housing: '<path d="M4 11 L12 4 L20 11" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M6 10 V20 H18 V10" fill="none" stroke-width="1.8" stroke-linejoin="round"/><rect x="10" y="14" width="4" height="6" fill="none" stroke-width="1.8"/>',
   farming: '<path d="M12 20 V10" fill="none" stroke-width="1.8" stroke-linecap="round"/><path d="M12 10 C9 10 8 7 8 5 C10 5 12 6 12 10" fill="none" stroke-width="1.8" stroke-linejoin="round"/><path d="M12 10 C15 10 16 7 16 5 C14 5 12 6 12 10" fill="none" stroke-width="1.8" stroke-linejoin="round"/>',
