@@ -731,8 +731,15 @@ input[type=text]:focus,input[type=number]:focus,textarea:focus,select:focus{outl
 .edict-row-status{font-size:11px;color:var(--text-teal-2);padding-left:30px;}
 .edict-row-status.muted{color:var(--text-label);}
 .edict-row-locked{opacity:.55;}
-.edict-row-locked.edict-row-title{color:var(--text-label);}
-.edict-row-locked.edict-row-icon{background:rgba(255,255,255,.06);color:var(--text-label);}
+/* Were ".edict-row-locked.edict-row-title"/".edict-row-locked.edict-
+   row-icon" - compound selectors demanding both classes on the same
+   element. .edict-row-locked only ever lands on the outer row div
+   (see lockedRow()); .edict-row-title/.edict-row-icon are always on
+   inner children, so neither rule ever matched — the row still dimmed
+   overall via the opacity above, but the title/icon's own extra color
+   override never actually applied. Descendant selectors fix that. */
+.edict-row-locked .edict-row-title{color:var(--text-label);}
+.edict-row-locked .edict-row-icon{background:rgba(255,255,255,.06);color:var(--text-label);}
 .edict-row-locked-tag{font-size:10px;color:var(--text-label);border:1px solid var(--border-card);border-radius:10px;padding:3px 9px;flex:0 0 auto;}
 /* Edict picker modals (Economic / Immigration / Construction) */
 .edict-modal h2{display:flex;align-items:center;gap:8px;}
@@ -751,7 +758,65 @@ input[type=text]:focus,input[type=number]:focus,textarea:focus,select:focus{outl
 .edict-pick-item-wide{flex-direction:column;align-items:flex-start;gap:3px;}
 .edict-pick-name{font-size:12px;font-weight:600;}
 .edict-pick-detail{font-size:10px;color:var(--text-muted);}
-.edict-pick-item-wide.edict-pick-detail{color:var(--text-muted);line-height:1.4;}
+/* Was ".edict-pick-item-wide.edict-pick-detail" - .edict-pick-item-
+   wide is the outer <button>, .edict-pick-detail its inner <span>, so
+   this never matched either; the multi-line detail text never got the
+   extra line-height, just whatever line-height it inherited. */
+.edict-pick-item-wide .edict-pick-detail{color:var(--text-muted);line-height:1.4;}
+/* ── Town Hall: marble acropolis theme ───────────────────────────────
+   Applies to the Town Hall's own building popover (.townhall-modal,
+   see _openBuildingTokenModal) and every one of its Edict picker
+   sub-modals (.townhall-edict-modal, stamped onto all 5: Economic/
+   Immigration/Construction/Housing/Tourism). A stone-and-bronze
+   palette instead of the app's usual blue/tan, a fluted pediment
+   strip, carved-tablet edict rows, and a classical serif title —
+   this is the one building whose whole UI is civic government, so it
+   gets to look like an actual seat of one instead of a plain card. */
+.townhall-modal,.townhall-edict-modal{position:relative;overflow:hidden;
+  background:
+    radial-gradient(ellipse at 12% 0%, rgba(255,255,255,.55), transparent 45%),
+    radial-gradient(ellipse at 90% 100%, rgba(190,185,175,.4), transparent 50%),
+    linear-gradient(160deg,#f6f4ef,#e8e3d8 45%,#dbd5c8);
+  border:2px solid #b3925a;
+  box-shadow:0 0 0 1px rgba(179,146,90,.3),0 24px 60px rgba(30,20,5,.35);
+  color:#4a4030;padding-top:32px;}
+/* Fluted frieze strip along the top, like a temple pediment. */
+.townhall-modal::before,.townhall-edict-modal::before{content:'';position:absolute;top:0;left:0;right:0;height:9px;
+  background:repeating-linear-gradient(90deg,#b3925a 0 3px,#8a6d3c 3px 4px,transparent 4px 11px,transparent 11px 11px);
+  background-size:22px 100%;opacity:.9;}
+/* Faint marble veining, purely decorative, behind the content. */
+.townhall-modal::after,.townhall-edict-modal::after{content:'';position:absolute;inset:0;pointer-events:none;z-index:0;
+  background:
+    linear-gradient(115deg,transparent 28%,rgba(140,125,95,.09) 29%,transparent 31%),
+    linear-gradient(65deg,transparent 52%,rgba(140,125,95,.07) 53%,transparent 55%),
+    linear-gradient(15deg,transparent 68%,rgba(140,125,95,.08) 69%,transparent 71%);}
+.townhall-modal>*,.townhall-edict-modal>*{position:relative;z-index:1;}
+.townhall-modal h2,.townhall-edict-modal h2{font-family:Georgia,'Times New Roman',serif;letter-spacing:.06em;
+  color:#6b5324;text-align:center;text-shadow:0 1px 0 rgba(255,255,255,.6);justify-content:center;}
+.townhall-edict-modal .edict-modal-icon{background:rgba(179,146,90,.18);color:#8a6d3c;}
+.townhall-edict-modal .edict-modal-desc{color:#5c5240;}
+/* Edict rows read as carved stone tablets: an inset, chiseled-in
+   look (light top edge, dark inner shadow) instead of a flat card. */
+.townhall-modal .edict-row{background:linear-gradient(180deg,#efe9db,#e2dbc9);
+  border:1px solid #c2a970;box-shadow:inset 0 1px 0 rgba(255,255,255,.7),inset 0 -2px 4px rgba(120,95,45,.15);}
+.townhall-modal .edict-row-title{color:#6b5324;}
+.townhall-modal .edict-row-icon{background:rgba(179,146,90,.2);color:#8a6d3c;}
+.townhall-modal .edict-row-status{color:#5c5240;}
+.townhall-modal .edict-row-status.active{color:#7a5a1e;font-weight:600;}
+.townhall-modal .edict-row-locked{background:linear-gradient(180deg,#e5e0d3,#dad3c2);}
+.townhall-modal .edict-row-locked-tag{color:#8a7e66;border-color:#c2b48f;}
+.townhall-edict-modal .edict-pick-item{background:linear-gradient(180deg,#efe9db,#e2dbc9);
+  border:1px solid #c2a970;color:#4a4030;box-shadow:inset 0 1px 0 rgba(255,255,255,.7);}
+.townhall-edict-modal .edict-pick-item:hover{border-color:#8a6d3c;}
+.townhall-edict-modal .edict-pick-item.active{border-color:#8a6d3c;background:linear-gradient(180deg,#f3ecd8,#e6dcc0);}
+.townhall-edict-modal .edict-pick-name{color:#4a4030;}
+.townhall-edict-modal .edict-pick-detail{color:#5c5240;}
+.townhall-edict-modal .edict-pick-tag{background:#8a6d3c;color:#f6f4ef;}
+/* Bronze/gold buttons instead of the app's usual blue. */
+.btn-townhall,.townhall-modal .edict-row-btn,.townhall-edict-modal .btn,.townhall-modal #tour-levelup-btn{
+  background:linear-gradient(180deg,#d9bd7e,#a9803f);color:#2e2410;border:1px solid #8a6d3c;font-weight:700;}
+.btn-townhall:hover,.townhall-modal .edict-row-btn:hover,.townhall-edict-modal .btn:hover,.townhall-modal #tour-levelup-btn:hover{
+  box-shadow:0 0 10px rgba(169,128,63,.5);}
 /* Quest branch buttons (choose_path/choose_leviathan_path and similar).
    same wide/column shape as an Edict pick, so a branch can carry a short
    hint about where it leads under its own label instead of being a bare
@@ -5259,10 +5324,15 @@ function _openBuildingTokenModal(islId, idx){
   if(!b) return;
   const bd = document.getElementById('modal-backdrop');
   bd.style.display = 'flex';
-  bd.innerHTML = '<div class="modal" style="max-width:440px;">'
+  // Town Hall gets the marble-acropolis treatment (.townhall-modal) —
+  // the one building whose whole popover is civic administration
+  // (Edicts), not a normal building card, so it earns looking like an
+  // actual seat of government instead of the plain generic modal.
+  const isTownHall = _bid(entry)==='town_hall';
+  bd.innerHTML = '<div class="modal'+(isTownHall?' townhall-modal':'')+'" style="max-width:440px;">'
     +'<h2 style="font-size:19px;">'+_buildingDisplayName(b, _blevel(entry))+'</h2>'
     +_renderBuildingCard(isl, entry, idx, b)
-    +'<div class="modal-btns"><button class="btn" onclick="closeAnyModal()">Close</button></div>'
+    +'<div class="modal-btns"><button class="btn'+(isTownHall?' btn-townhall':'')+'" onclick="closeAnyModal()">Close</button></div>'
   +'</div>';
 }
 function removeBuilding(islId, idx){
@@ -5670,10 +5740,12 @@ function _usedLots(isl){
 }
 function _totalLots(isl){
   // Expansion buildings don't level up. GrantsLots is a flat, permanent
-  // number.
+  // number, boosted (rounded up) by an active Expansion Economic Edict
+  // the same way Housing/Farming/Recreational capacity is.
   const bonus = isl.buildings.reduce(function(sum,entry){
     const b = BUILDINGS.find(function(x){ return x.id===_bid(entry); });
-    return sum + (b ? (b.grantsLots||0): 0);
+    if(!b || !b.grantsLots) return sum;
+    return sum + _econBoost(isl, 'expansion', b.grantsLots);
   }, 0);
   // Riftstone Quarry (and any future flat-Lots trait). No building, no
   // scaling, just a permanent jump the moment the island has the trait.
@@ -5788,6 +5860,24 @@ function _activeCruiseLineEffects(isl){
     return out;
   }).filter(Boolean);
 }
+// Economic Edict, for the 5 categories that now boost their own real
+// output/capacity number instead of a flat gp% (Housing/Farming/
+// Recreational/Civic/Expansion — Guilds/Tourism keep the original
+// income-percent mechanic in _runBastionForBuilding). Rounds the
+// MAGNITUDE up regardless of sign, so a civic building's own crime
+// REDUCTION (a negative number) gets a bigger reduction rather than a
+// smaller one — Math.ceil alone on a negative number rounds toward
+// zero, the wrong direction for a "bonus" that happens to be negative.
+function _econBoost(isl, cat, value){
+  const econ = isl.economicEdict;
+  if(!econ || econ.weeksLeft<=0 || econ.category!==cat || !value) return value;
+  const mult = 1 + econ.percent/100;
+  // Rounded to 6 decimal places before ceiling. Floating-point math
+  // alone (360*1.1 === 396.00000000000006) would otherwise ceil an
+  // exact +10% up to +11 instead of the +10 it should already be.
+  const scaled = Math.round(Math.abs(value)*mult*1e6)/1e6;
+  return value<0 ? -Math.ceil(scaled): Math.ceil(scaled);
+}
 function calcIslandStats(isl){
   let popCap = 0, aquaticPopCap = 0, aquaticInGeneralCap = 0, foodCap = 0, happinessBonus = 0, beauty = 0, crime = 0, investedGp = 0, recreationCap = 0;
   const traitEffects = _activeTraitEffects(isl).concat(_activeCruiseLineEffects(isl));
@@ -5820,21 +5910,33 @@ function calcIslandStats(isl){
       // Low Density halves it back for a Beauty gain (plus extra buildable
       // Lots, handled in _totalLots).
       const isHousing = b.cat==='housing';
+      const isCivic = b.cat==='civic';
       const housingCapMult = isHousing && isl.housingEdict==='highDensity' ? 2: isHousing && isl.housingEdict==='lowDensity' ? 0.5: 1;
-      popCap += Math.round(_levelCapBonus(b.stats.popCap||0, level) * housingCapMult);
-      aquaticPopCap += Math.round(_levelCapBonus(b.stats.aquaticPopCap||0, level) * housingCapMult);
+      // Economic Edict on Housing/Farming/Recreational rounds each
+      // building's own capacity number up by the edict's percent
+      // (Math.ceil, applied after the usual per-Level/Density math),
+      // rather than touching gp income the way Guilds/Tourism's edict
+      // still does.
+      popCap += _econBoost(isl, 'housing', Math.round(_levelCapBonus(b.stats.popCap||0, level) * housingCapMult));
+      aquaticPopCap += _econBoost(isl, 'housing', Math.round(_levelCapBonus(b.stats.aquaticPopCap||0, level) * housingCapMult));
       let foodMult = 1;
       foodMultipliers.forEach(function(fm){ if((fm.ids && fm.ids.indexOf(b.id)!==-1) || (fm.cat && fm.cat===b.cat)) foodMult *= fm.mult; });
-      foodCap += Math.round(_levelCapBonus(b.stats.foodCap||0, level) * foodMult);
-      happinessBonus += b.stats.happiness||0;
-      beauty += b.stats.beauty||0;
+      foodCap += _econBoost(isl, 'farming', Math.round(_levelCapBonus(b.stats.foodCap||0, level) * foodMult));
+      // Civic's Economic Edict boosts a Civic building's own passive
+      // bonuses (crime/beauty/happiness) — its "unique bonus" — the
+      // same rounded-up-percent way, rather than any other category's
+      // stats. Every other category's happiness/beauty pass through
+      // unboosted, same as always.
+      happinessBonus += isCivic ? _econBoost(isl, 'civic', b.stats.happiness||0): (b.stats.happiness||0);
+      beauty += isCivic ? _econBoost(isl, 'civic', b.stats.beauty||0): (b.stats.beauty||0);
       if(isHousing && isl.housingEdict==='highDensity'){ crime += 10; beauty -= 10; }
       else if(isHousing && isl.housingEdict==='lowDensity'){ beauty += 10; }
       // A building's crime contribution. Good or bad. Scales with its
       // Level: a leveled-up Watch Post stops more crime, a leveled-up Vice
       // Den attracts more of it. Only Housing/Recreational/Civic can ever
       // level past 1, so this is a no-op for every other category.
-      crime += (b.stats.crime||0) * (1 + 0.15*(level-1));
+      const rawCrime = (b.stats.crime||0) * (1 + 0.15*(level-1));
+      crime += isCivic ? _econBoost(isl, 'civic', Math.round(rawCrime)): rawCrime;
       // aquaticOnly housing (Coral Spires) still counts toward the general
       // pool for every stat below. Population, hunger, happiness, value.
       // it's only tracked separately here so the Pop tab can correctly
@@ -5843,7 +5945,7 @@ function calcIslandStats(isl){
       // Native Coral Reservation, which is a fully separate self-
       // sufficient pool.
       if(b.aquaticOnly) aquaticInGeneralCap += _levelCapBonus(b.stats.popCap||0, level);
-      recreationCap += _recreationServiceCap(b, level);
+      recreationCap += b.cat==='recreational' ? _econBoost(isl, 'recreational', _recreationServiceCap(b, level)): _recreationServiceCap(b, level);
     }
   });
   // Island Traits (picked at creation, permanent) fold flat bonuses in
@@ -8394,7 +8496,7 @@ function _renderTownHallEdictsHTML(isl, idx, level){
   }
   return '<div class="edict-section">'
     + row('economic', EDICT_ICONS.economic, 'Economic Edict', '',
-        econ ? '+'+econ.percent+'% '+(CAT_LABELS[econ.category]||econ.category)+' income. '+econ.weeksLeft+'wk left': 'Not active',
+        econ ? '+'+econ.percent+'% '+(CAT_LABELS[econ.category]||econ.category)+' '+((econ.category==='guilds'||econ.category==='tourism')?'income':'output/capacity')+'. '+econ.weeksLeft+'wk left': 'Not active',
         !!econ, econ?null:'Issue', "openEconomicEdictModal('"+isl.id+"',"+idx+")")
     + row('immigration', EDICT_ICONS.immigration, 'Immigration Edict', '',
         immi ? _immigrationEdictLabel(immi)+'. '+immi.weeksLeft+'wk left': 'Not active',
@@ -8414,6 +8516,15 @@ function _renderTownHallEdictsHTML(isl, idx, level){
        : lockedRow('Tourism Edict', 3))
   +'</div>';
 }
+// What each category's Economic Edict percent actually applies to,
+// shown right on its picker button. Guilds/Tourism unchanged (income);
+// everything else is the new output/capacity boost.
+const ECONOMIC_EDICT_CAT_NOTES = {
+  production:'· output qty', housing:'· housing capacity', farming:'· food capacity',
+  recreational:'· service capacity', civic:'· Civic bonuses', expansion:'· Lots granted',
+  guilds:'· income', tourism:'· income'
+};
+function _economicEdictCatNote(cat){ return ECONOMIC_EDICT_CAT_NOTES[cat]||''; }
 function openEconomicEdictModal(islId, idx){
   const isl = islands.find(function(i){ return i.id===islId; });
   if(!isl) return;
@@ -8422,11 +8533,11 @@ function openEconomicEdictModal(islId, idx){
   const locked = isl.economicEdict && isl.economicEdict.weeksLeft>0;
   const bd = document.getElementById('modal-backdrop');
   bd.style.display = 'flex';
-  bd.innerHTML = '<div class="modal edict-modal" style="max-width:440px;">'
+  bd.innerHTML = '<div class="modal edict-modal townhall-edict-modal" style="max-width:440px;">'
     +'<h2><span class="edict-modal-icon">'+EDICT_ICONS.economic+'</span>Economic Edict</h2>'
     +'<p class="edict-modal-desc">'+(locked
         ? 'Locked in on <b>'+(CAT_LABELS[isl.economicEdict.category]||isl.economicEdict.category)+'</b> for '+isl.economicEdict.weeksLeft+' more week'+(isl.economicEdict.weeksLeft===1?'':'s')+'. An Edict can\'t be swapped mid-run, only re-issued once it expires.'
-       : 'Boosts one category\'s Bastion income for 4 weeks, locked in for the full run. Picking the same category again once it\'s worn off permanently ratchets its own level up another +2%, to a 100% cap.')
+       : 'Boosts one category for 4 weeks, locked in for the full run. Guilds and Tourism get a straight income boost; every other category boosts its own real output or capacity instead (rounded up), same percent either way. Picking the same category again once it\'s worn off permanently ratchets its own percent up another +2%, to a 100% cap.')
       +'</p>'
     +'<div class="edict-pick-list">'
     + cats.map(function(cat){
@@ -8436,7 +8547,7 @@ function openEconomicEdictModal(islId, idx){
         const disabled = locked && !active;
         return '<button class="edict-pick-item'+(active?' active':'')+(disabled?' disabled':'')+'" '+(disabled?'disabled':'onclick="_confirmActivateEconomicEdict(\''+isl.id+'\',\''+cat+'\','+idx+')"')+'>'
           +'<span class="edict-pick-name">'+(CAT_LABELS[cat]||cat)+(active?' <span class="edict-pick-tag">ACTIVE</span>':'')+'</span>'
-          +'<span class="edict-pick-detail">'+(active?isl.economicEdict.weeksLeft+'wk left':current>0?'now +'+current+'% · next +'+next+'%':'first time. +10%')+'</span>'
+          +'<span class="edict-pick-detail">'+(active?isl.economicEdict.weeksLeft+'wk left':current>0?'now +'+current+'% · next +'+next+'%':'first time. +10%')+' '+_economicEdictCatNote(cat)+'</span>'
         +'</button>';
       }).join('')
     +'</div>'
@@ -8455,7 +8566,7 @@ function openImmigrationEdictModal(islId, idx){
     const disabled = locked && !active;
     return '<button class="edict-pick-item'+(active?' active':'')+(disabled?' disabled':'')+'" '+(disabled?'disabled':'onclick="_confirmActivateImmigrationEdict(\''+isl.id+'\',\''+target+'\','+idx+')"')+'><span class="edict-pick-name">'+label+(active?' <span class="edict-pick-tag">ACTIVE</span>':'')+'</span><span class="edict-pick-detail">'+(active?isl.immigrationEdict.weeksLeft+'wk left':detail)+'</span></button>';
   }
-  bd.innerHTML = '<div class="modal edict-modal" style="max-width:460px;max-height:80vh;overflow-y:auto;">'
+  bd.innerHTML = '<div class="modal edict-modal townhall-edict-modal" style="max-width:460px;max-height:80vh;overflow-y:auto;">'
     +'<h2><span class="edict-modal-icon">'+EDICT_ICONS.immigration+'</span>Immigration Edict</h2>'
     +'<p class="edict-modal-desc">'+(locked
         ? 'Locked in on <b>'+_immigrationEdictLabel(isl.immigrationEdict)+'</b> for '+isl.immigrationEdict.weeksLeft+' more week'+(isl.immigrationEdict.weeksLeft===1?'':'s')+'. An Edict can\'t be swapped mid-run, only re-issued once it expires.'
@@ -8481,7 +8592,7 @@ function openConstructionEdictModal(islId, idx){
   if(!isl) return;
   const bd = document.getElementById('modal-backdrop');
   bd.style.display = 'flex';
-  bd.innerHTML = '<div class="modal edict-modal" style="max-width:440px;">'
+  bd.innerHTML = '<div class="modal edict-modal townhall-edict-modal" style="max-width:440px;">'
     +'<h2><span class="edict-modal-icon">'+EDICT_ICONS.construction+'</span>Construction Edict</h2>'
     +'<p class="edict-modal-desc">A standing stance, not a timed boost. Click the active one again to stand down.</p>'
     +'<div class="edict-pick-list">'
@@ -8496,7 +8607,7 @@ function openHousingEdictModal(islId, idx){
   if(!isl) return;
   const bd = document.getElementById('modal-backdrop');
   bd.style.display = 'flex';
-  bd.innerHTML = '<div class="modal edict-modal" style="max-width:440px;">'
+  bd.innerHTML = '<div class="modal edict-modal townhall-edict-modal" style="max-width:440px;">'
     +'<h2><span class="edict-modal-icon">'+EDICT_ICONS.housing+'</span>Housing Edict</h2>'
     +'<p class="edict-modal-desc">A standing stance, not a timed boost. Click the active one again to stand down for free. Enacting it fresh or switching to the other stance both cost '+HOUSING_EDICT_COST.toLocaleString()+' gp. Reshapes every Housing building on the island at once, live.</p>'
     +'<div class="edict-pick-list">'
@@ -8517,7 +8628,7 @@ function openTourismEdictModal(islId, idx){
   }
   const bd = document.getElementById('modal-backdrop');
   bd.style.display = 'flex';
-  bd.innerHTML = '<div class="modal edict-modal" style="max-width:440px;">'
+  bd.innerHTML = '<div class="modal edict-modal townhall-edict-modal" style="max-width:440px;">'
     +'<h2><span class="edict-modal-icon">'+EDICT_ICONS.tourism+'</span>Tourism Edict</h2>'
     +'<p class="edict-modal-desc">'+(locked
         ? 'Locked in on <b>'+(isl.tourismEdict.option==='boostedCoffers'?'Boosted Coffers':'Fame Rush')+'</b> for '+isl.tourismEdict.weeksLeft+' more week'+(isl.tourismEdict.weeksLeft===1?'':'s')+'. An Edict can\'t be swapped mid-run, only re-issued once it expires.'
@@ -8539,9 +8650,13 @@ function _runBastionForBuilding(isl, stats, entry, visitor){
   r.id = b.id;
   r.level = _blevel(entry);
   r.name = _buildingDisplayName(b, r.level);
-  // Economic Edict. A standing income boost for one category, active
-  // for 4 weeks per activation.
-  if(isl.economicEdict && isl.economicEdict.weeksLeft>0 && isl.economicEdict.category===b.cat && typeof r.income==='number'){
+  // Economic Edict. Guilds and Tourism keep the original flat income
+  // boost, active for 4 weeks per activation. Every other category now
+  // boosts its own actual output/capacity number instead (housing/
+  // farming/recreational capacity, Civic's own bonuses, Expansion
+  // Lots, Production quantity) — see calcIslandStats, _totalLots, and
+  // the per-island weight in simulateWeek's production pass.
+  if(isl.economicEdict && isl.economicEdict.weeksLeft>0 && isl.economicEdict.category===b.cat && (b.cat==='guilds' || b.cat==='tourism') && typeof r.income==='number'){
     r.income = Math.round(r.income * (1 + isl.economicEdict.percent/100));
   }
   // A trait-granted, permanent version of the same idea. one category
@@ -11126,12 +11241,18 @@ function simulateWeek(weatherByIsland){
   // same inputs.
   const counts = {}, levelWeight = {};
   islands.forEach(function(isl){
+    // Economic Edict on Production boosts THIS island's own rooms'
+    // share of the (island-agnostic, pooled) output weight below by
+    // its percent, rather than touching gp income directly - a room on
+    // an island without the Edict active contributes its usual
+    // 1+0.1*(Level-1), unaffected by another island's own Edict.
+    const prodBoost = 1 + (isl.economicEdict && isl.economicEdict.weeksLeft>0 && isl.economicEdict.category==='production' ? isl.economicEdict.percent/100: 0);
     isl.buildings.forEach(function(entry){
       if(typeof entry==='object' && entry.constructionWeeksLeft>0) return; // not built yet. No inputs consumed, nothing produced
       const bid = _bid(entry);
       const level = _blevel(entry);
       counts[bid] = (counts[bid]||0) + 1;
-      levelWeight[bid] = (levelWeight[bid]||0) + (1 + 0.1*(level-1));
+      levelWeight[bid] = (levelWeight[bid]||0) + (1 + 0.1*(level-1)) * prodBoost;
     });
   });
   const entries = [];
