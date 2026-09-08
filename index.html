@@ -578,6 +578,41 @@ body{background:var(--bg-body);color:var(--text-primary);font-family:-apple-syst
 input[type=text],input[type=number],textarea,select{width:100%;padding:8px 10px;background:var(--bg-elevated);border:.5px solid var(--border-card);border-radius:6px;color:var(--text-primary);font-size:12px;margin-bottom:8px;font-family:inherit;box-sizing:border-box;}
 input[type=text]:focus,input[type=number]:focus,textarea:focus,select:focus{outline:none;border-color:var(--border-gold);}
 .modal-btns{display:flex;gap:8px;justify-content:flex-end;margin-top:14px;}
+/* Every building's own popover (.bldg-modal, opened from its token in the
+   grid) now carries the same cat-X accent color already used on that
+   building's token icon out in the grid — a thin top strip, a soft tint
+   wash behind the card, and its actual token icon enlarged in the
+   header — so the card reads as belonging to that specific building
+   instead of a generic gray box, and the jump into a flagship building's
+   deeper minigame modal (Casino's Gaming Floor, Port Authority's Cruise
+   Charters) no longer feels like it's coming from a completely
+   different, older app. Town Hall keeps its own dedicated marble theme
+   (.townhall-modal) instead and never gets this class. */
+.bldg-modal{position:relative;overflow:hidden;}
+.bldg-modal::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:var(--cat-accent,var(--border-gold));z-index:1;}
+.bldg-modal::after{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 140% 80% at 50% -10%,color-mix(in srgb,var(--cat-accent,var(--border-gold)) 12%,transparent),transparent 60%);pointer-events:none;z-index:0;}
+.bldg-modal>*{position:relative;z-index:1;}
+.bldg-modal.cat-housing{--cat-accent:var(--cat-housing);}
+.bldg-modal.cat-farming{--cat-accent:var(--cat-farming);}
+.bldg-modal.cat-production{--cat-accent:var(--cat-production);}
+.bldg-modal.cat-recreational{--cat-accent:var(--cat-recreational);}
+.bldg-modal.cat-tourism{--cat-accent:var(--cat-tourism);}
+.bldg-modal.cat-guilds{--cat-accent:var(--cat-guilds);}
+.bldg-modal.cat-expansion{--cat-accent:var(--cat-expansion);}
+.bldg-modal.cat-civic{--cat-accent:var(--cat-civic);}
+.bldg-modal-head{display:flex;align-items:center;gap:12px;margin-bottom:12px;}
+.bldg-modal-icon{width:48px;height:48px;border-radius:13px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:var(--bg-highlight);border:1.5px solid var(--cat-accent,var(--border-card));box-shadow:0 2px 8px rgba(0,0,0,.12);}
+.bldg-modal-icon svg{width:30px;height:30px;stroke:var(--cat-accent,var(--text-teal-4));color:var(--cat-accent,var(--text-teal-4));}
+.bldg-modal .building-row{background:var(--bg-highlight);border-color:var(--cat-accent,var(--border-card));border-width:.5px;}
+.bldg-modal .btn-gold{background:linear-gradient(180deg,color-mix(in srgb,var(--text-gold) 14%,transparent),transparent);box-shadow:0 1px 0 rgba(255,255,255,.08) inset;}
+.bldg-modal .btn-gold:hover{background:linear-gradient(180deg,color-mix(in srgb,var(--text-gold) 22%,transparent),transparent);}
+/* Remove used to be a full "Remove" text pill sitting right at eye level
+   next to the category label — the single most destructive action on the
+   card, dressed up to look as prominent as everything else. Now it's a
+   quiet icon-only ghost button, still reachable but no longer competing
+   for attention with Level Up/Active Action. */
+.bldg-remove-btn{padding:5px 8px;color:var(--text-muted);border-color:transparent;background:transparent;}
+.bldg-remove-btn:hover{color:var(--text-danger-hover);border-color:var(--border-card);background:var(--bg-card);}
 #room-tip{position:fixed;background:var(--bg-elevated);border:1px solid var(--border-strong);border-radius:10px;padding:11px 13px;font-size:10px;color:var(--text-tooltip);pointer-events:none;z-index:2300;max-width:280px;line-height:1.6;display:none;box-shadow:0 6px 24px rgba(15,40,55,.3);}
 .tab-row{display:flex;gap:4px;padding:8px 14px;border-bottom:1px solid var(--border-panel);background:var(--bg-panel);}
 .tab-btn{background:none;border:none;color:var(--text-emph);font-size:11px;font-weight:600;padding:7px 12px;cursor:pointer;border-bottom:3px solid transparent;border-radius:6px 6px 0 0;}
@@ -4289,7 +4324,7 @@ function _renderBuildingCard(isl, entry, idx, b){
   let html = '<div class="building-row" style="flex-direction:column;align-items:stretch;gap:9px;">'
     +'<div style="display:flex;justify-content:space-between;align-items:center;">'
       +'<div>'+(participates?'<span class="tier-pill" style="font-size:11px;">Lv.'+level+'</span> ':'')+'<span style="font-size:12px;color:var(--text-muted);">'+(CAT_LABELS[b.cat]||b.cat)+'</span>'+traitBadge+'</div>'
-      +'<button class="btn" style="font-size:11px;padding:5px 11px;color:var(--text-danger-hover);" onclick="removeBuilding(\''+isl.id+'\','+idx+')">Remove</button>'
+      +'<button class="btn bldg-remove-btn" title="Remove" onclick="removeBuilding(\''+isl.id+'\','+idx+')"><i class="ti ti-trash"></i></button>'
     +'</div>';
   if(weeksLeft>0){
     // Under construction. No effect line, no Level Up/Active Action
@@ -5329,8 +5364,22 @@ function _openBuildingTokenModal(islId, idx){
   // (Edicts), not a normal building card, so it earns looking like an
   // actual seat of government instead of the plain generic modal.
   const isTownHall = _bid(entry)==='town_hall';
-  bd.innerHTML = '<div class="modal'+(isTownHall?' townhall-modal':'')+'" style="max-width:440px;">'
-    +'<h2 style="font-size:19px;">'+_buildingDisplayName(b, _blevel(entry))+'</h2>'
+  // Every other building's popover now carries its own category accent
+  // (the same cat-X color already used on its token icon out in the
+  // grid) and opens with that same icon enlarged in its header, so the
+  // card reads as belonging to the same building the player just
+  // clicked instead of a generic gray box. Town Hall keeps its own
+  // dedicated marble theme instead and skips this entirely.
+  const isUnique = !!(entry.wildcard || b.requiresTrait || b.requiresUnlock);
+  const catCls = _catClass(b);
+  const headHtml = isTownHall
+    ? '<h2 style="font-size:19px;">'+_buildingDisplayName(b, _blevel(entry))+'</h2>'
+    : '<div class="bldg-modal-head">'
+       +'<div class="bldg-modal-icon'+catCls+'">'+_buildingIconSVG(b, isUnique)+'</div>'
+       +'<h2 style="font-size:19px;margin:0;">'+_buildingDisplayName(b, _blevel(entry))+'</h2>'
+     +'</div>';
+  bd.innerHTML = '<div class="modal'+(isTownHall?' townhall-modal':' bldg-modal'+catCls)+'" style="max-width:440px;">'
+    +headHtml
     +_renderBuildingCard(isl, entry, idx, b)
     +'<div class="modal-btns"><button class="btn'+(isTownHall?' btn-townhall':'')+'" onclick="closeAnyModal()">Close</button></div>'
   +'</div>';
