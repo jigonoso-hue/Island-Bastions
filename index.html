@@ -4354,6 +4354,15 @@ function _renderBuildingCard(isl, entry, idx, b){
   // reported fact about the building, separate from the buttons that
   // act on it.
   html += (effectLabel ? '<div class="bldg-stat-chip"><i class="ti '+(BLDG_STAT_CHIP_ICON[b.cat]||'ti-chart-bar')+'"></i><span>'+effectLabel+'</span></div>': '');
+  // A handful of buildings have one bespoke button of their own (opening
+  // a dedicated minigame modal, or - Reef/Mint/Excursion - swapping to a
+  // disabled "already acted" state) on top of the generic Level Up/
+  // Active Action controls every participating building gets. These used
+  // to render on their own line above the generic buttons; now they're
+  // collected here and dropped into the same .bldg-actions-row as
+  // everything else, to the right of Level Up/Active Action, so a
+  // building's controls all read as one row instead of two stacked ones.
+  let bespokeActionHtml = '';
   if(bid==='town_hall'){
     // Town Hall doesn't roll for income like other Civic buildings. Its
     // popover replaces the usual Active Action section with the Edicts
@@ -4381,7 +4390,7 @@ function _renderBuildingCard(isl, entry, idx, b){
   // Gaming Floor gets rather than a cramped inline list.
   if(bid==='tourism_help_center' && level>=3){
     const active = (isl.cruiseLines||[]).length;
-    html += '<div style="margin-bottom:2px;"><button class="btn btn-gold" style="font-size:11px;padding:6px 12px;" onclick="openCruiseModal(\''+isl.id+'\','+idx+')"><i class="ti ti-anchor"></i> Cruise Line Charters ('+active+'/2 in port)</button></div>';
+    bespokeActionHtml += '<button class="btn btn-gold" style="font-size:11px;padding:6px 12px;" onclick="openCruiseModal(\''+isl.id+'\','+idx+')"><i class="ti ti-anchor"></i> Cruise Line Charters ('+active+'/2 in port)</button>';
   }
   // The Grand Casino Resort's own gaming floor opens the moment it's
   // built. Slots at Lv.1, blackjack unlocks at Lv.2, and Roulette
@@ -4389,7 +4398,7 @@ function _renderBuildingCard(isl, entry, idx, b){
   // any time rather than a once-a-week roll like every other
   // building's Active Action.
   if(bid==='grand_casino_resort'){
-    html += '<div style="margin-bottom:2px;"><button class="btn btn-gold" style="font-size:11px;padding:6px 12px;" onclick="openCasinoModal(\''+isl.id+'\','+idx+')"><i class="ti ti-coins"></i> Play the Gaming Floor</button></div>';
+    bespokeActionHtml += '<button class="btn btn-gold" style="font-size:11px;padding:6px 12px;" onclick="openCasinoModal(\''+isl.id+'\','+idx+')"><i class="ti ti-coins"></i> Play the Gaming Floor</button>';
   }
   // The Mint's press is a manual, once-a-week gamble layered on top of
   // its own deterministic weekly income. Push the timing needle further
@@ -4397,17 +4406,16 @@ function _renderBuildingCard(isl, entry, idx, b){
   if(bid==='the_mint'){
     const mintKey = 'mint#'+isl.id+'#'+idx;
     const mintActed = _ledger.actedThisTurn && _ledger.actedThisTurn[mintKey];
-    html += '<div style="margin-bottom:2px;">'+(mintActed
+    bespokeActionHtml += (mintActed
       ? '<button class="btn" style="font-size:11px;padding:6px 12px;" disabled>'+mintActed+'</button>'
-     : '<button class="btn btn-gold" style="font-size:11px;padding:6px 12px;" onclick="openMintModal(\''+isl.id+'\','+idx+')"><i class="ti ti-coin"></i> Run the Press</button>')
-    +'</div>';
+     : '<button class="btn btn-gold" style="font-size:11px;padding:6px 12px;" onclick="openMintModal(\''+isl.id+'\','+idx+')"><i class="ti ti-coin"></i> Run the Press</button>');
   }
   // The Fighting Pit is a betting minigame, not a weekly roll. Pick one
   // of three fighters offered, bet the treasury, then actually fight it
   // out move-by-move against whichever of the other two ends up your
   // opponent. Playable any time, same as the Casino's Gaming Floor.
   if(bid==='fighting_pit'){
-    html += '<div style="margin-bottom:2px;"><button class="btn btn-gold" style="font-size:11px;padding:6px 12px;" onclick="openFightingPitModal(\''+isl.id+'\','+idx+')">'+_gameIconHtml('glove',13)+' Enter the Pit</button></div>';
+    bespokeActionHtml += '<button class="btn btn-gold" style="font-size:11px;padding:6px 12px;" onclick="openFightingPitModal(\''+isl.id+'\','+idx+')">'+_gameIconHtml('glove',13)+' Enter the Pit</button>';
   }
   // Reef Diving School. Once/week expedition roll. Most dives are clean;
   // sometimes the diver hits trouble and the player has to choose between
@@ -4419,27 +4427,25 @@ function _renderBuildingCard(isl, entry, idx, b){
     const recoveryWeeks = entry.diverRecoveryWeeks||0;
     const reefKey = 'reef#'+isl.id+'#'+idx;
     const reefActed = _ledger.actedThisTurn && _ledger.actedThisTurn[reefKey];
-    html += '<div style="margin-bottom:2px;">'+(recoveryWeeks>0
+    bespokeActionHtml += (recoveryWeeks>0
       ? '<button class="btn" style="font-size:11px;padding:6px 12px;" disabled>Diver recovering. '+recoveryWeeks+' week'+(recoveryWeeks===1?'':'s')+' left</button>'
      : reefActed
         ? '<button class="btn" style="font-size:11px;padding:6px 12px;" disabled>'+reefActed+'</button>'
-       : '<button class="btn btn-gold" style="font-size:11px;padding:6px 12px;" onclick="openReefModal(\''+isl.id+'\','+idx+')">🤿 Send the Diver Down</button>')
-    +'</div>';
+       : '<button class="btn btn-gold" style="font-size:11px;padding:6px 12px;" onclick="openReefModal(\''+isl.id+'\','+idx+')">🤿 Send the Diver Down</button>');
   }
   // Excursion Docks. Once/week chart-a-course node map (see the
   // EXC_* functions). Gated the same acted-this-turn way as Reef/Mint.
   if(bid==='excursion_docks'){
     const excKey = 'excursion#'+isl.id+'#'+idx;
     const excActed = _ledger.actedThisTurn && _ledger.actedThisTurn[excKey];
-    html += '<div style="margin-bottom:2px;">'+(excActed
+    bespokeActionHtml += (excActed
       ? '<button class="btn" style="font-size:11px;padding:6px 12px;" disabled>'+excActed+'</button>'
-     : '<button class="btn btn-gold" style="font-size:11px;padding:6px 12px;" onclick="openExcursionModal(\''+isl.id+'\','+idx+')">'+_gameIconHtml('compass',13)+' Chart a Course</button>')
-    +'</div>';
+     : '<button class="btn btn-gold" style="font-size:11px;padding:6px 12px;" onclick="openExcursionModal(\''+isl.id+'\','+idx+')">'+_gameIconHtml('compass',13)+' Chart a Course</button>');
   }
   // Bounty Board. Always available to open (posting/claiming has no
   // once-a-week gate of its own; taking a bounty is the real commitment).
   if(bid==='bounty_board'){
-    html += '<div style="margin-bottom:2px;"><button class="btn btn-gold" style="font-size:11px;padding:6px 12px;" onclick="openBountyBoardModal(\''+isl.id+'\','+idx+')">'+_gameIconHtml('bounty',13)+' Open Bounty Board</button></div>';
+    bespokeActionHtml += '<button class="btn btn-gold" style="font-size:11px;padding:6px 12px;" onclick="openBountyBoardModal(\''+isl.id+'\','+idx+')">'+_gameIconHtml('bounty',13)+' Open Bounty Board</button>';
   }
   if(participates){
     let actionBtnHtml = '';
@@ -4455,7 +4461,13 @@ function _renderBuildingCard(isl, entry, idx, b){
     html += '<div class="bldg-actions-row">'
       +(level<maxLevel ? '<button class="btn" id="tour-levelup-btn" style="font-size:11px;padding:5px 10px;" onclick="_levelUpBuilding(\''+isl.id+'\','+idx+')"><i class="ti ti-arrow-up"></i> Level Up ('+upgradeCost.toLocaleString()+' gp)</button>': '<span style="font-size:11px;color:var(--text-muted);align-self:center;">'+(maxLevel===1?'No Upgrades':'Max Level')+'</span>')
       +actionBtnHtml
+      +bespokeActionHtml
     +'</div>';
+  } else if(bespokeActionHtml){
+    // Expansion buildings never reach here (they don't participate), but
+    // nothing bespoke is ever put on one - this is just belt-and-suspenders
+    // so a bespoke button never silently vanishes if that ever changes.
+    html += '<div class="bldg-actions-row">'+bespokeActionHtml+'</div>';
   }
   html += '</div>';
   return html;
