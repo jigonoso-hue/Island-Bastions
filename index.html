@@ -611,8 +611,8 @@ input[type=text]:focus,input[type=number]:focus,textarea:focus,select:focus{outl
 .bldg-modal-icon-flip-inner{position:relative;width:100%;height:100%;transition:transform .45s cubic-bezier(.4,.15,.2,1);transform-style:preserve-3d;}
 .bldg-modal-icon-flip.flipped .bldg-modal-icon-flip-inner{transform:rotateY(180deg);}
 .bldg-modal-icon-face{position:absolute;inset:0;border-radius:13px;display:flex;align-items:center;justify-content:center;backface-visibility:hidden;-webkit-backface-visibility:hidden;}
-.bldg-modal-icon-front{background:var(--bg-highlight);border:1.5px solid var(--cat-accent,var(--border-card));box-shadow:0 2px 8px rgba(0,0,0,.12);overflow:hidden;}
-.bldg-modal-icon-front svg{width:30px;height:30px;stroke:var(--cat-accent,var(--text-teal-4));color:var(--cat-accent,var(--text-teal-4));position:relative;z-index:1;}
+.bldg-modal-icon-front{background:var(--bg-highlight);border:1.5px solid var(--cat-accent,var(--border-card));box-shadow:0 2px 8px rgba(0,0,0,.12);}
+.bldg-modal-icon-front svg{width:30px;height:30px;stroke:var(--cat-accent,var(--text-teal-4));color:var(--cat-accent,var(--text-teal-4));}
 /* A thin band of light pans diagonally across the icon on a loop - the
    only hint, short of the "Click to demolish" title tooltip, that this
    icon is actually a button and not just decoration. The diagonal look
@@ -624,7 +624,7 @@ input[type=text]:focus,input[type=number]:focus,textarea:focus,select:focus{outl
    across one narrow, hard-to-predict sliver of the position range.
    Parked past 55% of the animation so there's a real pause between
    sweeps instead of a constant slide. */
-.bldg-modal-icon-front::after{content:'';position:absolute;inset:0;background-image:linear-gradient(115deg,transparent 40%,rgba(255,255,255,.7) 50%,transparent 60%);background-size:200% 100%;background-repeat:no-repeat;animation:bldg-icon-shimmer 3.4s ease-in-out infinite;pointer-events:none;}
+.bldg-modal-icon-front::after{content:'';position:absolute;inset:0;border-radius:inherit;background-image:linear-gradient(115deg,transparent 40%,rgba(255,255,255,.7) 50%,transparent 60%);background-size:200% 100%;background-repeat:no-repeat;animation:bldg-icon-shimmer 3.4s ease-in-out infinite;pointer-events:none;}
 @keyframes bldg-icon-shimmer{
   0%{background-position:-30% 0;}
   55%{background-position:130% 0;}
