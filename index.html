@@ -601,16 +601,15 @@ input[type=text]:focus,input[type=number]:focus,textarea:focus,select:focus{outl
 .bldg-modal.cat-expansion{--cat-accent:var(--cat-expansion);}
 .bldg-modal.cat-civic{--cat-accent:var(--cat-civic);}
 .bldg-modal-head{display:flex;align-items:center;gap:12px;margin-bottom:14px;padding-top:2px;}
-/* The icon badge is a real 3D flip card: hovering it rotates the inner
+/* The icon badge is a real 3D flip card: clicking it rotates the inner
    card 180° around the Y axis to reveal a Demolish button on its back
-   face, and moving the cursor back off the icon (anywhere outside its
-   own square, since the flip is driven by :hover on the outer wrapper)
-   rotates it right back with no extra click needed. Front and back are
-   two absolutely-positioned faces with backface-visibility:hidden so
-   only one is ever showing at a time. */
-.bldg-modal-icon-flip{width:48px;height:48px;flex-shrink:0;perspective:500px;}
+   face (clicking the icon again - or the Close button, since the modal
+   re-renders fresh next open - flips it back). Front and back are two
+   absolutely-positioned faces with backface-visibility:hidden so only
+   one is ever showing at a time. */
+.bldg-modal-icon-flip{width:48px;height:48px;flex-shrink:0;perspective:500px;cursor:pointer;}
 .bldg-modal-icon-flip-inner{position:relative;width:100%;height:100%;transition:transform .45s cubic-bezier(.4,.15,.2,1);transform-style:preserve-3d;}
-.bldg-modal-icon-flip:hover .bldg-modal-icon-flip-inner{transform:rotateY(180deg);}
+.bldg-modal-icon-flip.flipped .bldg-modal-icon-flip-inner{transform:rotateY(180deg);}
 .bldg-modal-icon-face{position:absolute;inset:0;border-radius:13px;display:flex;align-items:center;justify-content:center;backface-visibility:hidden;-webkit-backface-visibility:hidden;}
 .bldg-modal-icon-front{background:var(--bg-highlight);border:1.5px solid var(--cat-accent,var(--border-card));box-shadow:0 2px 8px rgba(0,0,0,.12);}
 .bldg-modal-icon-front svg{width:30px;height:30px;stroke:var(--cat-accent,var(--text-teal-4));color:var(--cat-accent,var(--text-teal-4));}
@@ -5414,18 +5413,20 @@ function _openBuildingTokenModal(islId, idx){
   // dedicated marble theme instead and skips this entirely.
   const isUnique = !!(entry.wildcard || b.requiresTrait || b.requiresUnlock);
   const catCls = _catClass(b);
-  // The icon badge doubles as the Demolish control: hover it and it flips
-  // over (a real 3D rotateY, not a fade) to show a demolish button on its
-  // back face; move off the icon and it flips right back on its own,
-  // no separate click needed to dismiss it. Replaces the old standalone
-  // trash-icon button that used to sit in the meta row.
+  // The icon badge doubles as the Demolish control: clicking it (not
+  // hovering - a hover-only flip turned out too easy to trigger by
+  // accident just moving the mouse across the header) flips it over, a
+  // real 3D rotateY, to show a Demolish button on its back face.
+  // Demolishing itself still needs a real confirm (_confirmDemolishBuilding
+  // -> _showConfirmModal) since a flip-and-click is otherwise only one
+  // click away from an unrecoverable action.
   const headHtml = isTownHall
     ? '<h2 style="font-size:19px;">'+_buildingDisplayName(b, _blevel(entry))+'</h2>'
     : '<div class="bldg-modal-head">'
-       +'<div class="bldg-modal-icon-flip" title="Hover to demolish">'
+       +'<div class="bldg-modal-icon-flip" title="Click to demolish" onclick="_toggleBldgIconFlip(this)">'
          +'<div class="bldg-modal-icon-flip-inner">'
            +'<div class="bldg-modal-icon-face bldg-modal-icon-front">'+_buildingIconSVG(b, isUnique)+'</div>'
-           +'<button class="bldg-modal-icon-face bldg-modal-icon-back" onclick="removeBuilding(\''+isl.id+'\','+idx+')"><i class="ti ti-trash"></i><span>Demolish</span></button>'
+           +'<button class="bldg-modal-icon-face bldg-modal-icon-back" onclick="event.stopPropagation();_confirmDemolishBuilding(\''+isl.id+'\','+idx+')"><i class="ti ti-trash"></i><span>Demolish</span></button>'
          +'</div>'
        +'</div>'
        +'<h2 style="font-size:19px;margin:0;">'+_buildingDisplayName(b, _blevel(entry))+'</h2>'
@@ -5443,6 +5444,28 @@ function removeBuilding(islId, idx){
   closeAnyModal();
   renderIslandList();
   renderDetail();
+}
+// Click target for the building card's icon-badge flip (see
+// _openBuildingTokenModal). Just toggles the flipped class - the CSS
+// transition does the actual 3D rotation. Clicking the Demolish button
+// itself on the back face stops this from firing again (it stopPropagation
+// s before calling _confirmDemolishBuilding), so a click there never
+// re-flips the card back at the same moment it opens the confirm dialog.
+function _toggleBldgIconFlip(el){
+  el.classList.toggle('flipped');
+}
+// Demolishing is unrecoverable (no undo, no refund), so flipping the
+// icon over to reveal the button isn't itself enough - it still needs a
+// real "are you sure" through the app's own themed confirm dialog rather
+// than just acting on the click.
+function _confirmDemolishBuilding(islId, idx){
+  const isl = islands.find(function(i){ return i.id===islId; });
+  const entry = isl && isl.buildings[idx];
+  const b = entry && BUILDINGS.find(function(x){ return x.id===_bid(entry); });
+  const name = b ? _buildingDisplayName(b, _blevel(entry)) : 'this building';
+  _showConfirmModal('Demolish '+name+'? This can\'t be undone.', function(){
+    removeBuilding(islId, idx);
+  });
 }
 // Shared by every hover tooltip in the app (building info, Bastion rolls,
 // Active Actions). Native `title` attributes are unreliable (slow,
