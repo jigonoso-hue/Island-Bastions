@@ -755,14 +755,36 @@ input[type=text]:focus,input[type=number]:focus,textarea:focus,select:focus{outl
    token grid on the right. Reuses.building-token so a token here looks
    exactly like one already standing on the island. */
 .build-modal{width:94vw;height:88vh;max-width:1400px;background:var(--bg-modal);border:1px solid var(--border-card);border-radius:16px;padding:24px 28px;display:flex;flex-direction:column;position:relative;overflow:hidden;}
+/* Same category-accent treatment the building token's own popover got
+   (.bldg-modal) - a top strip in the currently-filtered category's
+   color, plus that color available as --cat-accent to everything
+   inside (the active tab, token hover). Set as a cat-X class on
+   .build-modal itself by _applyBuildCatModalClass, kept in sync with
+   _buildingCatFilter on open and on every tab switch (the modal element
+   persists across tab switches - only the grid/cat-list innerHTML gets
+   re-rendered - so this can't just be baked in once at open time). */
+.build-modal::before{content:'';position:absolute;top:0;left:0;right:0;height:7px;background:var(--cat-accent,var(--border-gold));z-index:1;}
+.build-modal.cat-housing{--cat-accent:var(--cat-housing);}
+.build-modal.cat-farming{--cat-accent:var(--cat-farming);}
+.build-modal.cat-production{--cat-accent:var(--cat-production);}
+.build-modal.cat-recreational{--cat-accent:var(--cat-recreational);}
+.build-modal.cat-tourism{--cat-accent:var(--cat-tourism);}
+.build-modal.cat-guilds{--cat-accent:var(--cat-guilds);}
+.build-modal.cat-expansion{--cat-accent:var(--cat-expansion);}
+.build-modal.cat-civic{--cat-accent:var(--cat-civic);}
 .build-modal-head{display:flex;align-items:center;justify-content:space-between;flex-shrink:0;padding-right:40px;margin-bottom:16px;}
-.build-modal-body{flex:1;min-height:0;display:flex;gap:22px;}
+.build-modal-body{flex:1;min-height:0;display:flex;gap:22px;position:relative;}
 .build-modal-cats{width:170px;flex-shrink:0;display:flex;flex-direction:column;gap:4px;overflow-y:auto;}
 .build-cat-btn{background:none;border:none;border-radius:8px;color:var(--text-emph);font-size:13px;font-weight:600;text-align:left;padding:9px 12px;cursor:pointer;}
 .build-cat-btn:hover{background:var(--bg-card);}
-.build-cat-btn.active{background:var(--bg-highlight);color:var(--text-gold);border:1px solid var(--border-gold);}
-.build-modal-grid{flex:1;min-width:0;overflow-y:auto;display:flex;flex-wrap:wrap;align-content:flex-start;gap:16px;padding-top:8px;}
-.build-modal-grid.building-token.at-cap{opacity:.4;cursor:not-allowed;}
+.build-cat-btn.active{background:var(--bg-highlight);color:var(--cat-accent,var(--text-gold));border:1px solid var(--cat-accent,var(--border-gold));}
+.build-modal-grid{flex:1;min-width:0;overflow-y:auto;display:flex;flex-wrap:wrap;align-content:flex-start;gap:16px;padding-top:8px;position:relative;}
+/* A faint tint wash behind the grid, same color as the active category -
+   the same trick .bldg-modal::after uses, just anchored to the grid
+   column instead of the whole card so the category rail stays neutral. */
+.build-modal-grid::before{content:'';position:absolute;top:-8px;left:-8px;right:-8px;height:220px;background:radial-gradient(ellipse 80% 100% at 30% 0%,color-mix(in srgb,var(--cat-accent,var(--border-gold)) 10%,transparent),transparent 70%);pointer-events:none;z-index:0;}
+.build-modal-grid>*{position:relative;z-index:1;}
+.build-modal-grid .building-token.at-cap{opacity:.4;cursor:not-allowed;}
 /* The little qty badge that appears on a token once it's in the cart.
    Same corner as the action-flag/construction-flag use on a built
    token, but gold instead of red since it's a count, not a warning. */
@@ -913,12 +935,18 @@ input[type=text]:focus,input[type=number]:focus,textarea:focus,select:focus{outl
    was silently jumping to a different anchor the instant hover kicked in
    instead of moving in lockstep with the icon underneath it. */
 .building-token-icon{position:relative;width:78px;height:78px;border-radius:16px;background:var(--bg-highlight);border:1.5px solid var(--border-gold);display:flex;align-items:center;justify-content:center;transition:border-color .12s ease,transform .12s ease;}
-.building-token:hover.building-token-icon{border-color:var(--text-gold);transform:translateY(-2px);}
+/* Was ".building-token:hover.building-token-icon" - two classes that only
+   ever live on the outer button and its own inner icon div respectively,
+   never the same element, so this hover never actually applied. Fixed to
+   a real descendant selector; picks up --cat-accent when set (inside the
+   Add Building catalog, filtered to one category at a time) so the hover
+   lift matches that category's color instead of always plain gold. */
+.building-token:hover .building-token-icon{border-color:var(--cat-accent,var(--text-gold));transform:translateY(-2px);}
 /* Unowned islands. The token still shows what's built, it just isn't
    yours to open. No hover lift, no pointer cursor pretending it's a
    button that does something. */
 .building-token.readonly{cursor:default;}
-.building-token.readonly:hover.building-token-icon{border-color:var(--border-gold);transform:none;}
+.building-token.readonly:hover .building-token-icon{border-color:var(--border-gold);transform:none;}
 /* color, not just stroke: several building icons use fill="currentColor"
    for solid accent bits (eyes, dots, a lit window, a filled door) —
    without `color` set here too, those resolved against the page's
@@ -973,8 +1001,10 @@ input[type=text]:focus,input[type=number]:focus,textarea:focus,select:focus{outl
    "Xwk(s)" countdown standing in for the usual Lv. badge. Nothing about
    it functions yet, so it should read as inert rather than active. */
 .building-token.constructing{opacity:.5;}
-.building-token.constructing.building-token-icon{border-color:var(--border-strong);background:var(--bg-card);}
-.building-token.constructing.building-token-icon svg{stroke:var(--text-muted);color:var(--text-muted);}
+/* Same descendant-selector fix as the hover rules above - these two
+   never matched anything either. */
+.building-token.constructing .building-token-icon{border-color:var(--border-strong);background:var(--bg-card);}
+.building-token.constructing .building-token-icon svg{stroke:var(--text-muted);color:var(--text-muted);}
 .building-token-construction-flag{position:absolute;top:-5px;right:10px;width:18px;height:18px;border-radius:50%;background:var(--bg-elevated);border:1px solid var(--border-strong);color:var(--text-muted);font-size:10px;display:flex;align-items:center;justify-content:center;}
 .building-token-lv.construction{color:var(--text-gold-2);font-weight:700;}
 .construction-note{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-gold-2);background:var(--bg-highlight);border:1px solid var(--border-gold);border-radius:8px;padding:8px 10px;}
@@ -5582,7 +5612,7 @@ function _showAddBuildingModal(){
   if(isl && isl.owned===false) return; // not yours to build on yet. The button itself is hidden, this is just belt-and-suspenders
   const bd = document.getElementById('modal-backdrop');
   bd.style.display = 'flex';
-  bd.innerHTML = '<div class="modal build-modal">'
+  bd.innerHTML = '<div class="modal build-modal cat-'+_buildingCatFilter+'">'
     +'<button class="island-modal-close" onclick="closeAnyModal()">&times;</button>'
     +'<div class="build-modal-head">'
       +'<span class="island-modal-lots" id="build-lots-label">Lots: '+(isl?_usedLots(isl):0)+'/'+(isl?_totalLots(isl):0)+'</span>'
@@ -5606,6 +5636,15 @@ function _renderBuildCatList(){
 }
 function _setBuildingCatFilter(cat){
   _buildingCatFilter = cat;
+  // The modal element itself persists across tab switches (only the cat
+  // list and grid get re-rendered), so its cat-X class - the source of
+  // --cat-accent for the top strip, the active tab, and the grid's own
+  // tint wash - has to be kept in sync here rather than only set once at
+  // open time.
+  const modal = document.querySelector('.build-modal');
+  if(modal){
+    modal.className = modal.className.replace(/\bcat-[a-z]+\b/g, '').trim()+' cat-'+cat;
+  }
   _renderBuildCatList();
   _renderBuildTokenGrid();
 }
