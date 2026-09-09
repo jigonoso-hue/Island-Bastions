@@ -5423,7 +5423,7 @@ function _openBuildingTokenModal(islId, idx){
   const headHtml = isTownHall
     ? '<h2 style="font-size:19px;">'+_buildingDisplayName(b, _blevel(entry))+'</h2>'
     : '<div class="bldg-modal-head">'
-       +'<div class="bldg-modal-icon-flip" title="Click to demolish" onclick="_toggleBldgIconFlip(this)">'
+       +'<div class="bldg-modal-icon-flip" title="Click to demolish" onclick="_toggleBldgIconFlip(this)" onmouseleave="_bldgIconFlipLeave(this)" onmouseenter="_bldgIconFlipEnter(this)">'
          +'<div class="bldg-modal-icon-flip-inner">'
            +'<div class="bldg-modal-icon-face bldg-modal-icon-front">'+_buildingIconSVG(b, isUnique)+'</div>'
            +'<button class="bldg-modal-icon-face bldg-modal-icon-back" onclick="event.stopPropagation();_confirmDemolishBuilding(\''+isl.id+'\','+idx+')"><i class="ti ti-trash"></i><span>Demolish</span></button>'
@@ -5453,6 +5453,21 @@ function removeBuilding(islId, idx){
 // re-flips the card back at the same moment it opens the confirm dialog.
 function _toggleBldgIconFlip(el){
   el.classList.toggle('flipped');
+}
+// Once flipped, the card doesn't stay flipped forever if you wander off -
+// leaving its square starts a 2s timer that flips it back automatically
+// (re-entering the square, or the modal simply closing, cancels/moots it),
+// so a demolish button left sitting there doesn't linger indefinitely
+// after you've moved on to something else in the popover.
+function _bldgIconFlipLeave(el){
+  if(el._flipTimer) clearTimeout(el._flipTimer);
+  el._flipTimer = setTimeout(function(){
+    el.classList.remove('flipped');
+    el._flipTimer = null;
+  }, 2000);
+}
+function _bldgIconFlipEnter(el){
+  if(el._flipTimer){ clearTimeout(el._flipTimer); el._flipTimer = null; }
 }
 // Demolishing is unrecoverable (no undo, no refund), so flipping the
 // icon over to reveal the button isn't itself enough - it still needs a
