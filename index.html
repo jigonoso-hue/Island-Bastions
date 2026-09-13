@@ -2551,6 +2551,15 @@ function _renderWeeklyReportBody(r, islId){
       }
     }
   });
+  // A handful of Active Actions (see action.vip in the niche tables -
+  // Court a legendary guest, Attract a legendary specialist, and the
+  // like) are specifically a notable arrival when they succeed, not
+  // just a good roll - so they belong here too, alongside this same
+  // building's other named-guest content, not only in Actions/Quests
+  // below.
+  (r.activeActions||[]).filter(function(a){ return a.vip; }).forEach(function(a){
+    peopleRows.push({ building: a.building, text: a.text });
+  });
   // Performance content (roll math and gp figures) built either way.
   // it's either the whole view (toggled in) or just needs its row/gp
   // count for the teaser card (toggled out, the default).
@@ -6769,7 +6778,13 @@ function _bastionActionSuccessChance(action, level){
 function _resolveBastionAction(isl, action, level){
   const chance = _bastionActionSuccessChance(action, level);
   const success = Math.random() < chance;
-  const result = { success: success, text: success ? (action.successText||'It works out.'): (action.failText||'Nothing much comes of it.'), rewards: [] };
+  // action.vip marks an Active Action whose success is specifically a
+  // notable arrival (a legendary guest, a visiting symposium of
+  // scholars, and the like) rather than just a good outcome - so it
+  // belongs in the Weekly Report's Important People panel alongside
+  // this building's other named-guest content, not only in Actions/
+  // Quests. Never true on a failure; nobody notable showed up.
+  const result = { success: success, text: success ? (action.successText||'It works out.'): (action.failText||'Nothing much comes of it.'), rewards: [], vip: success && !!action.vip };
   if(success){
     if(action.gold){
       const lo = Math.min(action.gold[0], action.gold[1]), hi = Math.max(action.gold[0], action.gold[1]);
@@ -6961,7 +6976,7 @@ const HOSPITALITY_VENUES = {
       { text:'Serve the regulars', chance:1, gold:[80,150], successText:'A steady night at the bar. Nothing dramatic, but the till is full.', failText:'N/A' },
       { text:'Host adventurers for the night', chance:0.75, gold:[150,400], happinessMod:3, successText:'A traveling party settles their tab generously and leaves in good spirits.', failText:'The party settles in but keeps mostly to themselves.' },
       { text:'Host a feast', chance:0.5, gold:[300,700], happinessMod:8, successText:'The feast is the talk of the docks. Coin and goodwill both flow.', failText:'Turnout is thin; the cost barely breaks even.' },
-      { text:'Court a legendary guest', chance:0.25, gold:[800,2000], notoriety:3, happinessMod:10, successText:'A genuinely famous guest. A hero, a lord, a name everyone recognizes. Stays the week, and the whole island hears about it.', failText:'No one of note answers the invitation this time.' }
+      { text:'Court a legendary guest', chance:0.25, gold:[800,2000], notoriety:3, happinessMod:10, vip:true, successText:'A genuinely famous guest. A hero, a lord, a name everyone recognizes. Stays the week, and the whole island hears about it.', failText:'No one of note answers the invitation this time.' }
     ]
   },
   backstreet_casino: {
@@ -6982,8 +6997,8 @@ const HOSPITALITY_VENUES = {
     actions:[
       { text:'Open to the public', chance:1, gold:[200,400], successText:'A full house of ordinary patrons, all paying customers.', failText:'N/A' },
       { text:'Host a private soak for a faction', chance:0.75, gold:[400,900], successText:'A visiting faction leaves impressed and well-connected. Word of the bathhouse spreads.', failText:'The booking falls through.' },
-      { text:'Attract a renowned healer', chance:0.5, gold:[600,1200], happinessMod:10, successText:'A traveling healer sets up shop for the week, and the whole island benefits.', failText:'No healer answers the invitation this time.' },
-      { text:'Host island nobility', chance:0.25, gold:[1500,3000], notoriety:3, happinessMod:15, successText:"The island's wealthiest turn the bathhouse into the season's social event.", failText:'Nobody of consequence shows interest.' }
+      { text:'Attract a renowned healer', chance:0.5, gold:[600,1200], happinessMod:10, vip:true, successText:'A traveling healer sets up shop for the week, and the whole island benefits.', failText:'No healer answers the invitation this time.' },
+      { text:'Host island nobility', chance:0.25, gold:[1500,3000], notoriety:3, happinessMod:15, vip:true, successText:"The island's wealthiest turn the bathhouse into the season's social event.", failText:'Nobody of consequence shows interest.' }
     ]
   },
   vice_den: {
@@ -7492,7 +7507,7 @@ const VISITING_SPECIALISTS = {
       { text:'Open the grounds', chance:1, gold:[100,250], successText:'A pleasant, well-attended day. Small donations add up.', failText:'N/A' },
       { text:'Host a public lecture or exhibition', chance:0.75, happinessMod:6, successText:'A well-attended talk gives the island something to talk about.', failText:'Turnout is thin.' },
       { text:'Commission new plantings or art', chance:0.5, gold:[-300,-100], happinessMod:14, successText:'The grounds are transformed. Residents notice immediately.', failText:'The commission falls through.' },
-      { text:'Attract a legendary specialist', chance:0.25, notoriety:4, happinessMod:15, gold:[300,900], successText:"A renowned botanist, artist, or scholar takes up long-term residence, and their work becomes the island's pride.", failText:'No one of that caliber takes the offer.' }
+      { text:'Attract a legendary specialist', chance:0.25, notoriety:4, happinessMod:15, gold:[300,900], vip:true, successText:"A renowned botanist, artist, or scholar takes up long-term residence, and their work becomes the island's pride.", failText:'No one of that caliber takes the offer.' }
     ]
   },
   grand_library: {
@@ -7502,7 +7517,7 @@ const VISITING_SPECIALISTS = {
       { text:'Open the reading room', chance:1, gold:[100,250], successText:'A quiet, well-used day at the archive.', failText:'N/A' },
       { text:'Host a public lecture', chance:0.75, happinessMod:6, successText:'A well-attended talk gives the island something to think about.', failText:'Turnout is thin.' },
       { text:'Commission a new wing or rare acquisition', chance:0.5, gold:[-400,-100], happinessMod:12, successText:'The new acquisition is a genuine draw. Scholars start asking about it right away.', failText:'The acquisition falls through.' },
-      { text:'Host a symposium of visiting scholars', chance:0.25, notoriety:3, happinessMod:15, successText:'A genuinely prestigious gathering. The island is talked about in academic circles for years.', failText:'Too few scholars answer the invitation to make it worthwhile.' }
+      { text:'Host a symposium of visiting scholars', chance:0.25, notoriety:3, happinessMod:15, vip:true, successText:'A genuinely prestigious gathering. The island is talked about in academic circles for years.', failText:'Too few scholars answer the invitation to make it worthwhile.' }
     ]
   },
   menagerie: {
@@ -7512,7 +7527,7 @@ const VISITING_SPECIALISTS = {
       { text:'Open the exhibits', chance:1, gold:[100,250], successText:'A well-attended day at the exhibits.', failText:'N/A' },
       { text:'Host a keeper\'s talk', chance:0.75, happinessMod:6, successText:'A well-attended talk gives the island something to marvel at.', failText:'Turnout is thin.' },
       { text:'Acquire a new exotic specimen', chance:0.5, gold:[-500,-150], happinessMod:14, successText:'The new specimen is a genuine sensation. Crowds line up for a look.', failText:'The acquisition falls through.' },
-      { text:'Host a traveling menagerie exchange', chance:0.25, notoriety:4, happinessMod:16, gold:[300,900], successText:'A grand exchange with a foreign menagerie draws visitors from across the sea.', failText:'The exchange falls through at the last moment.' }
+      { text:'Host a traveling menagerie exchange', chance:0.25, notoriety:4, happinessMod:16, gold:[300,900], vip:true, successText:'A grand exchange with a foreign menagerie draws visitors from across the sea.', failText:'The exchange falls through at the last moment.' }
     ]
   }
 };
@@ -7523,7 +7538,17 @@ function _runVisitingSpecialists(cfg, entry, isl, b){
   const count = _rollDice(diceCount, cfg.dice.sides);
   const visitors = [];
   for(let i=0;i<count;i++) visitors.push(cfg.roster[Math.floor(Math.random()*cfg.roster.length)]);
-  const notes = [cfg.moraleNote];
+  // Important People is meant for actual named/notable arrivals. This
+  // niche's roll already produces exactly that (the visitors[] roster
+  // roll above) - it just used to never leave the Performance panel's
+  // rollText, while `notes` (the one thing Important People reads off
+  // a building) got the same static, visitor-free morale blurb every
+  // single week regardless of who showed up. Now `notes` carries the
+  // actual roll result when anyone showed up, falling back to the
+  // generic blurb only on the rare week nobody did.
+  const notes = visitors.length
+    ? [(visitors.length===1 ? 'A visitor passes through: ': visitors.length+' visitors pass through: ')+visitors.join(', ')+'.']
+    : [cfg.moraleNote];
   // Optional: a genuine, separate roll for Notoriety (not just flavor).
   // 1d6, Notoriety only on a natural 6, same idiom as questNotoriety on
   // the Hospitality niche.
@@ -9273,7 +9298,7 @@ function _resolveQueuedBastionActions(isl){
     if(!_ledger.actedThisTurn) _ledger.actedThisTurn = {};
     _ledger.actedThisTurn[key] = action.text+(result.success?' ✓':' ✗');
     if(!_ledger.pendingNotes) _ledger.pendingNotes = [];
-    _ledger.pendingNotes.push({ island: isl.name, building: _buildingDisplayName(b, level), action: action.text, success: result.success, text: result.text, rewards: result.rewards, day: _ledger.day });
+    _ledger.pendingNotes.push({ island: isl.name, building: _buildingDisplayName(b, level), action: action.text, success: result.success, text: result.text, rewards: result.rewards, vip: result.vip, day: _ledger.day });
   });
   isl.pendingBastionActions = [];
 }
@@ -9302,7 +9327,7 @@ function _autoAssignUnownedActiveActions(){
       if(!_ledger.actedThisTurn) _ledger.actedThisTurn = {};
       _ledger.actedThisTurn[key] = action.text+(result.success?' ✓':' ✗');
       if(!_ledger.pendingNotes) _ledger.pendingNotes = [];
-      _ledger.pendingNotes.push({ island: isl.name, building: _buildingDisplayName(b, level), action: action.text, success: result.success, text: result.text, rewards: result.rewards, day: _ledger.day });
+      _ledger.pendingNotes.push({ island: isl.name, building: _buildingDisplayName(b, level), action: action.text, success: result.success, text: result.text, rewards: result.rewards, vip: result.vip, day: _ledger.day });
     });
   });
 }
