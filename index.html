@@ -7642,12 +7642,17 @@ function _runVisitingSpecialists(cfg, entry, isl, b){
   // roll above) - it just used to never leave the Performance panel's
   // rollText, while `notes` (the one thing Important People reads off
   // a building) got the same static, visitor-free morale blurb every
-  // single week regardless of who showed up. `people` carries the raw
-  // roll as a tagged list instead of a pre-formatted sentence, so two
-  // of this same building on one island get re-summed into one combined
-  // line instead of two separate "N visitors..." sentences; `notes`
-  // stays as the plain-text fallback for the rare week nobody visited.
-  const people = visitors.length ? [{ kind:'visitorCount', list: visitors }]: [];
+  // single week regardless of who showed up. One building only ever
+  // names ONE person of interest per week, no matter how many the dice
+  // say technically showed up (that dice roll still flavors rollText
+  // below, "how busy" this building was) - multiples only ever come
+  // from having more than one of that building, merged together by
+  // _renderWeeklyReportBody. `people` carries that single named pick as
+  // a tagged list instead of a pre-formatted sentence, so two of this
+  // same building on one island still re-sum correctly into one
+  // combined "2 visitors pass through: ..." line; `notes` stays as the
+  // plain-text fallback for the rare week nobody visited.
+  const people = visitors.length ? [{ kind:'visitorCount', list: [visitors[0]] }]: [];
   const notes = visitors.length ? []: [cfg.moraleNote];
   // Optional: a genuine, separate roll for Notoriety (not just flavor).
   // 1d6, Notoriety only on a natural 6, same idiom as questNotoriety on
@@ -7798,16 +7803,19 @@ function _runOverrideBastion(b, entry, visitor, isl){
     // exact same generic sentence over and over in Important People.
     // Rolls one specific performer now, same as the Visiting Specialists
     // niche already does for Garden/Library/Menagerie.
+    // One theater names ONE person of interest per week - the notable
+    // patron replaces the usual passing performer as that one pick on a
+    // big-attendance week, rather than stacking a second name on top of
+    // it. Multiples only ever come from having more than one theater,
+    // merged together by _renderWeeklyReportBody (tagged raw picks, see
+    // PEOPLE_KIND_TEMPLATES, not pre-formatted sentences).
     const performer = THEATER_PERFORMERS[Math.floor(Math.random()*THEATER_PERFORMERS.length)];
-    // Tagged raw picks (see PEOPLE_KIND_TEMPLATES), not pre-formatted
-    // sentences, so two Open-Air Theaters on the same island merge into
-    // one combined Important People line instead of two separate ones
-    // repeating the same "Settlement morale improves;" frame.
     const people = [{ kind:'theaterPerformer', list:[performer] }];
     let vip = null;
     if(tickets>40){
       const patron = THEATER_PATRONS[Math.floor(Math.random()*THEATER_PATRONS.length)];
       vip = 'A notable patron attends: '+patron+'.';
+      people.length = 0;
       people.push({ kind:'theaterPatron', list:[patron] });
       _gainNotoriety(isl, 1);
     }
