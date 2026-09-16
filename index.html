@@ -381,6 +381,11 @@ body{background:var(--bg-body);color:var(--text-primary);font-family:-apple-syst
 .wr-vip-row:last-child{border-bottom:none;}
 .wr-vip-building{font-size:10px;font-weight:700;color:var(--text-gold);}
 .wr-vip-text{font-size:10px;color:var(--text-muted);margin-top:1px;line-height:1.4;}
+/* Quantity/visitor-count highlight inside an Important People line (see
+   _hlVisitorText), and the ×N badge next to a building name when
+   several identical arrivals this week collapsed into one row. */
+.wr-vip-hl{color:var(--text-gold);font-weight:700;}
+.wr-vip-qty{font-size:9px;font-weight:700;color:var(--text-muted);}
 /* Themed scrollbars for every scrollable panel in this modal. The bare
    native scrollbar (bright, off-theme) stood out against the card
    surfaces around it. Firefox uses scrollbar-color; everything else
@@ -2529,6 +2534,14 @@ function _renderWeeklyReportModal(){
   html += '<div class="modal-btns"><button class="btn btn-gold" onclick="closeAnyModal()">Close</button></div></div>';
   bd.innerHTML = html;
 }
+// Bolds+colors any digit run and the word "visitor(s)" inside an
+// Important People line - "3 visitors pass through..." reads at a
+// glance instead of the quantity blending into the surrounding prose.
+function _hlVisitorText(text){
+  return String(text)
+    .replace(/\b(\d+)\b/g, '<b class="wr-vip-hl">$1</b>')
+    .replace(/\b(visitors?)\b/gi, '<b class="wr-vip-hl">$1</b>');
+}
 function _renderWeeklyReportBody(r, islId){
   const b = r.bastion;
   const unowned = !!(b && b.owned===false);
@@ -2559,6 +2572,15 @@ function _renderWeeklyReportBody(r, islId){
   // below.
   (r.activeActions||[]).filter(function(a){ return a.vip; }).forEach(function(a){
     peopleRows.push({ building: a.building, text: a.text });
+  });
+  // Multiple identical arrivals - most visibly several of the same
+  // building on one island, each rolling the exact same line the same
+  // week - used to each get their own full row. Collapsed into one row
+  // with a ×N badge instead of repeating the whole line back to back.
+  const dedupedPeople = [];
+  peopleRows.forEach(function(v){
+    const existing = dedupedPeople.find(function(d){ return d.building===v.building && d.text===v.text; });
+    if(existing) existing.n++; else dedupedPeople.push({ building: v.building, text: v.text, n: 1 });
   });
   // Performance content (roll math and gp figures) built either way.
   // it's either the whole view (toggled in) or just needs its row/gp
@@ -2626,8 +2648,10 @@ function _renderWeeklyReportBody(r, islId){
   // Important People. Every notable arrival or named guest this week,
   // pulled off whichever building it happened at.
   html += '<div class="'+panelCls+'" id="wr-panel-people"><h4>Important People</h4><div class="wr-panel-scroll">'
-    +(peopleRows.length
-      ? peopleRows.map(function(v){ return '<div class="wr-vip-row"><div class="wr-vip-building">'+v.building+'</div><div class="wr-vip-text">'+v.text+'</div></div>'; }).join('')
+    +(dedupedPeople.length
+      ? dedupedPeople.map(function(v){
+          return '<div class="wr-vip-row"><div class="wr-vip-building">'+v.building+(v.n>1?' <span class="wr-vip-qty">×'+v.n+'</span>': '')+'</div><div class="wr-vip-text">'+_hlVisitorText(v.text)+'</div></div>';
+        }).join('')
      : '<div class="wr-empty-note">No notable arrivals this week.</div>')
   +'</div></div>';
   // Actions/Quests. Active Actions taken on buildings and any quest/dig
@@ -7497,6 +7521,13 @@ function _runLawOrder(cfg, entry, visitor, stats){
 // building where the point isn't gold. It's who shows up. No income at
 // all; just a roll for how many notable visitors arrive and who they are,
 // echoing the reference doc's School "Visiting Scholars" example.
+// Open-Air Theater's own two rosters, same idiom as GARDEN_VISITORS/
+// LIBRARY_SCHOLARS below - a specific pick each week instead of the
+// generic "performer, playwright, musician, or artist" catalog line
+// (or "noble, merchant, diplomat, critic, or representative" for the
+// VIP patron) repeating itself verbatim every time.
+const THEATER_PERFORMERS = ['a traveling performer','a touring playwright workshopping a new script','a wandering musician','an itinerant artist sketching the crowd','a troupe of acrobats passing through','a puppeteer between engagements'];
+const THEATER_PATRONS = ['a noble traveling incognito','a wealthy merchant scouting investments','a foreign diplomat killing time before a meeting','a famous critic','a bardic college representative','a rival theater\'s own director, scouting the competition'];
 const GARDEN_VISITORS = ['a traveling botanist','a wandering poet','a naturalist cataloguing local wildlife','a landscape architect seeking commissions','a beekeeper trading for garden access','a druid passing through on pilgrimage'];
 const LIBRARY_SCHOLARS = ['a cartographer updating old charts','a historian researching the island\'s founding','a linguist cataloguing a half-forgotten dialect','a retired sea captain donating their logs','an apprentice archivist restoring water-damaged pages','a traveling storyteller trading tales for shelf space'];
 const VISITING_SPECIALISTS = {
@@ -7531,6 +7562,21 @@ const VISITING_SPECIALISTS = {
     ]
   }
 };
+// Groups a list of repeated strings into "Nx text" form instead of
+// listing the same pick once per occurrence back to back - "2x a druid
+// passing through on pilgrimage, a naturalist cataloguing local
+// wildlife" rather than "a druid passing through on pilgrimage, a
+// druid passing through on pilgrimage, a naturalist...". Order-
+// preserving: each distinct string keeps the position of its first
+// occurrence.
+function _countedListJoin(arr){
+  const counts = [];
+  arr.forEach(function(item){
+    const existing = counts.find(function(c){ return c.item===item; });
+    if(existing) existing.n++; else counts.push({item:item, n:1});
+  });
+  return counts.map(function(c){ return (c.n>1 ? c.n+'× ': '')+c.item; }).join(', ');
+}
 function _runVisitingSpecialists(cfg, entry, isl, b){
   const level = _blevel(entry);
   const tourismDiceBonus = (b && b.cat==='tourism') ? 1: 0;
@@ -7547,7 +7593,7 @@ function _runVisitingSpecialists(cfg, entry, isl, b){
   // actual roll result when anyone showed up, falling back to the
   // generic blurb only on the rare week nobody did.
   const notes = visitors.length
-    ? [(visitors.length===1 ? 'A visitor passes through: ': visitors.length+' visitors pass through: ')+visitors.join(', ')+'.']
+    ? [(visitors.length===1 ? 'A visitor passes through: ': visitors.length+' visitors pass through: ')+_countedListJoin(visitors)+'.']
     : [cfg.moraleNote];
   // Optional: a genuine, separate roll for Notoriety (not just flavor).
   // 1d6, Notoriety only on a natural 6, same idiom as questNotoriety on
@@ -7692,10 +7738,18 @@ function _runOverrideBastion(b, entry, visitor, isl){
     const rolled = _rollDice(diceCount, 10);
     const tickets = rolled*visitor.multiplier;
     const income = tickets*tp.gp;
-    const notes = ['Settlement morale improves; a traveling performer, playwright, musician, or artist passes through.'];
+    // Was a single static line naming all four performer types every
+    // single week, no roll involved - so an island with several
+    // Open-Air Theaters (or just several weeks in a row) showed the
+    // exact same generic sentence over and over in Important People.
+    // Rolls one specific performer now, same as the Visiting Specialists
+    // niche already does for Garden/Library/Menagerie.
+    const performer = THEATER_PERFORMERS[Math.floor(Math.random()*THEATER_PERFORMERS.length)];
+    const notes = ['Settlement morale improves; '+performer+' passes through.'];
     let vip = null;
     if(tickets>40){
-      vip = 'A notable patron attends. A noble, wealthy merchant, foreign diplomat, famous critic, or bardic college representative.';
+      const patron = THEATER_PATRONS[Math.floor(Math.random()*THEATER_PATRONS.length)];
+      vip = 'A notable patron attends: '+patron+'.';
       notes.push(vip);
       _gainNotoriety(isl, 1);
     }
