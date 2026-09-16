@@ -381,11 +381,12 @@ body{background:var(--bg-body);color:var(--text-primary);font-family:-apple-syst
 .wr-vip-row:last-child{border-bottom:none;}
 .wr-vip-building{font-size:10px;font-weight:700;color:var(--text-gold);}
 .wr-vip-text{font-size:10px;color:var(--text-muted);margin-top:1px;line-height:1.4;}
-/* Quantity/visitor-count highlight inside an Important People line (see
-   _hlVisitorText), and the ×N badge next to a building name when
-   several identical arrivals this week collapsed into one row. */
+/* Quantity/visitor-count highlight inside an Important People line
+   (see _hlVisitorText) - a whole building's worth of arrivals for the
+   week now reads as one row with a comma-joined/Nx-collapsed text
+   (see _countedListJoin), so the count that matters is the one inside
+   the text itself, not a separate badge. */
 .wr-vip-hl{color:var(--text-gold);font-weight:700;}
-.wr-vip-qty{font-size:9px;font-weight:700;color:var(--text-muted);}
 /* Themed scrollbars for every scrollable panel in this modal. The bare
    native scrollbar (bright, off-theme) stood out against the card
    surfaces around it. Firefox uses scrollbar-color; everything else
@@ -2553,12 +2554,32 @@ function _renderWeeklyReportBody(r, islId){
   // (Gossip, Rumors, Whispers, Reports, Talk, whatever a given building
   // calls it) is ambient information, not a person. Those go to Gossip.
   // Performance keeps only the roll math and gp figures.
-  const peopleRows = [], gossipRows = [];
+  // One row per building, not one row per thing that happened to it -
+  // several of the same building on one island (two Open-Air Theaters,
+  // say) used to each print their own full block under the same
+  // building name. Two kinds of content feed a building's bucket:
+  // `people` entries carry a raw, tagged list (kind + list, see
+  // PEOPLE_KIND_TEMPLATES) that gets properly re-merged across every
+  // instance of that building - a correctly re-summed "N visitors pass
+  // through: ..." with one shared frame, not two separate sentences
+  // repeating it - while everything else (a plain note, Guest Ledger,
+  // a vip Active Action's own successText) is just a full sentence
+  // already and gets dedup-joined with a space instead.
+  const peopleByBuilding = {}, peopleOrder = [];
+  function _peopleBucket(name){
+    if(!peopleByBuilding[name]){ peopleByBuilding[name] = { kinds:{}, plain:[] }; peopleOrder.push(name); }
+    return peopleByBuilding[name];
+  }
+  const gossipRows = [];
   (b ? b.buildings: []).forEach(function(row){
-    (row.notes||[]).filter(Boolean).forEach(function(t){ peopleRows.push({ building: row.name, text: t }); });
+    (row.people||[]).forEach(function(p){
+      const bucket = _peopleBucket(row.name);
+      bucket.kinds[p.kind] = (bucket.kinds[p.kind]||[]).concat(p.list);
+    });
+    (row.notes||[]).filter(Boolean).forEach(function(t){ _peopleBucket(row.name).plain.push(t); });
     if(row.secondaryLines && row.secondaryLines.length){
       if(row.secondaryLabel==='Guest Ledger'){
-        row.secondaryLines.forEach(function(t){ peopleRows.push({ building: row.name, text: 'Guest Ledger: '+t }); });
+        row.secondaryLines.forEach(function(t){ _peopleBucket(row.name).plain.push('Guest Ledger: '+t); });
       } else {
         row.secondaryLines.forEach(function(t){ gossipRows.push({ building: row.name, label: row.secondaryLabel||'Word Around Town', text: t }); });
       }
@@ -2571,16 +2592,16 @@ function _renderWeeklyReportBody(r, islId){
   // building's other named-guest content, not only in Actions/Quests
   // below.
   (r.activeActions||[]).filter(function(a){ return a.vip; }).forEach(function(a){
-    peopleRows.push({ building: a.building, text: a.text });
+    _peopleBucket(a.building).plain.push(a.text);
   });
-  // Multiple identical arrivals - most visibly several of the same
-  // building on one island, each rolling the exact same line the same
-  // week - used to each get their own full row. Collapsed into one row
-  // with a ×N badge instead of repeating the whole line back to back.
-  const dedupedPeople = [];
-  peopleRows.forEach(function(v){
-    const existing = dedupedPeople.find(function(d){ return d.building===v.building && d.text===v.text; });
-    if(existing) existing.n++; else dedupedPeople.push({ building: v.building, text: v.text, n: 1 });
+  const dedupedPeople = peopleOrder.map(function(name){
+    const bucket = peopleByBuilding[name];
+    const sentences = Object.keys(bucket.kinds).map(function(kind){
+      const tmpl = PEOPLE_KIND_TEMPLATES[kind];
+      return tmpl ? tmpl(bucket.kinds[kind]): '';
+    }).filter(Boolean);
+    if(bucket.plain.length) sentences.push(_dedupJoinSentences(bucket.plain));
+    return { building: name, text: sentences.join(' ') };
   });
   // Performance content (roll math and gp figures) built either way.
   // it's either the whole view (toggled in) or just needs its row/gp
@@ -2650,7 +2671,7 @@ function _renderWeeklyReportBody(r, islId){
   html += '<div class="'+panelCls+'" id="wr-panel-people"><h4>Important People</h4><div class="wr-panel-scroll">'
     +(dedupedPeople.length
       ? dedupedPeople.map(function(v){
-          return '<div class="wr-vip-row"><div class="wr-vip-building">'+v.building+(v.n>1?' <span class="wr-vip-qty">×'+v.n+'</span>': '')+'</div><div class="wr-vip-text">'+_hlVisitorText(v.text)+'</div></div>';
+          return '<div class="wr-vip-row"><div class="wr-vip-building">'+v.building+'</div><div class="wr-vip-text">'+_hlVisitorText(v.text)+'</div></div>';
         }).join('')
      : '<div class="wr-empty-note">No notable arrivals this week.</div>')
   +'</div></div>';
@@ -7577,6 +7598,38 @@ function _countedListJoin(arr){
   });
   return counts.map(function(c){ return (c.n>1 ? c.n+'× ': '')+c.item; }).join(', ');
 }
+// Same idea as _countedListJoin, but for a list of already-complete
+// sentences (a plain note, a Guest Ledger line, a vip Active Action's
+// successText) rather than bare noun phrases - joined with a space
+// since each already ends in its own punctuation, not a comma.
+function _dedupJoinSentences(arr){
+  const counts = [];
+  arr.forEach(function(item){
+    const existing = counts.find(function(c){ return c.item===item; });
+    if(existing) existing.n++; else counts.push({item:item, n:1});
+  });
+  return counts.map(function(c){ return (c.n>1 ? c.n+'× ': '')+c.item; }).join(' ');
+}
+// Sentence templates for a building's "people" content (see the `people`
+// field on _runVisitingSpecialists/_runOverrideBastion's open_air_theater
+// results, consumed by _renderWeeklyReportBody). Keeping the specific
+// visitor/patron names as a raw list, tagged with which template built
+// it, instead of a single pre-formatted sentence, is what lets the
+// Weekly Report properly re-merge two of the same building's rolls into
+// one combined sentence (a correct re-summed count, one shared "N
+// visitors pass through:" frame) instead of just concatenating two
+// already-finished sentences and duplicating that frame.
+const PEOPLE_KIND_TEMPLATES = {
+  visitorCount: function(list){
+    return (list.length===1 ? 'A visitor passes through: ': list.length+' visitors pass through: ')+_countedListJoin(list)+'.';
+  },
+  theaterPerformer: function(list){
+    return 'Settlement morale improves; '+_countedListJoin(list)+(list.length===1 ? ' passes through.': ' pass through.');
+  },
+  theaterPatron: function(list){
+    return 'A notable patron attends: '+_countedListJoin(list)+'.';
+  }
+};
 function _runVisitingSpecialists(cfg, entry, isl, b){
   const level = _blevel(entry);
   const tourismDiceBonus = (b && b.cat==='tourism') ? 1: 0;
@@ -7589,12 +7642,13 @@ function _runVisitingSpecialists(cfg, entry, isl, b){
   // roll above) - it just used to never leave the Performance panel's
   // rollText, while `notes` (the one thing Important People reads off
   // a building) got the same static, visitor-free morale blurb every
-  // single week regardless of who showed up. Now `notes` carries the
-  // actual roll result when anyone showed up, falling back to the
-  // generic blurb only on the rare week nobody did.
-  const notes = visitors.length
-    ? [(visitors.length===1 ? 'A visitor passes through: ': visitors.length+' visitors pass through: ')+_countedListJoin(visitors)+'.']
-    : [cfg.moraleNote];
+  // single week regardless of who showed up. `people` carries the raw
+  // roll as a tagged list instead of a pre-formatted sentence, so two
+  // of this same building on one island get re-summed into one combined
+  // line instead of two separate "N visitors..." sentences; `notes`
+  // stays as the plain-text fallback for the rare week nobody visited.
+  const people = visitors.length ? [{ kind:'visitorCount', list: visitors }]: [];
+  const notes = visitors.length ? []: [cfg.moraleNote];
   // Optional: a genuine, separate roll for Notoriety (not just flavor).
   // 1d6, Notoriety only on a natural 6, same idiom as questNotoriety on
   // the Hospitality niche.
@@ -7613,7 +7667,7 @@ function _runVisitingSpecialists(cfg, entry, isl, b){
   return {
     passiveLabel: cfg.label,
     rollText: diceCount+'d'+cfg.dice.sides+' = '+count+' visitor'+(count===1?'':'s')+' this turn'+(visitors.length?'. '+visitors.join(', '):''),
-    income: 0, secondaryLabel: secondaryLabel, secondaryLines: secondaryLines, notes: notes, actions: cfg.actions, vip: vip
+    income: 0, secondaryLabel: secondaryLabel, secondaryLines: secondaryLines, notes: notes, people: people, actions: cfg.actions, vip: vip
   };
 }
 
@@ -7745,15 +7799,19 @@ function _runOverrideBastion(b, entry, visitor, isl){
     // Rolls one specific performer now, same as the Visiting Specialists
     // niche already does for Garden/Library/Menagerie.
     const performer = THEATER_PERFORMERS[Math.floor(Math.random()*THEATER_PERFORMERS.length)];
-    const notes = ['Settlement morale improves; '+performer+' passes through.'];
+    // Tagged raw picks (see PEOPLE_KIND_TEMPLATES), not pre-formatted
+    // sentences, so two Open-Air Theaters on the same island merge into
+    // one combined Important People line instead of two separate ones
+    // repeating the same "Settlement morale improves;" frame.
+    const people = [{ kind:'theaterPerformer', list:[performer] }];
     let vip = null;
     if(tickets>40){
       const patron = THEATER_PATRONS[Math.floor(Math.random()*THEATER_PATRONS.length)];
       vip = 'A notable patron attends: '+patron+'.';
-      notes.push(vip);
+      people.push({ kind:'theaterPatron', list:[patron] });
       _gainNotoriety(isl, 1);
     }
-    return { passiveLabel:'Attendance. '+tp.name+' ('+tp.gp+' gp/ticket)', rollText:diceCount+'d10 = '+rolled+' × ×'+visitor.multiplier+' = '+tickets+' tickets sold', income:income, secondaryLabel:null, secondaryLines:[], notes:notes, actions:BASTION_FLAGSHIP_ACTIONS.open_air_theater, vip:vip };
+    return { passiveLabel:'Attendance. '+tp.name+' ('+tp.gp+' gp/ticket)', rollText:diceCount+'d10 = '+rolled+' × ×'+visitor.multiplier+' = '+tickets+' tickets sold', income:income, secondaryLabel:null, secondaryLines:[], notes:[], people:people, actions:BASTION_FLAGSHIP_ACTIONS.open_air_theater, vip:vip };
   }
   if(b.id==='watch_barracks'){
     const diceCount = (_bastionDiceCount(2, level)+tourismDiceBonus);
