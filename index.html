@@ -7016,7 +7016,7 @@ const HOSPITALITY_VENUES = {
   dockside_tavern: {
     passiveLabel:'Room Occupancy', dice:{n:2,sides:6}, gpPerUnit:20, unitNoun:'occupied room stays',
     secondaryLabel:'Rumors & Intelligence', secondaryDie:4, secondary:TAVERN_RUMORS, doubleSecondaryAtMultiplier:4,
-    vipText:'A notable guest arrives. A noble, merchant prince, pirate captain, scholar, adventuring party, diplomat, spy, or crime boss.', vipNotoriety:1,
+    vipRoster:['A notable guest arrives. A noble, merchant prince, pirate captain, scholar, adventuring party, diplomat, spy, or crime boss.', 'A retired sellsword buys a round for everyone and tells the same battle story three times.', 'A minor prince, traveling under a false name that fools no one, asks for the good room.', 'A trio of off-duty guild guards drink quietly in the corner, clearly discussing something they shouldn\'t.', 'A shipwrecked merchant, still soaked, orders the strongest drink on the menu and doesn\'t explain.'], vipNotoriety:1,
     actions:[
       { text:'Serve the regulars', chance:1, gold:[80,150], successText:'A steady night at the bar. Nothing dramatic, but the till is full.', failText:'N/A' },
       { text:'Host adventurers for the night', chance:0.75, gold:[150,400], happinessMod:3, successText:'A traveling party settles their tab generously and leaves in good spirits.', failText:'The party settles in but keeps mostly to themselves.' },
@@ -7027,7 +7027,7 @@ const HOSPITALITY_VENUES = {
   backstreet_casino: {
     passiveLabel:'Drink & Table Sales', dice:{n:3,sides:6}, gpPerUnit:5, unitNoun:'groups served',
     secondaryLabel:'Gossip', secondaryDie:6, secondary:CASINO_GOSSIP, doubleSecondaryAboveUnits:40,
-    vipText:'A high-rolling pirate captain sits down at the highest table and doesn\'t leave until dawn.', vipNotoriety:2,
+    vipRoster:['A high-rolling pirate captain sits down at the highest table and doesn\'t leave until dawn.', 'A retired admiral bets recklessly and loses with remarkable good humor.', 'A masked patron insists on a private table and pays triple for the privacy.', 'A young heiress tries her luck for the first time and can\'t stop grinning.', 'A professional card counter gets quietly asked to leave, and quietly does.'], vipNotoriety:2,
     actions:[
       { text:'Run the tables', chance:1, gold:[150,300], successText:'A quiet, profitable night at the tables.', failText:'N/A' },
       { text:'Host high rollers', chance:0.75, gold:[300,700], successText:'A run of big spenders keeps the house well ahead tonight.', failText:'The high rollers stay away tonight.' },
@@ -7038,7 +7038,7 @@ const HOSPITALITY_VENUES = {
   grand_bathhouse: {
     passiveLabel:'Treatments Sold', dice:{n:2,sides:8}, gpPerUnit:12, unitNoun:'treatments booked',
     secondaryLabel:'High-Society Gossip', secondaryDie:6, secondary:BATHHOUSE_GOSSIP, questNotoriety:1,
-    vipText:'A visiting celebrity books a private soak. The whole island hears about it within the week.', vipNotoriety:1,
+    vipRoster:['A visiting celebrity books a private soak. The whole island hears about it within the week.', 'A traveling opera singer tests the acoustics of the steam room, loudly and unapologetically.', 'A retired general finally lets someone else scrub their back.', 'A pair of rival diplomats end up soaking in the same pool and, against all odds, get along.', 'A minor royal insists on the exact same water temperature as back home.'], vipNotoriety:1,
     actions:[
       { text:'Open to the public', chance:1, gold:[200,400], successText:'A full house of ordinary patrons, all paying customers.', failText:'N/A' },
       { text:'Host a private soak for a faction', chance:0.75, gold:[400,900], successText:'A visiting faction leaves impressed and well-connected. Word of the bathhouse spreads.', failText:'The booking falls through.' },
@@ -7049,7 +7049,7 @@ const HOSPITALITY_VENUES = {
   vice_den: {
     passiveLabel:'Under-the-Table Trade', dice:{n:2,sides:6}, gpPerUnit:8, unitNoun:'quiet deals made',
     secondaryLabel:'Word in the Underworld', secondaryDie:6, secondary:UNDERWORLD_WHISPERS,
-    vipText:'A disgraced noble spends a fortune trying to stay unrecognized, and fails completely.', vipNotoriety:1,
+    vipRoster:['A disgraced noble spends a fortune trying to stay unrecognized, and fails completely.', 'A once-famous actor drinks alone in the corner, and everyone pretends not to notice.', 'A rival gang\'s lieutenant comes in unarmed, as a show of good faith. Probably.', 'A wealthy widow spends the night losing money on purpose, for reasons nobody asks about.', 'A gambler on a genuine hot streak draws a small, nervous crowd.'], vipNotoriety:1,
     actions:[
       { text:'Quiet trade', chance:1, gold:[100,250], successText:'Business as usual, nothing worth remembering.', failText:'N/A' },
       { text:'Fence stolen goods', chance:0.75, gold:[250,600], crimeMod:3, successText:'The goods move quietly and quickly.', failText:'No buyers are interested this week.' },
@@ -7060,7 +7060,7 @@ const HOSPITALITY_VENUES = {
   smugglers_den: {
     passiveLabel:'Contraband Moved', dice:{n:1,sides:6}, gpPerUnit:15, unitNoun:'shipments slipped past the docks',
     secondaryLabel:'Close Calls', secondaryDie:6, secondary:SMUGGLER_CLOSE_CALLS,
-    vipText:'A legendary smuggler passes through just long enough to trade a favor for silence.', vipNotoriety:2,
+    vipRoster:['A legendary smuggler passes through just long enough to trade a favor for silence.', 'A retired customs officer shows up looking to buy, not confiscate.', 'A nervous first-timer badly overpays for a simple favor.', 'A rival crew\'s fence tries to poach business, quietly and badly.', 'A courier with a sealed message refuses to say who sent them.'], vipNotoriety:2,
     actions:[
       { text:'Small-time trade', chance:1, gold:[80,200], successText:'A handful of minor deals, nothing that draws attention.', failText:'N/A' },
       { text:'Move a shipment', chance:0.75, gold:[250,600], crimeMod:4, successText:'The shipment slips through clean and sells well.', failText:'The run is called off at the last minute.' },
@@ -7071,7 +7071,7 @@ const HOSPITALITY_VENUES = {
   hotel: {
     passiveLabel:'Suite Occupancy', dice:{n:3,sides:8}, gpPerUnit:18, unitNoun:'occupied suites',
     secondaryLabel:'Guest Ledger', secondaryDie:6, secondary:HOTEL_LEDGER, questNotoriety:2,
-    vipText:'A dignitary books the top floor for the week. The whole harbor takes notice.', vipNotoriety:2,
+    vipRoster:['A dignitary books the top floor for the week. The whole harbor takes notice.', 'A honeymooning couple books the finest room and tips absurdly well.', 'A traveling author checks in to finish a novel, and complains about every noise.', 'A minor celebrity\'s entourage takes up an entire floor by themselves.', 'A mysterious guest pays entirely in advance and requests total privacy.'], vipNotoriety:2,
     actions:[
       { text:'Run the front desk', chance:1, gold:[250,500], successText:'A steady stream of check-ins and check-outs, nothing remarkable.', failText:'N/A' },
       { text:'Host a traveling caravan or crew', chance:0.75, gold:[500,1100], happinessMod:5, successText:'A full booking pays out well and leaves everyone satisfied.', failText:'The booking falls through at the last minute.' },
@@ -7082,7 +7082,7 @@ const HOSPITALITY_VENUES = {
   beer_garden: {
     passiveLabel:'Table Service', dice:{n:2,sides:6}, gpPerUnit:9, unitNoun:'rounds served',
     secondaryLabel:'Garden Chatter', secondaryDie:6, secondary:BEER_GARDEN_CHATTER,
-    vipText:'A traveling bard holds court for the whole evening, and the story of the night spreads for weeks.', vipNotoriety:1,
+    vipRoster:['A traveling bard holds court for the whole evening, and the story of the night spreads for weeks.', 'A retired sea captain tells the same storm story to three different tables, each time bigger.', 'A local hero, home for the first time in years, gets bought drinks all night.', 'A traveling comedian tries out new material and actually lands it.', 'A pair of rival brewers end up arm-wrestling over whose stout is better.'], vipNotoriety:1,
     actions:[
       { text:'Pour the regular rounds', chance:1, gold:[100,220], successText:'A full garden and a full till, nothing dramatic.', failText:'N/A' },
       { text:'Host a folk band', chance:0.75, gold:[220,500], happinessMod:4, successText:'The music draws a bigger crowd than usual.', failText:'The band cancels; turnout is thin.' },
@@ -7093,7 +7093,7 @@ const HOSPITALITY_VENUES = {
   winery: {
     passiveLabel:'Tasting Room Sales', dice:{n:2,sides:8}, gpPerUnit:14, unitNoun:'bottles sold',
     secondaryLabel:'Vintage Notes', secondaryDie:6, secondary:WINERY_NOTES, questNotoriety:1,
-    vipText:'A traveling wine critic tastes the vintage and writes it up glowingly.', vipNotoriety:1,
+    vipRoster:['A traveling wine critic tastes the vintage and writes it up glowingly.', 'A rival vintner shows up to taste the competition, and can\'t hide being impressed.', 'A minor noble buys out an entire vintage on the spot.', 'A sommelier in training begs for an apprenticeship on the way out.', 'A collector offers an absurd sum for the oldest bottle in the cellar.'], vipNotoriety:1,
     actions:[
       { text:'Sell the standard vintage', chance:1, gold:[150,350], successText:'A solid, unremarkable batch sells through.', failText:'N/A' },
       { text:'Host a tasting event', chance:0.75, gold:[350,750], happinessMod:5, successText:'A well-attended tasting moves plenty of bottles.', failText:'Turnout is thin; sales are modest.' },
@@ -7104,7 +7104,7 @@ const HOSPITALITY_VENUES = {
   temple: {
     passiveLabel:'Offerings & Tithes', dice:{n:2,sides:6}, gpPerUnit:7, unitNoun:'offerings given',
     secondaryLabel:'Omens & Blessings', secondaryDie:6, secondary:TEMPLE_OMENS,
-    vipText:'A small, undeniable miracle is witnessed by half the island.', vipNotoriety:2,
+    vipRoster:['A small, undeniable miracle is witnessed by half the island.', 'A pilgrim who walked the whole way finally reaches the altar, and weeps.', 'A skeptic comes to disprove something and leaves quietly convinced.', 'A visiting cleric from another faith asks, respectfully, to observe the rites.', 'A child born on the temple steps gets named for the place, on the spot.'], vipNotoriety:2,
     actions:[
       { text:'Hold the regular service', chance:1, gold:[100,250], successText:'A well-attended, ordinary service.', failText:'N/A' },
       { text:'Bless a departing ship or venture', chance:0.75, gold:[200,450], happinessMod:5, successText:'The blessing is well-received; the congregation leaves in good spirits.', failText:'Attendance is thin this week.' },
@@ -7115,7 +7115,7 @@ const HOSPITALITY_VENUES = {
   hospital: {
     passiveLabel:'Treatment Fees', dice:{n:2,sides:6}, gpPerUnit:10, unitNoun:'patients treated',
     secondaryLabel:'Ward Reports', secondaryDie:6, secondary:HOSPITAL_REPORTS,
-    vipText:'A renowned healer arrives to study a rare case, staying on to train the staff.', vipNotoriety:1,
+    vipRoster:['A renowned healer arrives to study a rare case, staying on to train the staff.', 'A retired battlefield medic volunteers a week of free work, no explanation given.', 'A grateful former patient returns with a donation nobody expected.', 'A traveling alchemist offers a rare remedy in exchange for records access.', 'A visiting inspector arrives to audit conditions, and leaves impressed.'], vipNotoriety:1,
     actions:[
       { text:'Run the regular ward', chance:1, gold:[150,350], successText:'Routine treatment, nothing out of the ordinary.', failText:'N/A' },
       { text:'Treat an outbreak before it spreads', chance:0.75, gold:[300,700], happinessMod:6, successText:'The outbreak is caught early and contained without incident.', failText:'The ward is overwhelmed; the outbreak spreads before it\'s brought under control.' },
@@ -7126,7 +7126,7 @@ const HOSPITALITY_VENUES = {
   guildhall: {
     passiveLabel:'Contract Fees', dice:{n:2,sides:8}, gpPerUnit:11, unitNoun:'contracts filed',
     secondaryLabel:'Guild Gossip', secondaryDie:6, secondary:GUILD_GOSSIP,
-    vipText:'A guildmaster from another island arrives to negotiate a formal charter. The whole harbor takes notice.', vipNotoriety:2,
+    vipRoster:['A guildmaster from another island arrives to negotiate a formal charter. The whole harbor takes notice.', 'A rival guild sends an envoy to quietly propose a joint venture.', 'An auditor arrives unannounced, and finds nothing out of order, to everyone\'s relief.', 'A retired guildmaster stops by just to see how the place has changed.', 'A young apprentice from across the sea arrives hoping for a transfer.'], vipNotoriety:2,
     actions:[
       { text:'Process routine paperwork', chance:1, gold:[150,350], successText:'Filings and fees, collected without fuss.', failText:'N/A' },
       { text:'Broker a trade contract', chance:0.75, gold:[350,800], successText:'A solid contract is signed and filed.', failText:'Negotiations stall; no contract today.' },
@@ -7137,7 +7137,7 @@ const HOSPITALITY_VENUES = {
   counting_house: {
     passiveLabel:'Exchange Fees', dice:{n:2,sides:8}, gpPerUnit:15, unitNoun:'transactions cleared',
     secondaryLabel:'Market Whispers', secondaryDie:6, secondary:MARKET_WHISPERS,
-    vipText:'A wealthy investor moves a fortune through the vaults. Word of the island\'s stability spreads.', vipNotoriety:2,
+    vipRoster:['A wealthy investor moves a fortune through the vaults. Word of the island\'s stability spreads.', 'A foreign banker arrives to personally verify the vault\'s reputation.', 'A retired accountant catches a decades-old error nobody else noticed.', 'A nervous new client moves their entire savings in, and asks a lot of questions.', 'A rival counting-house\'s own auditor arrives to size up the competition.'], vipNotoriety:2,
     actions:[
       { text:'Clear the daily transactions', chance:1, gold:[200,450], successText:'Routine deposits and withdrawals, cleared without incident.', failText:'N/A' },
       { text:'Underwrite a merchant\'s loan', chance:0.75, gold:[400,900], successText:'The loan is repaid with interest ahead of schedule.', failText:'The borrower defaults; the loss is absorbed quietly.' },
@@ -7148,7 +7148,7 @@ const HOSPITALITY_VENUES = {
   almshouse: {
     passiveLabel:'Charitable Collections', dice:{n:1,sides:6}, gpPerUnit:5, unitNoun:'donation drives held',
     secondaryLabel:'Community Stories', secondaryDie:6, secondary:ALMSHOUSE_STORIES,
-    vipText:'A visiting noble tours the kitchens personally and leaves a genuinely generous donation.', vipNotoriety:2,
+    vipRoster:['A visiting noble tours the kitchens personally and leaves a genuinely generous donation.', 'A former resident, now well-off, returns to pay it all forward.', 'A traveling priest blesses the kitchens and stays to help serve.', 'A skeptical councilor tours the books and leaves convinced it\'s money well spent.', 'A quiet benefactor leaves an anonymous donation and won\'t say who they are.'], vipNotoriety:2,
     actions:[
       { text:'Run the daily kitchen', chance:1, gold:[80,180], successText:'Another day, another warm meal for whoever needs one.', failText:'N/A' },
       { text:'Hold a charity drive', chance:0.75, gold:[150,350], happinessMod:5, successText:'The drive collects generously; the whole district pitches in.', failText:'Donations are thin this week.' },
@@ -7159,7 +7159,7 @@ const HOSPITALITY_VENUES = {
   music_hall: {
     passiveLabel:'Ticket Sales', dice:{n:2,sides:8}, gpPerUnit:13, unitNoun:'tickets sold',
     secondaryLabel:'Encore Reports', secondaryDie:6, secondary:MUSIC_HALL_ENCORES,
-    vipText:'A celebrated composer or virtuoso performs a surprise encore.', vipNotoriety:2,
+    vipRoster:['A celebrated composer or virtuoso performs a surprise encore.', 'A traveling conductor sits in the front row, taking notes the whole time.', 'A young prodigy is invited on stage for an impromptu duet.', 'A retired performer, once famous, is recognized mid-applause.', 'A talent scout from a mainland opera house lingers by the stage door after.'], vipNotoriety:2,
     actions:[
       { text:'Run the standard program', chance:1, gold:[150,350], successText:'A well-rehearsed, well-attended program.', failText:'N/A' },
       { text:'Book a touring orchestra', chance:0.75, gold:[350,800], happinessMod:6, successText:'A touring orchestra fills the hall for the whole run.', failText:'The booking falls through at the last minute.' },
@@ -7170,7 +7170,7 @@ const HOSPITALITY_VENUES = {
   sporting_arena: {
     passiveLabel:'Gate Fees & Wagers', dice:{n:3,sides:6}, gpPerUnit:12, unitNoun:'spectators through the gate',
     secondaryLabel:'Match Results', secondaryDie:6, secondary:ARENA_RESULTS, questNotoriety:2,
-    vipText:'A champion from another island arrives to issue a formal challenge.', vipNotoriety:2,
+    vipRoster:['A champion from another island arrives to issue a formal challenge.', 'A retired champion shows up just to watch, and gets recognized instantly.', 'A talent scout quietly clocks times from the back row.', 'A rival team\'s captain arrives to size up the competition in person.', 'A local underdog draws a surprise crowd after an upset win.'], vipNotoriety:2,
     actions:[
       { text:'Run the regular slate', chance:1, gold:[200,450], successText:'A full slate of races and bouts, gate fees collected without incident.', failText:'N/A' },
       { text:'Host a championship match', chance:0.75, gold:[450,1000], happinessMod:7, successText:'A championship match draws a real crowd.', failText:'A key competitor drops out; turnout suffers.' },
@@ -7181,7 +7181,7 @@ const HOSPITALITY_VENUES = {
   fashion_guild: {
     passiveLabel:'Commissioned Garments', dice:{n:2,sides:6}, gpPerUnit:11, unitNoun:'garments commissioned',
     secondaryLabel:'Salon Talk', secondaryDie:6, secondary:FASHION_SALON_TALK, questNotoriety:2,
-    vipText:'A renowned designer from the mainland requests a private commission, and won\'t say no to being photographed leaving.', vipNotoriety:2,
+    vipRoster:['A renowned designer from the mainland requests a private commission, and won\'t say no to being photographed leaving.', 'A visiting noble commissions an entire seasonal wardrobe on the spot.', 'A rival tailor comes to scout techniques, badly disguised.', 'A traveling critic previews the new line and can\'t stop talking about it.', 'A minor celebrity wears a piece out the door before it\'s even finished.'], vipNotoriety:2,
     actions:[
       { text:'Fill routine orders', chance:1, gold:[120,280], successText:'Standard orders, filled on schedule.', failText:'N/A' },
       { text:'Dress a wedding party', chance:0.75, gold:[280,650], happinessMod:5, successText:'A full wedding party outfitted beautifully and on time.', failText:'A fitting runs long; the order ships late.' },
@@ -7192,7 +7192,7 @@ const HOSPITALITY_VENUES = {
   artists_guild: {
     passiveLabel:'Commissions Sold', dice:{n:2,sides:6}, gpPerUnit:10, unitNoun:'pieces commissioned',
     secondaryLabel:'Studio Gossip', secondaryDie:6, secondary:ARTIST_STUDIO_GOSSIP, questNotoriety:2,
-    vipText:'A celebrated critic writes a glowing review that reaches every gallery worth knowing.', vipNotoriety:2,
+    vipRoster:['A celebrated critic writes a glowing review that reaches every gallery worth knowing.', 'A wealthy collector buys out an entire exhibit in one visit.', 'A rival guild\'s own artist arrives to study the technique, openly.', 'A traveling curator scouts pieces for a mainland exhibition.', 'A young apprentice\'s work gets noticed by exactly the right person.'], vipNotoriety:2,
     actions:[
       { text:'Sell studio pieces', chance:1, gold:[100,250], successText:'A handful of studio pieces sell at fair prices.', failText:'N/A' },
       { text:'Paint a commissioned portrait', chance:0.75, gold:[250,600], happinessMod:5, successText:'A commissioned portrait delights the client.', failText:'The sitting is postponed; the commission stalls.' },
@@ -7203,7 +7203,7 @@ const HOSPITALITY_VENUES = {
   thieves_guild: {
     passiveLabel:'Guild Dues', dice:{n:2,sides:8}, gpPerUnit:9, unitNoun:'jobs taxed',
     secondaryLabel:'Whispers in the Ledger', secondaryDie:6, secondary:THIEVES_LEDGER, questNotoriety:3,
-    vipText:'An infamous cat burglar turns up looking for work, and everyone pretends not to notice.', vipNotoriety:2,
+    vipRoster:['An infamous cat burglar turns up looking for work, and everyone pretends not to notice.', 'A retired fence offers one last big score, on their terms only.', 'A rival crew\'s own scout comes to size up the competition.', 'A wealthy mark, entirely unaware, wanders in looking for directions.', 'An old contact resurfaces with a job too good to be a coincidence.'], vipNotoriety:2,
     actions:[
       { text:'Collect routine dues', chance:1, gold:[120,280], successText:'Dues collected quietly, as always.', failText:'N/A' },
       { text:'Lean on a late payer', chance:0.75, gold:[280,650], crimeMod:5, successText:'The message is received; payment follows shortly after.', failText:'The payer is nowhere to be found this week.' },
@@ -7214,7 +7214,7 @@ const HOSPITALITY_VENUES = {
   locksmiths_guild: {
     passiveLabel:'Fitted Locks & Wards', dice:{n:2,sides:6}, gpPerUnit:10, unitNoun:'locks and wards fitted',
     secondaryLabel:'Shop Talk', secondaryDie:6, secondary:LOCKSMITH_SHOP_TALK, questNotoriety:1,
-    vipText:'A master locksmith from the mainland arrives to study the guild\'s own vaults.', vipNotoriety:1,
+    vipRoster:['A master locksmith from the mainland arrives to study the guild\'s own vaults.', 'A retired thief, now reformed, offers to consult on weak points.', 'A wealthy client commissions a lock nobody\'s supposed to be able to pick.', 'A rival locksmith arrives, unofficially, to compare notes.', 'An inspector arrives to certify the guild\'s latest design, and can\'t find fault with it.'], vipNotoriety:1,
     actions:[
       { text:'Fit routine locks', chance:1, gold:[100,220], successText:'Routine fittings, delivered on schedule.', failText:'N/A' },
       { text:'Secure a merchant\'s strongroom', chance:0.75, gold:[220,500], successText:'A merchant\'s strongroom is fitted out properly, front to back.', failText:'The job runs long; the merchant looks elsewhere.' },
@@ -7225,7 +7225,7 @@ const HOSPITALITY_VENUES = {
   beastmasters_guild: {
     passiveLabel:'Training Contracts', dice:{n:2,sides:6}, gpPerUnit:9, unitNoun:'animals trained',
     secondaryLabel:'Lodge Reports', secondaryDie:6, secondary:BEASTMASTER_REPORTS, questNotoriety:2,
-    vipText:'A traveling menagerie keeper arrives hunting a trade for something truly rare.', vipNotoriety:2,
+    vipRoster:['A traveling menagerie keeper arrives hunting a trade for something truly rare.', 'A retired beastmaster stops by just to see how their old charges are doing.', 'A wealthy collector offers an absurd sum for a single rare specimen.', 'A traveling scholar arrives to document a species nobody\'s cataloged yet.', 'A young apprentice begs for a spot, having walked most of the way here.'], vipNotoriety:2,
     actions:[
       { text:'Handle routine training', chance:1, gold:[100,250], successText:'A full slate of routine training, nothing dramatic.', failText:'N/A' },
       { text:'Break in a difficult animal', chance:0.75, gold:[250,600], happinessMod:4, successText:'A genuinely difficult animal finally takes to training.', failText:'The animal isn\'t having it this week.' },
@@ -7236,7 +7236,7 @@ const HOSPITALITY_VENUES = {
   prospectors_guild: {
     passiveLabel:'Claims Worked', dice:{n:2,sides:8}, gpPerUnit:12, unitNoun:'claims worked',
     secondaryLabel:'Assay Reports', secondaryDie:6, secondary:PROSPECTOR_ASSAY_REPORTS, questNotoriety:2,
-    vipText:'A mining magnate arrives in person to inspect the claims, checkbook already in hand.', vipNotoriety:2,
+    vipRoster:['A mining magnate arrives in person to inspect the claims, checkbook already in hand.', 'A rival prospecting outfit sends a scout to size up the yield.', 'A geologist from the mainland arrives to study an unusual find.', 'A retired prospector shows up just to reminisce about the old claims.', 'An investor arrives hoping to buy in before word gets out.'], vipNotoriety:2,
     actions:[
       { text:'Work the routine claims', chance:1, gold:[120,280], successText:'Ordinary yields from the ordinary claims.', failText:'N/A' },
       { text:'Chase a promising vein', chance:0.75, gold:[280,650], successText:'The vein pays off better than expected.', failText:'The vein runs dry sooner than expected.' },
@@ -7247,7 +7247,7 @@ const HOSPITALITY_VENUES = {
   skywatch_observatory: {
     passiveLabel:'Admissions', dice:{n:2,sides:8}, gpPerUnit:16, unitNoun:'admissions sold',
     secondaryLabel:'Night Sky Reports', secondaryDie:6, secondary:SKYWATCH_NIGHT_REPORTS, questNotoriety:1,
-    vipText:'A royal astronomer arrives specifically to verify a rare celestial reading against the crown\'s own charts.', vipNotoriety:2,
+    vipRoster:['A royal astronomer arrives specifically to verify a rare celestial reading against the crown\'s own charts.', 'A rival observatory\'s own astronomer arrives to compare notes, grudgingly.', 'A traveling scholar begs for one night\'s use of the lens.', 'A young apprentice stargazer is invited up for their first real look.', 'A superstitious sailor arrives asking, quite seriously, what the stars say about their next voyage.'], vipNotoriety:2,
     actions:[
       { text:'Run the regular viewing schedule', chance:1, gold:[200,450], successText:'A full house for the regular evening viewing.', failText:'N/A' },
       { text:'Host a guided stargazing night', chance:0.75, gold:[450,1000], happinessMod:6, successText:'A guided night draws a real crowd and rave reviews.', failText:'Clouds roll in; the event is cut short.' },
@@ -7269,7 +7269,7 @@ const HOSPITALITY_VENUES = {
       {max:4,text:'Travelers linger long after the show, trading stories of the glow.'},
       {max:6,text:'Someone important sees it for the first time. And won\'t stop talking about it.'}
     ],
-    vipText:'The whole pier lights up at once. A night nobody who saw it will forget.', vipNotoriety:2,
+    vipRoster:['The whole pier lights up at once. A night nobody who saw it will forget.', 'A traveling poet is inspired on the spot and writes the whole night down.', 'A pair of strangers meet under the lights and end up talking until dawn.', 'A visiting artist sets up right there to capture it before it fades.', 'A local elder says it\'s the best they\'ve seen it in decades.'], vipNotoriety:2,
     actions:[
       { text:'Run the nightly viewing', chance:1, gold:[150,350], successText:'A steady crowd along the rail all night.', failText:'N/A' },
       { text:'Host a moonlit festival', chance:0.5, gold:[500,1100], happinessMod:8, notoriety:1, successText:'The whole bay glows for the festival. A genuinely magical night.', failText:'Clouds roll in and dim the show.' }
@@ -7282,7 +7282,7 @@ const HOSPITALITY_VENUES = {
       {max:4,text:'A minor working goes exactly to plan.'},
       {max:6,text:'Something genuinely new is discovered in the confluence.'}
     ],
-    vipText:'A working succeeds beyond anything the conservatory has managed before.', vipNotoriety:2,
+    vipRoster:['A working succeeds beyond anything the conservatory has managed before.', 'A rival conservatory sends an observer, who leaves genuinely rattled.', 'A traveling scholar arrives specifically to study the breakthrough.', 'An apprentice\'s minor working goes unexpectedly, spectacularly right.', 'A cautious inspector arrives to make sure nothing\'s actually on fire. Nothing is.'], vipNotoriety:2,
     actions:[
       { text:'Take routine commissions', chance:1, gold:[200,450], successText:'Ordinary workings, reliably paid.', failText:'N/A' },
       { text:'Attempt a genuine breakthrough', chance:0.4, gold:[800,1800], notoriety:2, successText:'A real breakthrough. Scholars elsewhere take notice.', failText:'The working fizzles; nothing comes of it.' }
@@ -7290,7 +7290,7 @@ const HOSPITALITY_VENUES = {
   },
   fey_market: {
     passiveLabel:'Stalls Trading', dice:{n:4,sides:6}, gpPerUnit:15, unitNoun:'stalls trading',
-    vipText:'A fey noble browses the stalls personally, paying in favors instead of coin.', vipNotoriety:2,
+    vipRoster:['A fey noble browses the stalls personally, paying in favors instead of coin.', 'A traveling merchant trades something ordinary for something that definitely isn\'t.', 'A curious child wanders off after a stall that wasn\'t there a moment ago.', 'A scholar of the fey arrives, notebook out, trying very hard not to stare.', 'A local regular returns a favor owed from a deal nobody else remembers.'], vipNotoriety:2,
     secondaryLabel:'What\'s On Offer', secondaryDie:6, secondary:[
       {max:2,text:'Ordinary trinkets, oddly priced.'},
       {max:4,text:'Something genuinely strange changes hands.'},
@@ -7303,7 +7303,7 @@ const HOSPITALITY_VENUES = {
   },
   archaeologists_guild: {
     passiveLabel:'Excavation Commissions', dice:{n:2,sides:10}, gpPerUnit:10, unitNoun:'finds catalogued',
-    vipText:'A university dean arrives to personally authenticate the guild\'s latest find.', vipNotoriety:2,
+    vipRoster:['A university dean arrives to personally authenticate the guild\'s latest find.', 'A rival expedition\'s own lead scholar arrives to inspect the dig, professionally envious.', 'A wealthy patron offers to fund the next expedition on the spot.', 'A retired archaeologist stops by just to see the find for themselves.', 'A journalist arrives hoping for an exclusive on the discovery.'], vipNotoriety:2,
     secondaryLabel:'What the Dig Turns Up', secondaryDie:6, secondary:[
       {max:2,text:'Routine pottery shards, nothing remarkable.'},
       {max:4,text:'An intact artifact, cleaned up and sold to a private collector.'},
@@ -7316,7 +7316,7 @@ const HOSPITALITY_VENUES = {
   },
   necromancers_study: {
     passiveLabel:'Commissions Taken', dice:{n:2,sides:10}, gpPerUnit:14, unitNoun:'commissions taken',
-    vipText:'A scholar of the forbidden arts arrives seeking access to the study\'s private records.', vipNotoriety:2,
+    vipRoster:['A scholar of the forbidden arts arrives seeking access to the study\'s private records.', 'A rival practitioner arrives to challenge a theory, and stays to debate it for hours.', 'A nervous local asks, very quietly, if a lost pet can be \'looked into.\'', 'An inspector arrives to make sure everything\'s properly licensed. It is. Mostly.', 'A grieving noble arrives asking after services the study doesn\'t officially offer.'], vipNotoriety:2,
     secondaryLabel:'What the Study Learns', secondaryDie:6, secondary:[
       {max:2,text:'Quiet, unremarkable research.'},
       {max:4,text:'A paying client gets exactly what they asked for, and doesn\'t ask questions.'},
@@ -7354,14 +7354,14 @@ const HOSPITALITY_VENUES = {
       {max:4,text:'Something answers the tribute. Quietly, this time.'},
       {max:6,text:'The whole island feels it stir. And word spreads fast.'}
     ],
-    vipText:'The titan itself seems to take notice. An unmistakable, island-shaking honor.', vipNotoriety:3,
+    vipRoster:['The titan itself seems to take notice. An unmistakable, island-shaking honor.', 'A traveling scholar arrives specifically to study the phenomenon, notebook shaking along with the ground.', 'A nervous dignitary asks, very carefully, if it\'s always like this.', 'A local elder says this is the best sign they\'ve seen in a generation.', 'A rival island\'s envoy arrives, unable to hide how impressed they are.'], vipNotoriety:3,
     actions:[
       { text:'Leave the usual tribute', chance:1, gold:[400,900], successText:'The tribute is accepted, as always.', failText:'N/A' }
     ]
   },
   bridgeside_market: {
     passiveLabel:'Bridge Traffic', dice:{n:3,sides:6}, gpPerUnit:10, unitNoun:'stalls trading',
-    vipText:'A trade envoy from across the reef arrives to formalize a standing agreement.', vipNotoriety:1,
+    vipRoster:['A trade envoy from across the reef arrives to formalize a standing agreement.', 'A traveling merchant sets up an entire stall just for the day, and sells out by noon.', 'A rival market\'s own broker arrives to scout prices, badly disguised.', 'A wealthy buyer clears out an entire stock in one visit.', 'A young trader closes their first real deal, and can\'t stop grinning about it.'], vipNotoriety:1,
     secondaryLabel:'Crossing Talk', secondaryDie:6, secondary:[
       {max:2,text:'Ordinary bridge traffic.'},
       {max:4,text:'Both sides of the reef trade easily, like they always should have.'},
@@ -7373,7 +7373,7 @@ const HOSPITALITY_VENUES = {
   },
   flatwalk_pavilion: {
     passiveLabel:'Mirror Walk Attendance', dice:{n:3,sides:6}, gpPerUnit:16, unitNoun:'visitors on the flats',
-    vipText:'A traveling painter sets up an easel on the flats, and captures the reflection just right.', vipNotoriety:1,
+    vipRoster:['A traveling painter sets up an easel on the flats, and captures the reflection just right.', 'A poet is inspired on the spot and writes the whole scene down before it fades.', 'A pair of newlyweds have their portrait done right there, on the spot.', 'A local elder says the light hasn\'t looked like this in years.', 'A traveling photographer, or the local equivalent, begs for just one more minute of light.'], vipNotoriety:1,
     secondaryLabel:'What the Mirror Shows', secondaryDie:6, secondary:[
       {max:2,text:'A quiet, ordinary reflection.'},
       {max:4,text:'The sunset over the flats draws a real crowd.'},
@@ -7390,14 +7390,14 @@ const HOSPITALITY_VENUES = {
       {max:4,text:'The ceiling is especially bright tonight. Worth the trip alone.'},
       {max:6,text:'A chamber nobody\'s mapped before is found mid-tour.'}
     ],
-    vipText:'The whole ceiling lights up at once, all together. A sight nobody on the tour will forget.', vipNotoriety:2,
+    vipRoster:['The whole ceiling lights up at once, all together. A sight nobody on the tour will forget.', 'A traveling naturalist documents the display, and swears it\'s the best they\'ve seen.', 'A nervous first-timer forgets to be scared, just for a moment.', 'A local guide says even they never get tired of that exact moment.', 'A visiting artist tries, and fails, to capture it properly on canvas.'], vipNotoriety:2,
     actions:[
       { text:'Run the lantern tours', chance:1, gold:[180,400], successText:'A full tour, glowing ceiling and all.', failText:'N/A' }
     ]
   },
   whale_watch_charters: {
     passiveLabel:'Charter Bookings', dice:{n:3,sides:6}, gpPerUnit:15, unitNoun:'seats booked',
-    vipText:'A marine naturalist charters the whole boat just to document a single pod.', vipNotoriety:2,
+    vipRoster:['A marine naturalist charters the whole boat just to document a single pod.', 'A traveling photographer books the whole trip just for one perfect shot.', 'A nervous first-timer spends the whole trip holding their breath, then can\'t stop talking about it.', 'A local captain says it\'s the best sighting they\'ve had all season.', 'A visiting scholar takes copious notes the entire trip, and thanks everyone twice.'], vipNotoriety:2,
     secondaryLabel:'What the Water Shows', secondaryDie:6, secondary:[
       {max:2,text:'A quiet charter, no sightings today.'},
       {max:4,text:'A pod surfaces right alongside the boat.'},
@@ -7465,9 +7465,15 @@ function _runHospitality(cfg, entry, visitor, isl, b){
     _gainNotoriety(isl, cfg.questNotoriety + (bonus.notoriety||0));
   }
   let vip = null;
-  if(cfg.vipText && rolled>=diceCount*cfg.dice.sides){
-    notes.push(cfg.vipText);
-    vip = cfg.vipText;
+  // Each Hospitality Venue now has its own small (5-entry) roster of
+  // specific guests instead of one fixed vipText line, same idiom as
+  // the Visiting Specialists/Theater rosters - a different notable
+  // arrival most times this actually fires, rather than word-for-word
+  // the same guest every single time an island's Tavern maxes its dice.
+  if(cfg.vipRoster && cfg.vipRoster.length && rolled>=diceCount*cfg.dice.sides){
+    const picked = cfg.vipRoster[Math.floor(Math.random()*cfg.vipRoster.length)];
+    notes.push(picked);
+    vip = picked;
     _gainNotoriety(isl, (cfg.vipNotoriety||1) + (bonus.notoriety||0));
   }
   return {
@@ -8172,10 +8178,23 @@ function _runFlatIncomeBuilding(baseGold, entry){
 // Monster Hunter's Guild and Wreck Diver's Guild both roll a big dice
 // pool but pay out off a 3-tier TOTAL-roll table (with a rare cargo/
 // trophy bonus on the top tier) instead of the flat roll×gpPerUnit every
-// other Hospitality Venue uses. A genuinely different table shape.
-function _runMonsterHuntersGuild(entry, visitor, isl){
+// other Hospitality Venue uses. A genuinely different table shape - so
+// their own top-tier guest rosters live here too, rather than as a
+// vipRoster on their (mostly decorative) HOSPITALITY_VENUES config,
+// which this pair never actually reads from.
+const MONSTER_HUNTERS_VIP = ['A trophy is mounted at the guildhall.', 'A retired hunter arrives with a bounty too big to pass up and too dangerous to take alone.', 'A rival guild\'s own tracker arrives to compare notes on a shared target.', 'A frightened villager arrives asking for help with something they can barely describe.', 'A trophy collector offers an absurd sum for proof of the guild\'s latest kill.', 'A young hopeful begs to be taken on as an apprentice, unarmed and completely serious.'];
+const WRECK_DIVERS_VIP = ['A treasure hunter arrives with a map that\'s either genuine or a very good forgery.', 'A marine historian arrives hoping to document the guild\'s latest find.', 'A rival salvage crew sends a scout to size up the competition.', 'A grieving family member asks, quietly, about a wreck that\'s personal.', 'An insurer arrives to inspect a claim, and leaves satisfied.'];
+function _runMonsterHuntersGuild(entry, visitor, isl, b){
   const level = _blevel(entry);
   const bonus = (isl.buildingBonuses && isl.buildingBonuses.monster_hunters_guild) || {};
+  // Same Tourism-category dice bonus every other niche gets (see
+  // _runHospitality) - was referencing an undefined variable here
+  // (this function never received `b` to compute it from), throwing
+  // and crashing the whole week's simulation any time this building
+  // actually rolled. Always 0 in practice since this is a Guilds
+  // building, but computed properly instead of just deleted, in case
+  // that ever changes.
+  const tourismDiceBonus = (b && b.cat==='tourism') ? 1: 0;
   const diceCount = (_bastionDiceCount(4, level)+tourismDiceBonus) + (bonus.dice||0);
   const total = _rollDice(diceCount, 8);
   let perPoint, text; const notes = [];
@@ -8185,13 +8204,16 @@ function _runMonsterHuntersGuild(entry, visitor, isl){
     perPoint = 50;
     text = 'An intact, genuinely dangerous kill. The whole island hears about it.';
     _gainNotoriety(isl, 5 + (bonus.notoriety||0));
-    notes.push('A trophy is mounted at the guildhall.');
+    notes.push(MONSTER_HUNTERS_VIP[Math.floor(Math.random()*MONSTER_HUNTERS_VIP.length)]);
   }
   const income = Math.round(total * perPoint * visitor.multiplier * 0.4);
   return { passiveLabel:'Hunt Result', rollText: diceCount+'d8 = '+total+'. '+text, income: income, notes: notes };
 }
-function _runWreckDiversGuild(entry, visitor, isl){
+function _runWreckDiversGuild(entry, visitor, isl, b){
   const level = _blevel(entry);
+  // Same fix as _runMonsterHuntersGuild above - was an undefined
+  // reference, crashing the week the moment this building rolled.
+  const tourismDiceBonus = (b && b.cat==='tourism') ? 1: 0;
   const diceCount = (_bastionDiceCount(4, level)+tourismDiceBonus);
   const total = _rollDice(diceCount, 6);
   let perPoint, text; const notes = [];
@@ -8209,13 +8231,14 @@ function _runWreckDiversGuild(entry, visitor, isl){
       _ledger.cargo[info.item].qty += qty;
       notes.push('Recovered cargo: +'+qty+' '+info.item+'.');
     }
+    notes.push(WRECK_DIVERS_VIP[Math.floor(Math.random()*WRECK_DIVERS_VIP.length)]);
   }
   const income = Math.round(total * perPoint * visitor.multiplier * 0.4);
   return { passiveLabel:'Dive Result', rollText: diceCount+'d6 = '+total+'. '+text, income: income, notes: notes };
 }
 function _runNicheBastion(b, entry, visitor, stats, isl){
-  if(b.id==='monster_hunters_guild') return _runMonsterHuntersGuild(entry, visitor, isl);
-  if(b.id==='wreck_divers_guild') return _runWreckDiversGuild(entry, visitor, isl);
+  if(b.id==='monster_hunters_guild') return _runMonsterHuntersGuild(entry, visitor, isl, b);
+  if(b.id==='wreck_divers_guild') return _runWreckDiversGuild(entry, visitor, isl, b);
   if(FLAT_INCOME_BUILDINGS[b.id]!=null) return _runFlatIncomeBuilding(FLAT_INCOME_BUILDINGS[b.id], entry);
   if(HOSPITALITY_VENUES[b.id]) return _runHospitality(HOSPITALITY_VENUES[b.id], entry, visitor, isl, b);
   if(LAW_ORDER_POSTS[b.id]) return _runLawOrder(LAW_ORDER_POSTS[b.id], entry, visitor, stats);
@@ -8366,7 +8389,7 @@ function _bastionRollSummary(b){
   if(hosp){
     return {
       passive: hosp.passiveLabel+'. '+hosp.dice.n+'d'+hosp.dice.sides+' (another d'+hosp.dice.sides+' added per Level) × the island\'s Visitor Multiplier × '+hosp.gpPerUnit+' gp, income from patrons.',
-      secondary: hosp.secondaryLabel+'. A d'+hosp.secondaryDie+' flavor roll (gossip, rumors, opportunities), no income'+(hosp.vipText?'; a rare VIP flourish can also nudge Notoriety':'')+(hosp.questNotoriety?'; rolling the top result surfaces a rare quest and grants +'+hosp.questNotoriety+' Notoriety':'')+'.'
+      secondary: hosp.secondaryLabel+'. A d'+hosp.secondaryDie+' flavor roll (gossip, rumors, opportunities), no income'+(hosp.vipRoster?'; a rare VIP flourish can also nudge Notoriety':'')+(hosp.questNotoriety?'; rolling the top result surfaces a rare quest and grants +'+hosp.questNotoriety+' Notoriety':'')+'.'
     };
   }
   const law = LAW_ORDER_POSTS[b.id];
