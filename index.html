@@ -704,6 +704,8 @@ input[type=text]:focus,input[type=number]:focus,textarea:focus,select:focus{outl
 .bldg-meta-row{display:flex;justify-content:space-between;align-items:center;}
 .bldg-stat-chip{display:flex;align-items:center;gap:9px;background:var(--bg-card);border:1px solid var(--border-card);border-left:3px solid var(--cat-accent,var(--border-gold));border-radius:8px;padding:9px 11px;font-size:12px;line-height:1.4;color:var(--text-primary);}
 .bldg-stat-chip i{font-size:15px;color:var(--cat-accent,var(--text-teal-4));flex-shrink:0;}
+.bldg-workforce-chip span:first-of-type{flex:1;min-width:0;}
+.bldg-workforce-toggles{display:flex;gap:6px;flex-shrink:0;}
 .bldg-actions-row{display:flex;gap:8px;flex-wrap:wrap;padding-top:9px;margin-top:1px;border-top:1px dashed var(--border-card);}
 .bldg-modal .btn-gold{background:linear-gradient(180deg,color-mix(in srgb,var(--text-gold) 14%,transparent),transparent);box-shadow:0 1px 0 rgba(255,255,255,.08) inset;}
 .bldg-modal .btn-gold:hover{background:linear-gradient(180deg,color-mix(in srgb,var(--text-gold) 22%,transparent),transparent);}
@@ -3752,29 +3754,30 @@ function openWorkforceModal(islId){
 function _renderWorkforceBody(isl){
   isl.workforceStaffing = _computeWorkforce(isl);
   const pool = _islandWorkforcePool(isl);
+  let totalDemand = 0;
+  WORKFORCE_CATEGORIES.forEach(function(cat){ totalDemand += _workforceCategoryDemand(isl, cat); });
   let totalRequested = 0;
   const catInfo = WORKFORCE_CATEGORIES.map(function(cat){
     const demand = _workforceCategoryDemand(isl, cat);
-    const pct = (isl.workforceAlloc && isl.workforceAlloc[cat]!=null) ? isl.workforceAlloc[cat]: 100;
-    const requested = demand * pct/100;
+    const requested = _workforceRequested(isl, cat, pool, totalDemand);
     totalRequested += requested;
-    return { cat: cat, demand: demand, pct: pct, requested: requested };
+    return { cat: cat, demand: demand, requested: requested };
   });
-  const overRatio = (totalRequested>pool && totalRequested>0) ? pool/totalRequested: 1;
   let html = '<div class="wf-pool-summary">'
     +'<div>Labor Pool<br><b>'+pool.toLocaleString()+'</b></div>'
-    +'<div>Requested<br><b'+(totalRequested>pool ? ' style="color:var(--text-danger-hover);"': '')+'>'+Math.round(totalRequested).toLocaleString()+'</b></div>'
-    +(totalRequested>pool ? '<div class="wf-warn">Over-allocated. Every category is scaled down proportionally until this fits.</div>': '')
+    +'<div>Requested<br><b>'+Math.round(totalRequested).toLocaleString()+'</b></div>'
   +'</div>';
   catInfo.forEach(function(info){
-    const fillPct = info.demand>0 ? Math.round(Math.min(1, (info.requested*overRatio)/info.demand)*100): 100;
+    const fillPct = info.demand>0 ? Math.round(Math.min(1, info.requested/info.demand)*100): 100;
+    const otherRequested = totalRequested - info.requested;
+    const sliderMax = info.demand>0 ? Math.min(info.demand, Math.max(0, pool-otherRequested)): 0;
     html += '<div class="wf-cat-row">'
       +'<div class="wf-cat-head"><span class="wf-cat-name">'+(CAT_LABELS[info.cat]||info.cat)+'</span>'
         +(info.demand>0 ? '<span class="wf-cat-fill'+(fillPct<75?' bad':'')+'">'+fillPct+'% staffed</span>': '<span class="wf-cat-fill">—</span>')
       +'</div>'
       +(info.demand>0
-          ? '<input type="range" class="wf-slider" min="0" max="100" value="'+info.pct+'" oninput="_setWorkforcePct(\''+isl.id+'\',\''+info.cat+'\',this.value)">'
-            +'<div class="wf-cat-sub">'+Math.round(info.requested).toLocaleString()+' of '+info.demand.toLocaleString()+' jobs requested</div>'
+          ? '<input type="range" class="wf-slider" min="0" max="'+Math.round(sliderMax)+'" value="'+Math.round(info.requested)+'" oninput="_setWorkforceRaw(\''+isl.id+'\',\''+info.cat+'\',this.value)">'
+            +'<div class="wf-cat-sub">'+Math.round(info.requested).toLocaleString()+' of '+info.demand.toLocaleString()+' jobs requested — raise this by lowering another category</div>'
          : '<div class="wf-cat-sub">No buildings in this category yet.</div>')
       +_renderWorkforceBuildingList(isl, info.cat)
     +'</div>';
@@ -3806,11 +3809,23 @@ function _refreshWorkforceModal(isl){
   if(el) el.innerHTML = _renderWorkforceBody(isl);
   renderDetail();
 }
-function _setWorkforcePct(islId, cat, val){
+function _setWorkforceRaw(islId, cat, val){
   const isl = islands.find(function(i){ return i.id===islId; });
   if(!isl) return;
+  const pool = _islandWorkforcePool(isl);
+  let totalDemand = 0;
+  WORKFORCE_CATEGORIES.forEach(function(c){ totalDemand += _workforceCategoryDemand(isl, c); });
   isl.workforceAlloc = isl.workforceAlloc || {};
-  isl.workforceAlloc[cat] = Math.max(0, Math.min(100, parseInt(val,10)||0));
+  // Freeze every category's current requested amount so untouched
+  // categories don't silently reshuffle once one of them is edited.
+  WORKFORCE_CATEGORIES.forEach(function(c){
+    if(isl.workforceAlloc[c]==null) isl.workforceAlloc[c] = _workforceDefaultRequested(isl, c, pool, totalDemand);
+  });
+  const demand = _workforceCategoryDemand(isl, cat);
+  let otherRequested = 0;
+  WORKFORCE_CATEGORIES.forEach(function(c){ if(c!==cat) otherRequested += isl.workforceAlloc[c]; });
+  const maxAllowed = Math.min(demand, Math.max(0, pool-otherRequested));
+  isl.workforceAlloc[cat] = Math.max(0, Math.min(maxAllowed, parseInt(val,10)||0));
   _refreshWorkforceModal(isl);
 }
 function _setWorkforcePriority(islId, cat, idx){
@@ -4644,6 +4659,25 @@ function _renderBuildingCard(isl, entry, idx, b){
   // reported fact about the building, separate from the buttons that
   // act on it.
   html += (effectLabel ? '<div class="bldg-stat-chip"><i class="ti '+(BLDG_STAT_CHIP_ICON[b.cat]||'ti-chart-bar')+'"></i><span>'+effectLabel+'</span></div>': '');
+  // Workforce. Same Priority/Close controls as the Workforce modal's own
+  // per-category list, surfaced here too so marking this one building as
+  // Priority (or mothballing it) doesn't require leaving its own card to
+  // go find it in that list. Refreshes this same card in place afterward
+  // (via _openBuildingTokenModal, not just the Workforce modal) since
+  // that's how this copy of the controls was reached.
+  if(b.workers>0){
+    const wfClosed = (isl.workforceClosed && isl.workforceClosed[b.cat] || []).indexOf(idx)!==-1;
+    const wfPriority = isl.workforcePriority && isl.workforcePriority[b.cat]===idx;
+    const wfStaffing = _computeWorkforce(isl);
+    const wfPct = wfClosed ? null: (wfStaffing[idx]!=null ? Math.round(wfStaffing[idx]*100): null);
+    html += '<div class="bldg-stat-chip bldg-workforce-chip"><i class="ti ti-users"></i>'
+      +'<span>'+(wfClosed ? 'Closed — no workers assigned': (wfPct!=null ? wfPct+'% staffed ('+b.workers+' jobs)': 'Awaiting staffing'))+'</span>'
+      +'<span class="bldg-workforce-toggles">'
+        +'<button class="btn'+(wfPriority?' btn-gold':'')+'" style="font-size:10px;padding:3px 8px;" '+(wfClosed?'disabled':'')+' onclick="_setWorkforcePriority(\''+isl.id+'\',\''+b.cat+'\','+idx+');_openBuildingTokenModal(\''+isl.id+'\','+idx+')">'+(wfPriority?'★ Priority':'Priority')+'</button>'
+        +'<button class="btn'+(wfClosed?' btn-gold':'')+'" style="font-size:10px;padding:3px 8px;" onclick="_toggleWorkforceClosed(\''+isl.id+'\',\''+b.cat+'\','+idx+');_openBuildingTokenModal(\''+isl.id+'\','+idx+')">'+(wfClosed?'Reopen':'Close')+'</button>'
+      +'</span>'
+    +'</div>';
+  }
   // A handful of buildings have one bespoke button of their own (opening
   // a dedicated minigame modal, or - Reef/Mint/Excursion - swapping to a
   // disabled "already acted" state) on top of the generic Level Up/
@@ -6555,23 +6589,41 @@ function _workforceCategoryDemand(isl, cat){
 // building funded first within its own category's cut, and everyone
 // else in that category sharing whatever's left in exact proportion to
 // their own workersNeeded. Returns {buildingIdx: staffedFraction 0..1}.
+// isl.workforceAlloc now stores a RAW worker-count request per category
+// (not a percent) - whatever the player last set it to via the slider,
+// always already clamped at set-time (see _setWorkforceRaw) to never
+// exceed what's actually left in the pool after every other category's
+// own current request. That means the sum of every category's request
+// is guaranteed <= the pool by construction, and this function never
+// needs to apply its own after-the-fact overflow scale-down the way an
+// earlier version did - each slider is a genuine, live, zero-sum draw
+// on one shared pool: raising one is only possible by first lowering
+// another, exactly "push workers into other categories" from the
+// original spec, not an independent 0-100% request quietly rescaled
+// behind the scenes regardless of what the pool could actually support.
+function _workforceDefaultRequested(isl, cat, pool, totalDemand){
+  const demand = _workforceCategoryDemand(isl, cat);
+  const scale = (totalDemand>pool && totalDemand>0) ? pool/totalDemand: 1;
+  return Math.round(demand*scale);
+}
+function _workforceRequested(isl, cat, pool, totalDemand){
+  if(isl.workforceAlloc && isl.workforceAlloc[cat]!=null) return isl.workforceAlloc[cat];
+  return _workforceDefaultRequested(isl, cat, pool, totalDemand);
+}
 function _computeWorkforce(isl){
   const pool = _islandWorkforcePool(isl);
+  let totalDemand = 0;
+  WORKFORCE_CATEGORIES.forEach(function(cat){ totalDemand += _workforceCategoryDemand(isl, cat); });
   const perCat = {};
-  let totalRequested = 0;
   WORKFORCE_CATEGORIES.forEach(function(cat){
     const buildings = _workforceCategoryBuildings(isl, cat);
     const demand = buildings.reduce(function(s,x){ return s+x.workersNeeded; }, 0);
-    const pct = (isl.workforceAlloc && isl.workforceAlloc[cat]!=null) ? isl.workforceAlloc[cat]: 100;
-    const requested = demand * Math.max(0, Math.min(100, pct))/100;
-    perCat[cat] = { buildings: buildings, demand: demand, requested: requested };
-    totalRequested += requested;
+    perCat[cat] = { buildings: buildings, demand: demand, requested: _workforceRequested(isl, cat, pool, totalDemand) };
   });
-  const overflowScale = (totalRequested>pool && totalRequested>0) ? pool/totalRequested: 1;
   const result = {};
   WORKFORCE_CATEGORIES.forEach(function(cat){
     const info = perCat[cat];
-    let fulfilled = info.requested * overflowScale;
+    let fulfilled = info.requested;
     const priorityIdx = isl.workforcePriority && isl.workforcePriority[cat];
     let rest = info.buildings;
     if(priorityIdx!=null){
@@ -6597,21 +6649,14 @@ function _computeWorkforce(isl){
 // the exact same labor shortfall.
 function _workforceOverworkedCategories(isl){
   const pool = _islandWorkforcePool(isl);
-  const perCat = {};
-  let totalRequested = 0;
-  WORKFORCE_CATEGORIES.forEach(function(cat){
-    const demand = _workforceCategoryDemand(isl, cat);
-    const pct = (isl.workforceAlloc && isl.workforceAlloc[cat]!=null) ? isl.workforceAlloc[cat]: 100;
-    const requested = demand * Math.max(0, Math.min(100, pct))/100;
-    perCat[cat] = { demand: demand, requested: requested };
-    totalRequested += requested;
-  });
-  const overflowScale = (totalRequested>pool && totalRequested>0) ? pool/totalRequested: 1;
+  let totalDemand = 0;
+  WORKFORCE_CATEGORIES.forEach(function(cat){ totalDemand += _workforceCategoryDemand(isl, cat); });
   const out = [];
   WORKFORCE_CATEGORIES.forEach(function(cat){
-    const info = perCat[cat];
-    if(info.demand<=0) return;
-    if((info.requested*overflowScale)/info.demand < 0.75) out.push(cat);
+    const demand = _workforceCategoryDemand(isl, cat);
+    if(demand<=0) return;
+    const requested = _workforceRequested(isl, cat, pool, totalDemand);
+    if(requested/demand < 0.75) out.push(cat);
   });
   return out;
 }
