@@ -4698,7 +4698,7 @@ const INFRA_CAT_ORDER = ['production','farming','housing','recreational','touris
 // current occupancy is its proportional share of that pool: however much
 // of the island's total housing capacity this one building accounts for,
 // that same fraction of the island's actual population count.
-function _buildingOccupancyLabel(isl, b, level){
+function _buildingOccupancyLabel(isl, b, level, idx){
   if(b.cat!=='housing' || !b.stats) return null;
   const stats = calcIslandStats(isl);
   // Mirrors the exact multiplier calcIslandStats applies per Housing
@@ -4708,7 +4708,8 @@ function _buildingOccupancyLabel(isl, b, level){
   const housingCapMult = isl.housingEdict==='highDensity' ? 2: isl.housingEdict==='lowDensity' ? 0.5: 1;
   if(b.stats.popCap){
     const thisCap = Math.round(_levelCapBonus(b.stats.popCap, level) * housingCapMult);
-    const occupied = stats.popCap>0 ? Math.min(thisCap, Math.round((isl.population||0) * (thisCap/stats.popCap))): 0;
+    // Slums/Tenement Row fill first - see _islandGeneralHousingOccupancy.
+    const occupied = stats.popCap>0 ? (_islandGeneralHousingOccupancy(isl, stats)[idx]||0): 0;
     return occupied.toLocaleString()+' of '+thisCap.toLocaleString()+' housed residents at Lv.'+level;
   }
   if(b.stats.aquaticPopCap){
@@ -4731,7 +4732,7 @@ function _renderBuildingCard(isl, entry, idx, b){
   // table, same as before.
   const participates = _bastionParticipates(b);
   const hasActions = !!_bastionActionsFor(b);
-  const effectLabel = b.cat==='housing' ? _buildingOccupancyLabel(isl, b, level): _buildingLevelEffectLabel(b, level);
+  const effectLabel = b.cat==='housing' ? _buildingOccupancyLabel(isl, b, level, idx): _buildingLevelEffectLabel(b, level);
   // Trait-given buildings (only ever buildable because of a trait, or a
   // Starfall Crater wildcard) get their own badge right in the list.
   // otherwise they look identical to something anyone could just build.
@@ -7501,6 +7502,44 @@ function _bastionSecondaryText(table, roll){
 //     see the three reusable templates below.
 
 // ── Housing: rent, not a roll ───────────────────────────────────────
+// Overflow housing (Slums, Tenement Row) fills first - new residents
+// crowd into whatever's cheap and available before nicer housing sees
+// anyone, rather than every building drawing an equal-density share of
+// the population regardless of how desirable it is. Whatever's left
+// over after those two are full still splits proportionally (by
+// capacity share) among every other general-housing building, same as
+// before. Aquatic housing is untouched - Slums/Tenement Row are both
+// general-only, so there's nothing to prioritize there.
+const HOUSING_PRIORITY_FILL_IDS = ['slums', 'tenement_row'];
+function _islandGeneralHousingOccupancy(isl, stats){
+  const housingCapMult = isl.housingEdict==='highDensity' ? 2: isl.housingEdict==='lowDensity' ? 0.5: 1;
+  const buildings = [];
+  (isl.buildings||[]).forEach(function(entry, idx){
+    if(typeof entry==='object' && entry.constructionWeeksLeft>0) return;
+    const b = BUILDINGS.find(function(x){ return x.id===_bid(entry); });
+    if(!b || !b.stats || !b.stats.popCap) return;
+    const cap = Math.round(_levelCapBonus(b.stats.popCap, _blevel(entry)) * housingCapMult);
+    if(cap<=0) return;
+    buildings.push({ idx: idx, id: b.id, cap: cap });
+  });
+  const result = {};
+  const priority = [];
+  HOUSING_PRIORITY_FILL_IDS.forEach(function(pid){
+    buildings.filter(function(x){ return x.id===pid; }).forEach(function(x){ priority.push(x); });
+  });
+  const rest = buildings.filter(function(x){ return HOUSING_PRIORITY_FILL_IDS.indexOf(x.id)===-1; });
+  let remaining = stats.population||0;
+  priority.forEach(function(x){
+    const housed = Math.min(x.cap, Math.max(0, remaining));
+    result[x.idx] = housed;
+    remaining -= housed;
+  });
+  const restTotalCap = rest.reduce(function(s,x){ return s+x.cap; }, 0);
+  rest.forEach(function(x){
+    result[x.idx] = restTotalCap>0 ? Math.min(x.cap, Math.round(remaining * (x.cap/restTotalCap))): 0;
+  });
+  return result;
+}
 // A housing building's income is its share of the island's population
 // (this building's popCap ÷ the island's total popCap, times the actual
 // population currently living there) times a per-resident rent rate. The
@@ -7509,7 +7548,7 @@ function _bastionSecondaryText(table, roll){
 // housing costs more per unit of capacity, so it charges more rent per
 // resident, but the payback math stays consistent across the whole tier
 // ladder. No dice, no rumors. Occupancy is the only thing that moves it.
-function _runHousingBastion(b, entry, stats){
+function _runHousingBastion(b, entry, stats, isl, idx){
   // Native Coral Reservation is a fully self-sufficient tribal community.
   // it never charges rent into the treasury, no matter its Level.
   if(b.noRent) return null;
@@ -7521,10 +7560,16 @@ function _runHousingBastion(b, entry, stats){
   // gave this building's share of the island's total capacity, so rent
   // scales with the bigger, leveled-up building, not the un-leveled base.
   const cap = _levelCapBonus(baseCap, level);
-  const totalCap = isAquatic ? stats.aquaticPopCap: stats.popCap;
-  const pop = isAquatic ? stats.aquaticPopulation: stats.population;
-  if(totalCap<=0) return null;
-  const residents = Math.round(pop * (cap/totalCap));
+  let residents;
+  if(isAquatic){
+    const totalCap = stats.aquaticPopCap;
+    if(totalCap<=0) return null;
+    residents = Math.round(stats.aquaticPopulation * (cap/totalCap));
+  } else {
+    if(stats.popCap<=0) return null;
+    const occupancy = _islandGeneralHousingOccupancy(isl, stats);
+    residents = occupancy[idx]||0;
+  }
   const ratePerResident = Math.max(1, Math.round(_parsePrice(b.cost) / baseCap / 25));
   const income = Math.round(residents * ratePerResident);
   return {
@@ -9824,7 +9869,7 @@ function _runBastionForBuilding(isl, stats, entry, visitor, idx){
   // this week - same early-out as still being under construction.
   const staffedFraction = (b.workers>0 && isl.workforceStaffing && idx!=null && isl.workforceStaffing[idx]!=null) ? isl.workforceStaffing[idx]: 1;
   if(b.workers>0 && staffedFraction < 0.25) return null;
-  const r = b.cat==='housing' ? _runHousingBastion(b, entry, stats): (_runOverrideBastion(b, entry, visitor, isl) || _runNicheBastion(b, entry, visitor, stats, isl));
+  const r = b.cat==='housing' ? _runHousingBastion(b, entry, stats, isl, idx): (_runOverrideBastion(b, entry, visitor, isl) || _runNicheBastion(b, entry, visitor, stats, isl));
   if(!r) return null;
   r.id = b.id;
   r.level = _blevel(entry);
