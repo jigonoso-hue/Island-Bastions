@@ -3774,8 +3774,16 @@ function openWorkforceModal(islId){
   if(!isl) return;
   const bd = document.getElementById('modal-backdrop');
   bd.style.display = 'flex';
+  const helpTip = '<b>How staffing works</b><br>'
+    +'Every building that needs workers draws them from this island\'s shared labor pool (population, minus the Native Coral Reservation\'s subsistence farmers - they\'re off the books). Each category below splits that pool through its own slider; a building\'s staffed % follows whatever its category landed on, unless it\'s marked Priority (funded first, guaranteed full staffing before the rest of its category gets a cut) or Closed (pulled out of its category\'s job count entirely - mothballed, not demolished).'
+    +'<br><br><b>Effect on performance</b><br>'
+    +'<b>Under 25% staffed:</b> the building stops functioning - no production, no rolls, nothing.<br>'
+    +'<b>25%–99% staffed:</b> it still works, but output/income scales down with the shortfall.<br>'
+    +'<b>Under 75% staffed:</b> the overworked skeleton crew costs the whole island Happiness - once per category that\'s short, not once per building in it.';
   bd.innerHTML = '<div class="modal workforce-modal" style="max-width:640px;max-height:85vh;overflow-y:auto;">'
-    +'<h2>Workforce</h2>'
+    +'<h2 style="display:flex;align-items:center;gap:8px;">Workforce'
+      +'<button class="ring-info-btn" style="position:static;" data-tip="'+_escAttr(helpTip)+'" onmouseenter="_showTip(event, this.getAttribute(\'data-tip\'))" onmouseleave="hideTip()">?</button>'
+    +'</h2>'
     +'<div id="workforce-body">'+_renderWorkforceBody(isl)+'</div>'
     +'<div class="modal-btns"><button class="btn btn-gold" onclick="closeAnyModal()">Close</button></div>'
   +'</div>';
