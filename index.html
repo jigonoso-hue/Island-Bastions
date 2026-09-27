@@ -706,7 +706,8 @@ input[type=text]:focus,input[type=number]:focus,textarea:focus,select:focus{outl
 .bldg-icon-demolish-btn:hover{background:rgba(200,60,60,.14);}
 .bldg-icon-demolish-btn i{font-size:12px;}
 .bldg-icon-demolish-btn span{font-size:7px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;}
-.wf-building-flag{font-size:12px;}
+.wf-building-flag{display:inline-flex;vertical-align:-2px;}
+.wf-building-flag svg{width:11px;height:11px;}
 .wf-flag-priority{color:var(--border-gold);}
 .wf-flag-closed{color:var(--text-danger-hover);}
 /* The whole info block used to sit inside one solid-filled highlight box —
@@ -3814,8 +3815,8 @@ function _renderWorkforceBuildingList(isl, cat){
     // status, with small icons echoing whichever of the two is set.
     rows.push('<div class="wf-building-row'+(isClosed?' closed':'')+'">'
       +'<span class="wf-building-name">'+_buildingDisplayName(b, _blevel(entry))
-        +(isPriority ? ' <i class="ti ti-star-filled wf-building-flag wf-flag-priority" title="Priority"></i>': '')
-        +(isClosed ? ' <i class="ti ti-ban wf-building-flag wf-flag-closed" title="Closed"></i>': '')
+        +(isPriority ? ' <span class="wf-building-flag wf-flag-priority" title="Priority">'+_STAR_SVG_FILLED+'</span>': '')
+        +(isClosed ? ' <span class="wf-building-flag wf-flag-closed" title="Closed">'+_BAN_SVG+'</span>': '')
       +'</span>'
       +'<span class="wf-building-staff">'+(isClosed?'Closed': (staffPct!=null?staffPct+'%': '—'))+'</span>'
     +'</div>');
@@ -5719,6 +5720,16 @@ function _renderInfraTokens(isl){
 // A token is deliberately just an icon + name. Every level-up/remove/
 // Active Action control that used to sit right in the row now lives in
 // this small popover, opened on click.
+// Inline SVGs for the icon badge's Priority/Close/Demolish trio, used
+// instead of the Tabler icon font (loaded from a third-party CDN) so
+// these three controls always render even if that font fails to load -
+// unlike the rest of the app's ti-* icons, these have no text label of
+// their own to fall back on, so a missing glyph leaves them as blank,
+// indistinguishable squares.
+const _STAR_SVG_OUTLINE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><path d="M12 17.75l-6.172 3.245 1.179 -6.873 -5 -4.867 6.9 -1.002 3.086 -6.253 3.086 6.253 6.9 1.002 -5 4.867 1.179 6.873z"/></svg>';
+const _STAR_SVG_FILLED = '<svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><path d="M12 17.75l-6.172 3.245 1.179 -6.873 -5 -4.867 6.9 -1.002 3.086 -6.253 3.086 6.253 6.9 1.002 -5 4.867 1.179 6.873z"/></svg>';
+const _BAN_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><circle cx="12" cy="12" r="9"/><path d="M5.7 5.7l12.6 12.6"/></svg>';
+const _TRASH_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="13" height="13"><path d="M4 7h16"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12"/><path d="M9 7V4a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3"/></svg>';
 function _openBuildingTokenModal(islId, idx){
   const isl = islands.find(function(i){ return i.id===islId; });
   if(!isl) return;
@@ -5761,11 +5772,11 @@ function _openBuildingTokenModal(islId, idx){
   const wfPriority = hasWorkforce && isl.workforcePriority && isl.workforcePriority[b.cat]===idx;
   const backFaceHtml = hasWorkforce
     ? '<div class="bldg-modal-icon-face bldg-modal-icon-back bldg-modal-icon-back-split">'
-        +'<button class="bldg-icon-mini-btn'+(wfPriority?' active':'')+'" title="'+(wfPriority?'Remove priority':'Priority')+'" '+(wfClosed?'disabled':'')+' onclick="event.stopPropagation();_setWorkforcePriority(\''+isl.id+'\',\''+b.cat+'\','+(wfPriority?'null':idx)+');_openBuildingTokenModal(\''+isl.id+'\','+idx+')"><i class="ti ti-star'+(wfPriority?'-filled':'')+'"></i></button>'
-        +'<button class="bldg-icon-mini-btn'+(wfClosed?' active':'')+'" title="'+(wfClosed?'Reopen':'Close')+'" onclick="event.stopPropagation();_toggleWorkforceClosed(\''+isl.id+'\',\''+b.cat+'\','+idx+');_openBuildingTokenModal(\''+isl.id+'\','+idx+')"><i class="ti ti-ban"></i></button>'
-        +'<button class="bldg-icon-demolish-btn" onclick="event.stopPropagation();_confirmDemolishBuilding(\''+isl.id+'\','+idx+')"><i class="ti ti-trash"></i><span>Demolish</span></button>'
+        +'<button class="bldg-icon-mini-btn'+(wfPriority?' active':'')+'" title="'+(wfPriority?'Remove priority':'Priority')+'" '+(wfClosed?'disabled':'')+' onclick="event.stopPropagation();_setWorkforcePriority(\''+isl.id+'\',\''+b.cat+'\','+(wfPriority?'null':idx)+');_openBuildingTokenModal(\''+isl.id+'\','+idx+')">'+(wfPriority?_STAR_SVG_FILLED:_STAR_SVG_OUTLINE)+'</button>'
+        +'<button class="bldg-icon-mini-btn'+(wfClosed?' active':'')+'" title="'+(wfClosed?'Reopen':'Close')+'" onclick="event.stopPropagation();_toggleWorkforceClosed(\''+isl.id+'\',\''+b.cat+'\','+idx+');_openBuildingTokenModal(\''+isl.id+'\','+idx+')">'+_BAN_SVG+'</button>'
+        +'<button class="bldg-icon-demolish-btn" onclick="event.stopPropagation();_confirmDemolishBuilding(\''+isl.id+'\','+idx+')">'+_TRASH_SVG+'<span>Demolish</span></button>'
       +'</div>'
-    : '<button class="bldg-modal-icon-face bldg-modal-icon-back" onclick="event.stopPropagation();_confirmDemolishBuilding(\''+isl.id+'\','+idx+')"><i class="ti ti-trash"></i><span>Demolish</span></button>';
+    : '<button class="bldg-modal-icon-face bldg-modal-icon-back" onclick="event.stopPropagation();_confirmDemolishBuilding(\''+isl.id+'\','+idx+')">'+_TRASH_SVG+'<span>Demolish</span></button>';
   const headHtml = isTownHall
     ? '<h2 style="font-size:19px;">'+_buildingDisplayName(b, _blevel(entry))+'</h2>'
     : '<div class="bldg-modal-head">'
