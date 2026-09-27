@@ -405,7 +405,6 @@ body{background:var(--bg-body);color:var(--text-primary);font-family:-apple-syst
 .wf-building-row.closed{opacity:.5;}
 .wf-building-name{flex:1;min-width:0;}
 .wf-building-staff{width:44px;flex-shrink:0;text-align:right;color:var(--text-muted);font-weight:600;}
-.wf-building-toggle{display:flex;align-items:center;gap:3px;flex-shrink:0;white-space:nowrap;cursor:pointer;}
 /* Themed scrollbars for every scrollable panel in this modal. The bare
    native scrollbar (bright, off-theme) stood out against the card
    surfaces around it. Firefox uses scrollbar-color; everything else
@@ -693,6 +692,23 @@ input[type=text]:focus,input[type=number]:focus,textarea:focus,select:focus{outl
 .bldg-modal-icon-back:hover{background:rgba(200,60,60,.14);}
 .bldg-modal-icon-back i{font-size:16px;}
 .bldg-modal-icon-back span{font-size:7px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;}
+/* Buildings with a workforce split the back face three ways instead of
+   one bare Demolish button: two small squares up top (Priority, Close)
+   over a full-width Demolish bar - same 48x48 footprint as the icon
+   itself, just subdivided. */
+.bldg-modal-icon-back-split{transform:rotateY(180deg);display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:2px;background:transparent;border:none;padding:0;}
+.bldg-icon-mini-btn{border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-family:inherit;border:1.5px solid var(--border-card);background:var(--bg-card);color:var(--text-secondary);padding:0;}
+.bldg-icon-mini-btn i{font-size:13px;}
+.bldg-icon-mini-btn:hover{background:var(--bg-highlight);}
+.bldg-icon-mini-btn.active{background:var(--border-gold);border-color:var(--border-gold);color:#1a1408;}
+.bldg-icon-mini-btn:disabled{opacity:.4;cursor:not-allowed;}
+.bldg-icon-demolish-btn{grid-column:1/3;border-radius:8px;display:flex;align-items:center;justify-content:center;gap:3px;cursor:pointer;font-family:inherit;background:var(--bg-card);border:1.5px solid var(--text-danger-hover);color:var(--text-danger-hover);padding:0;}
+.bldg-icon-demolish-btn:hover{background:rgba(200,60,60,.14);}
+.bldg-icon-demolish-btn i{font-size:12px;}
+.bldg-icon-demolish-btn span{font-size:7px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;}
+.wf-building-flag{font-size:12px;}
+.wf-flag-priority{color:var(--border-gold);}
+.wf-flag-closed{color:var(--text-danger-hover);}
 /* The whole info block used to sit inside one solid-filled highlight box —
    level pill, category, effect text, and buttons all stacked into the
    same flat panel with no hierarchy, which read as one big undifferentiated
@@ -704,8 +720,6 @@ input[type=text]:focus,input[type=number]:focus,textarea:focus,select:focus{outl
 .bldg-meta-row{display:flex;justify-content:space-between;align-items:center;}
 .bldg-stat-chip{display:flex;align-items:center;gap:9px;background:var(--bg-card);border:1px solid var(--border-card);border-left:3px solid var(--cat-accent,var(--border-gold));border-radius:8px;padding:9px 11px;font-size:12px;line-height:1.4;color:var(--text-primary);}
 .bldg-stat-chip i{font-size:15px;color:var(--cat-accent,var(--text-teal-4));flex-shrink:0;}
-.bldg-workforce-chip span:first-of-type{flex:1;min-width:0;}
-.bldg-workforce-toggles{display:flex;gap:6px;flex-shrink:0;}
 .bldg-actions-row{display:flex;gap:8px;flex-wrap:wrap;padding-top:9px;margin-top:1px;border-top:1px dashed var(--border-card);}
 .bldg-modal .btn-gold{background:linear-gradient(180deg,color-mix(in srgb,var(--text-gold) 14%,transparent),transparent);box-shadow:0 1px 0 rgba(255,255,255,.08) inset;}
 .bldg-modal .btn-gold:hover{background:linear-gradient(180deg,color-mix(in srgb,var(--text-gold) 22%,transparent),transparent);}
@@ -3795,11 +3809,15 @@ function _renderWorkforceBuildingList(isl, cat){
     const isClosed = closedList.indexOf(idx)!==-1;
     const isPriority = priorityIdx===idx;
     const staffPct = (!isClosed && isl.workforceStaffing[idx]!=null) ? Math.round(isl.workforceStaffing[idx]*100): null;
+    // Priority/Close are set from the building's own icon badge now (see
+    // _openBuildingTokenModal), not from here - this list is read-only
+    // status, with small icons echoing whichever of the two is set.
     rows.push('<div class="wf-building-row'+(isClosed?' closed':'')+'">'
-      +'<span class="wf-building-name">'+_buildingDisplayName(b, _blevel(entry))+'</span>'
+      +'<span class="wf-building-name">'+_buildingDisplayName(b, _blevel(entry))
+        +(isPriority ? ' <i class="ti ti-star-filled wf-building-flag wf-flag-priority" title="Priority"></i>': '')
+        +(isClosed ? ' <i class="ti ti-ban wf-building-flag wf-flag-closed" title="Closed"></i>': '')
+      +'</span>'
       +'<span class="wf-building-staff">'+(isClosed?'Closed': (staffPct!=null?staffPct+'%': '—'))+'</span>'
-      +'<label class="wf-building-toggle"><input type="radio" name="wf-priority-'+cat+'-'+isl.id+'" '+(isPriority?'checked':'')+(isClosed?' disabled':'')+' onclick="_setWorkforcePriority(\''+isl.id+'\',\''+cat+'\','+idx+')"> Priority</label>'
-      +'<label class="wf-building-toggle"><input type="checkbox" '+(isClosed?'checked':'')+' onclick="_toggleWorkforceClosed(\''+isl.id+'\',\''+cat+'\','+idx+')"> Close</label>'
     +'</div>');
   });
   return rows.length ? '<div class="wf-building-list">'+rows.join('')+'</div>': '';
@@ -4659,23 +4677,15 @@ function _renderBuildingCard(isl, entry, idx, b){
   // reported fact about the building, separate from the buttons that
   // act on it.
   html += (effectLabel ? '<div class="bldg-stat-chip"><i class="ti '+(BLDG_STAT_CHIP_ICON[b.cat]||'ti-chart-bar')+'"></i><span>'+effectLabel+'</span></div>': '');
-  // Workforce. Same Priority/Close controls as the Workforce modal's own
-  // per-category list, surfaced here too so marking this one building as
-  // Priority (or mothballing it) doesn't require leaving its own card to
-  // go find it in that list. Refreshes this same card in place afterward
-  // (via _openBuildingTokenModal, not just the Workforce modal) since
-  // that's how this copy of the controls was reached.
+  // Workforce staffing status. Read-only here - Priority/Close now live
+  // on the icon badge in the modal header (see _openBuildingTokenModal),
+  // not as buttons in this card body.
   if(b.workers>0){
     const wfClosed = (isl.workforceClosed && isl.workforceClosed[b.cat] || []).indexOf(idx)!==-1;
-    const wfPriority = isl.workforcePriority && isl.workforcePriority[b.cat]===idx;
     const wfStaffing = _computeWorkforce(isl);
     const wfPct = wfClosed ? null: (wfStaffing[idx]!=null ? Math.round(wfStaffing[idx]*100): null);
     html += '<div class="bldg-stat-chip bldg-workforce-chip"><i class="ti ti-users"></i>'
       +'<span>'+(wfClosed ? 'Closed — no workers assigned': (wfPct!=null ? wfPct+'% staffed ('+b.workers+' jobs)': 'Awaiting staffing'))+'</span>'
-      +'<span class="bldg-workforce-toggles">'
-        +'<button class="btn'+(wfPriority?' btn-gold':'')+'" style="font-size:10px;padding:3px 8px;" '+(wfClosed?'disabled':'')+' onclick="_setWorkforcePriority(\''+isl.id+'\',\''+b.cat+'\','+idx+');_openBuildingTokenModal(\''+isl.id+'\','+idx+')">'+(wfPriority?'★ Priority':'Priority')+'</button>'
-        +'<button class="btn'+(wfClosed?' btn-gold':'')+'" style="font-size:10px;padding:3px 8px;" onclick="_toggleWorkforceClosed(\''+isl.id+'\',\''+b.cat+'\','+idx+');_openBuildingTokenModal(\''+isl.id+'\','+idx+')">'+(wfClosed?'Reopen':'Close')+'</button>'
-      +'</span>'
     +'</div>';
   }
   // A handful of buildings have one bespoke button of their own (opening
@@ -5738,13 +5748,31 @@ function _openBuildingTokenModal(islId, idx){
   // Demolishing itself still needs a real confirm (_confirmDemolishBuilding
   // -> _showConfirmModal) since a flip-and-click is otherwise only one
   // click away from an unrecoverable action.
+  // Buildings with a workforce also get Priority/Close on this same
+  // back face, alongside Demolish - three controls sharing the one
+  // square the icon badge occupies rather than a bare Demolish button
+  // filling the whole thing. Priority/Close stack as two small squares
+  // on top, Demolish stays a full-width bar underneath (still the most
+  // consequential of the three, so it keeps the most room). Buildings
+  // with no workforce (Housing, Expansion) keep the old single-button
+  // back face since there's nothing to prioritize or close.
+  const hasWorkforce = b.workers>0;
+  const wfClosed = hasWorkforce && (isl.workforceClosed && isl.workforceClosed[b.cat] || []).indexOf(idx)!==-1;
+  const wfPriority = hasWorkforce && isl.workforcePriority && isl.workforcePriority[b.cat]===idx;
+  const backFaceHtml = hasWorkforce
+    ? '<div class="bldg-modal-icon-face bldg-modal-icon-back bldg-modal-icon-back-split">'
+        +'<button class="bldg-icon-mini-btn'+(wfPriority?' active':'')+'" title="'+(wfPriority?'Remove priority':'Priority')+'" '+(wfClosed?'disabled':'')+' onclick="event.stopPropagation();_setWorkforcePriority(\''+isl.id+'\',\''+b.cat+'\','+(wfPriority?'null':idx)+');_openBuildingTokenModal(\''+isl.id+'\','+idx+')"><i class="ti ti-star'+(wfPriority?'-filled':'')+'"></i></button>'
+        +'<button class="bldg-icon-mini-btn'+(wfClosed?' active':'')+'" title="'+(wfClosed?'Reopen':'Close')+'" onclick="event.stopPropagation();_toggleWorkforceClosed(\''+isl.id+'\',\''+b.cat+'\','+idx+');_openBuildingTokenModal(\''+isl.id+'\','+idx+')"><i class="ti ti-ban"></i></button>'
+        +'<button class="bldg-icon-demolish-btn" onclick="event.stopPropagation();_confirmDemolishBuilding(\''+isl.id+'\','+idx+')"><i class="ti ti-trash"></i><span>Demolish</span></button>'
+      +'</div>'
+    : '<button class="bldg-modal-icon-face bldg-modal-icon-back" onclick="event.stopPropagation();_confirmDemolishBuilding(\''+isl.id+'\','+idx+')"><i class="ti ti-trash"></i><span>Demolish</span></button>';
   const headHtml = isTownHall
     ? '<h2 style="font-size:19px;">'+_buildingDisplayName(b, _blevel(entry))+'</h2>'
     : '<div class="bldg-modal-head">'
        +'<div class="bldg-modal-icon-flip" title="Click to demolish" onclick="_toggleBldgIconFlip(this)" onmouseleave="_bldgIconFlipLeave(this)" onmouseenter="_bldgIconFlipEnter(this)">'
          +'<div class="bldg-modal-icon-flip-inner">'
            +'<div class="bldg-modal-icon-face bldg-modal-icon-front">'+_buildingIconSVG(b, isUnique)+'</div>'
-           +'<button class="bldg-modal-icon-face bldg-modal-icon-back" onclick="event.stopPropagation();_confirmDemolishBuilding(\''+isl.id+'\','+idx+')"><i class="ti ti-trash"></i><span>Demolish</span></button>'
+           +backFaceHtml
          +'</div>'
        +'</div>'
        +'<h2 style="font-size:19px;margin:0;">'+_buildingDisplayName(b, _blevel(entry))+'</h2>'
