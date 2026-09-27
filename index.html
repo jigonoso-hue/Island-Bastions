@@ -3779,7 +3779,7 @@ function openWorkforceModal(islId){
     +'<br><br><b>Effect on performance</b><br>'
     +'<b>Under 25% staffed:</b> the building stops functioning - no production, no rolls, nothing.<br>'
     +'<b>25%–99% staffed:</b> it still works, but output/income scales down with the shortfall.<br>'
-    +'<b>Under 75% staffed:</b> the overworked skeleton crew costs the whole island Happiness - once per category that\'s short, not once per building in it.';
+    +'<b>Under 75% staffed:</b> each understaffed building costs the island -2 Happiness on its own, not a flat hit for the whole category.';
   bd.innerHTML = '<div class="modal workforce-modal" style="max-width:640px;max-height:85vh;overflow-y:auto;">'
     +'<h2 style="display:flex;align-items:center;gap:8px;">Workforce'
       +'<button class="ring-info-btn" style="position:static;" data-tip="'+_escAttr(helpTip)+'" onmouseenter="_showTip(event, this.getAttribute(\'data-tip\'))" onmouseleave="hideTip()">?</button>'
@@ -6753,16 +6753,17 @@ function _computeWorkforce(isl){
 // category with a dozen buildings in it would cost twelve times the
 // happiness hit that squeezing a category with one building costs, for
 // the exact same labor shortfall.
-function _workforceOverworkedCategories(isl){
-  const pool = _islandWorkforcePool(isl);
-  let totalDemand = 0;
-  WORKFORCE_CATEGORIES.forEach(function(cat){ totalDemand += _workforceCategoryDemand(isl, cat); });
+// Which buildings are individually under 75% staffed, for the
+// Overworked happiness penalty (calcIslandStats). Applied once per
+// building, not once per category - a category with a dozen buildings
+// squeezed the same way costs proportionally more Happiness than one
+// with a single building, matching the actual headcount of understaffed
+// crews rather than treating a whole category as one lump penalty.
+function _workforceOverworkedBuildings(isl){
+  const staffing = _computeWorkforce(isl);
   const out = [];
-  WORKFORCE_CATEGORIES.forEach(function(cat){
-    const demand = _workforceCategoryDemand(isl, cat);
-    if(demand<=0) return;
-    const requested = _workforceRequested(isl, cat, pool, totalDemand);
-    if(requested/demand < 0.75) out.push(cat);
+  Object.keys(staffing).forEach(function(idxStr){
+    if(staffing[idxStr]<0.75) out.push(parseInt(idxStr,10));
   });
   return out;
 }
@@ -6881,10 +6882,10 @@ function calcIslandStats(isl){
   const neverStarves = traitEffects.some(function(e){ return e.neverStarves; });
   // Player-added Events (see _renderEventsSection). Same flat-delta
   // shape as traitBonuses, folded in the same way.
-  // Workforce. A category running under 75% staffed costs -4 Happiness,
-  // once per category (not per building in it - see
-  // _workforceOverworkedCategories).
-  happinessBonus -= _workforceOverworkedCategories(isl).length * 4;
+  // Workforce. Each building running under 75% staffed costs -2
+  // Happiness, once per understaffed building (not a flat per-category
+  // hit - see _workforceOverworkedBuildings).
+  happinessBonus -= _workforceOverworkedBuildings(isl).length * 2;
   (isl.events||[]).forEach(function(ev){
     if(ev.statKey==='happiness') happinessBonus += ev.amount;
     else if(ev.statKey==='beauty') beauty += ev.amount;
