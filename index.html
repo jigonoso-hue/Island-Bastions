@@ -392,6 +392,7 @@ body{background:var(--bg-body);color:var(--text-primary);font-family:-apple-syst
    per-building Priority/Close list underneath. */
 .wf-pool-summary{display:flex;gap:20px;align-items:center;flex-wrap:wrap;background:var(--bg-highlight);border:1px solid var(--border-card);border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:11px;color:var(--text-muted);}
 .wf-pool-summary b{font-size:16px;color:var(--text-primary);}
+.wf-balance-btn{margin-left:auto;}
 .wf-warn{color:var(--text-danger-hover);font-weight:600;font-size:10.5px;flex:1 0 100%;}
 .wf-cat-row{border:1px solid var(--border-card);border-radius:10px;padding:10px 12px;margin-bottom:10px;background:var(--bg-card);}
 .wf-cat-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
@@ -3808,6 +3809,7 @@ function _renderWorkforceBody(isl){
   let html = '<div class="wf-pool-summary">'
     +'<div>Labor Pool<br><b>'+pool.toLocaleString()+'</b></div>'
     +'<div>Requested<br><b>'+Math.round(totalRequested).toLocaleString()+'</b></div>'
+    +(totalDemand>pool ? '<button class="btn wf-balance-btn" onclick="_balanceWorkforce(\''+isl.id+'\')">Balance categories</button>': '')
   +'</div>';
   catInfo.forEach(function(info){
     const fillPct = info.demand>0 ? Math.round(Math.min(1, info.requested/info.demand)*100): 100;
@@ -3855,6 +3857,23 @@ function _refreshWorkforceModal(isl){
   const el = document.getElementById('workforce-body');
   if(el) el.innerHTML = _renderWorkforceBody(isl);
   renderDetail();
+}
+// Resets every category back to its proportional share of the pool
+// (the same split a fresh island starts with, before any manual slider
+// edits) - the quick undo for however lopsided things have gotten from
+// dragging individual sliders around, rather than clicking each one
+// back by hand.
+function _balanceWorkforce(islId){
+  const isl = islands.find(function(i){ return i.id===islId; });
+  if(!isl) return;
+  const pool = _islandWorkforcePool(isl);
+  let totalDemand = 0;
+  WORKFORCE_CATEGORIES.forEach(function(c){ totalDemand += _workforceCategoryDemand(isl, c); });
+  isl.workforceAlloc = {};
+  WORKFORCE_CATEGORIES.forEach(function(c){
+    isl.workforceAlloc[c] = _workforceDefaultRequested(isl, c, pool, totalDemand);
+  });
+  _refreshWorkforceModal(isl);
 }
 function _setWorkforceRaw(islId, cat, val){
   const isl = islands.find(function(i){ return i.id===islId; });
