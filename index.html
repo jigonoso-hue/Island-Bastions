@@ -400,6 +400,8 @@ body{background:var(--bg-body);color:var(--text-primary);font-family:-apple-syst
 .wf-cat-fill.bad{color:var(--text-danger-hover);}
 .wf-slider{width:100%;accent-color:var(--text-gold);}
 .wf-cat-sub{font-size:10px;color:var(--text-muted);margin-top:2px;}
+.wf-cat-toggle{background:none;border:none;color:var(--text-teal-4);font-size:10px;font-weight:600;cursor:pointer;padding:6px 0 0;text-align:left;}
+.wf-cat-toggle:hover{text-decoration:underline;}
 .wf-building-list{margin-top:8px;padding-top:8px;border-top:1px dashed var(--border-card);display:flex;flex-direction:column;gap:5px;}
 .wf-building-row{display:flex;align-items:center;gap:10px;font-size:10.5px;color:var(--text-primary);}
 .wf-building-row.closed{opacity:.5;}
@@ -3755,6 +3757,18 @@ function renderDetail(){
   document.getElementById('island-modal-right').innerHTML = rightHead + _renderInfraTokens(isl);
 }
 // ── Workforce modal ──────────────────────────────────────────────────
+// Per-category building lists default collapsed (a fully-built-out
+// island can have a dozen+ rows per category) - this just remembers
+// which ones the player has expanded, keyed by island+category, for as
+// long as the tab stays open. Not persisted with the save; reopening
+// the modal fresh starts collapsed again.
+const _workforceExpandedCats = {};
+function _toggleWorkforceCatExpand(islId, cat){
+  const key = islId+'|'+cat;
+  _workforceExpandedCats[key] = !_workforceExpandedCats[key];
+  const isl = islands.find(function(i){ return i.id===islId; });
+  if(isl) _refreshWorkforceModal(isl);
+}
 function openWorkforceModal(islId){
   const isl = islands.find(function(i){ return i.id===islId; });
   if(!isl) return;
@@ -3775,8 +3789,13 @@ function _renderWorkforceBody(isl){
   const catInfo = WORKFORCE_CATEGORIES.map(function(cat){
     const demand = _workforceCategoryDemand(isl, cat);
     const requested = _workforceRequested(isl, cat, pool, totalDemand);
+    const buildingCount = (isl.buildings||[]).filter(function(entry){
+      if(typeof entry==='object' && entry.constructionWeeksLeft>0) return false;
+      const b = BUILDINGS.find(function(x){ return x.id===_bid(entry); });
+      return b && b.cat===cat && b.workers>0;
+    }).length;
     totalRequested += requested;
-    return { cat: cat, demand: demand, requested: requested };
+    return { cat: cat, demand: demand, requested: requested, buildingCount: buildingCount };
   });
   let html = '<div class="wf-pool-summary">'
     +'<div>Labor Pool<br><b>'+pool.toLocaleString()+'</b></div>'
@@ -3784,17 +3803,18 @@ function _renderWorkforceBody(isl){
   +'</div>';
   catInfo.forEach(function(info){
     const fillPct = info.demand>0 ? Math.round(Math.min(1, info.requested/info.demand)*100): 100;
-    const otherRequested = totalRequested - info.requested;
-    const sliderMax = info.demand>0 ? Math.min(info.demand, Math.max(0, pool-otherRequested)): 0;
+    const expandKey = isl.id+'|'+info.cat;
+    const expanded = !!_workforceExpandedCats[expandKey];
     html += '<div class="wf-cat-row">'
       +'<div class="wf-cat-head"><span class="wf-cat-name">'+(CAT_LABELS[info.cat]||info.cat)+'</span>'
         +(info.demand>0 ? '<span class="wf-cat-fill'+(fillPct<75?' bad':'')+'">'+fillPct+'% staffed</span>': '<span class="wf-cat-fill">—</span>')
       +'</div>'
       +(info.demand>0
-          ? '<input type="range" class="wf-slider" min="0" max="'+Math.round(sliderMax)+'" value="'+Math.round(info.requested)+'" oninput="_setWorkforceRaw(\''+isl.id+'\',\''+info.cat+'\',this.value)">'
+          ? '<input type="range" class="wf-slider" min="0" max="'+info.demand+'" value="'+Math.round(info.requested)+'" oninput="_setWorkforceRaw(\''+isl.id+'\',\''+info.cat+'\',this.value)">'
             +'<div class="wf-cat-sub">'+Math.round(info.requested).toLocaleString()+' of '+info.demand.toLocaleString()+' jobs requested — raise this by lowering another category</div>'
+            +'<button class="wf-cat-toggle" onclick="_toggleWorkforceCatExpand(\''+isl.id+'\',\''+info.cat+'\')">'+(expanded?'Hide buildings':'Show buildings')+' ('+info.buildingCount+')</button>'
+            +(expanded ? _renderWorkforceBuildingList(isl, info.cat): '')
          : '<div class="wf-cat-sub">No buildings in this category yet.</div>')
-      +_renderWorkforceBuildingList(isl, info.cat)
     +'</div>';
   });
   return html;
