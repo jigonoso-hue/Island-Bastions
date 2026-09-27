@@ -3861,11 +3861,50 @@ function _setWorkforceRaw(islId, cat, val){
     if(isl.workforceAlloc[c]==null) isl.workforceAlloc[c] = _workforceDefaultRequested(isl, c, pool, totalDemand);
   });
   const demand = _workforceCategoryDemand(isl, cat);
-  let otherRequested = 0;
-  WORKFORCE_CATEGORIES.forEach(function(c){ if(c!==cat) otherRequested += isl.workforceAlloc[c]; });
-  const maxAllowed = Math.min(demand, Math.max(0, pool-otherRequested));
-  isl.workforceAlloc[cat] = Math.max(0, Math.min(maxAllowed, parseInt(val,10)||0));
+  const oldVal = isl.workforceAlloc[cat];
+  const newVal = Math.max(0, Math.min(demand, parseInt(val,10)||0));
+  isl.workforceAlloc[cat] = newVal;
+  const delta = newVal - oldVal;
+  if(delta<0){
+    // Lowering a category frees workers back into the pool - rather than
+    // leaving them unassigned until the player manually raises another
+    // slider, push them straight into whichever other categories still
+    // have room, split in proportion to how much each one is still
+    // short of its own full demand.
+    _distributeWorkforceSurplus(isl, cat, -delta);
+  } else if(delta>0){
+    // Raising still can't outrun the pool - clamp to whatever slack
+    // existed before this edit (pool minus every other category's own
+    // current request), same as before.
+    let otherRequested = 0;
+    WORKFORCE_CATEGORIES.forEach(function(c){ if(c!==cat) otherRequested += isl.workforceAlloc[c]; });
+    const maxAllowed = Math.min(demand, Math.max(0, pool-otherRequested));
+    isl.workforceAlloc[cat] = Math.max(0, Math.min(maxAllowed, newVal));
+  }
   _refreshWorkforceModal(isl);
+}
+// Water-fills `amount` freed-up workers across every category except the
+// one that just gave them up, in proportion to each one's remaining
+// headroom (its own full demand minus what it's currently requesting).
+// Runs a few passes since a category can saturate (hit its own demand
+// cap) mid-distribution, leaving its share of that round for the others
+// still under their own cap to pick up instead of just being dropped.
+function _distributeWorkforceSurplus(isl, excludeCat, amount){
+  let remaining = amount;
+  for(let pass=0; pass<4 && remaining>0.5; pass++){
+    const headrooms = WORKFORCE_CATEGORIES.filter(function(c){ return c!==excludeCat; }).map(function(c){
+      const demand = _workforceCategoryDemand(isl, c);
+      const cur = isl.workforceAlloc[c]||0;
+      return { cat: c, headroom: Math.max(0, demand-cur) };
+    }).filter(function(h){ return h.headroom>0; });
+    if(!headrooms.length) break;
+    const totalHeadroom = headrooms.reduce(function(s,h){ return s+h.headroom; }, 0);
+    const give = Math.min(remaining, totalHeadroom);
+    headrooms.forEach(function(h){
+      isl.workforceAlloc[h.cat] = (isl.workforceAlloc[h.cat]||0) + give*(h.headroom/totalHeadroom);
+    });
+    remaining -= give;
+  }
 }
 function _setWorkforcePriority(islId, cat, idx){
   const isl = islands.find(function(i){ return i.id===islId; });
