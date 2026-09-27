@@ -5772,11 +5772,11 @@ function _openBuildingTokenModal(islId, idx){
   const wfPriority = hasWorkforce && isl.workforcePriority && isl.workforcePriority[b.cat]===idx;
   const backFaceHtml = hasWorkforce
     ? '<div class="bldg-modal-icon-face bldg-modal-icon-back bldg-modal-icon-back-split">'
-        +'<button class="bldg-icon-mini-btn'+(wfPriority?' active':'')+'" title="'+(wfPriority?'Remove priority':'Priority')+'" '+(wfClosed?'disabled':'')+' onclick="event.stopPropagation();_setWorkforcePriority(\''+isl.id+'\',\''+b.cat+'\','+(wfPriority?'null':idx)+');_openBuildingTokenModal(\''+isl.id+'\','+idx+')">'+(wfPriority?_STAR_SVG_FILLED:_STAR_SVG_OUTLINE)+'</button>'
-        +'<button class="bldg-icon-mini-btn'+(wfClosed?' active':'')+'" title="'+(wfClosed?'Reopen':'Close')+'" onclick="event.stopPropagation();_toggleWorkforceClosed(\''+isl.id+'\',\''+b.cat+'\','+idx+');_openBuildingTokenModal(\''+isl.id+'\','+idx+')">'+_BAN_SVG+'</button>'
-        +'<button class="bldg-icon-demolish-btn" onclick="event.stopPropagation();_confirmDemolishBuilding(\''+isl.id+'\','+idx+')">'+_TRASH_SVG+'<span>Demolish</span></button>'
+        +'<button class="bldg-icon-mini-btn'+(wfPriority?' active':'')+'" '+(wfClosed?'disabled':'')+' onmouseenter="_showTip(event,\''+(wfPriority?'Remove priority':'Priority')+'\')" onmouseleave="hideTip()" onclick="event.stopPropagation();hideTip();_setWorkforcePriority(\''+isl.id+'\',\''+b.cat+'\','+(wfPriority?'null':idx)+');_openBuildingTokenModal(\''+isl.id+'\','+idx+')">'+(wfPriority?_STAR_SVG_FILLED:_STAR_SVG_OUTLINE)+'</button>'
+        +'<button class="bldg-icon-mini-btn'+(wfClosed?' active':'')+'" onmouseenter="_showTip(event,\''+(wfClosed?'Reopen':'Close')+'\')" onmouseleave="hideTip()" onclick="event.stopPropagation();hideTip();_toggleWorkforceClosed(\''+isl.id+'\',\''+b.cat+'\','+idx+');_openBuildingTokenModal(\''+isl.id+'\','+idx+')">'+_BAN_SVG+'</button>'
+        +'<button class="bldg-icon-demolish-btn" onmouseenter="_showTip(event,\'Demolish\')" onmouseleave="hideTip()" onclick="event.stopPropagation();hideTip();_confirmDemolishBuilding(\''+isl.id+'\','+idx+')">'+_TRASH_SVG+'<span>Demolish</span></button>'
       +'</div>'
-    : '<button class="bldg-modal-icon-face bldg-modal-icon-back" onclick="event.stopPropagation();_confirmDemolishBuilding(\''+isl.id+'\','+idx+')">'+_TRASH_SVG+'<span>Demolish</span></button>';
+    : '<button class="bldg-modal-icon-face bldg-modal-icon-back" onmouseenter="_showTip(event,\'Demolish\')" onmouseleave="hideTip()" onclick="event.stopPropagation();hideTip();_confirmDemolishBuilding(\''+isl.id+'\','+idx+')">'+_TRASH_SVG+'<span>Demolish</span></button>';
   const headHtml = isTownHall
     ? '<h2 style="font-size:19px;">'+_buildingDisplayName(b, _blevel(entry))+'</h2>'
     : '<div class="bldg-modal-head">'
