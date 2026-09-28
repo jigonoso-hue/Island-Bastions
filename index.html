@@ -1829,7 +1829,7 @@ input[type=text]:focus,input[type=number]:focus,textarea:focus,select:focus{outl
     <button class="island-modal-close" onclick="closeIslandModal()">&times;</button>
     <div class="island-modal-head">
       <div class="island-modal-head-left">
-        <h1 id="island-modal-name" oncontextmenu="event.preventDefault();openIslandDebugEditModal(selectedIslandId);" title="Right-click to edit raw island data">Island</h1>
+        <h1 id="island-modal-name" oncontextmenu="event.preventDefault();openIslandDebugEditModal(selectedIslandId);" ontouchend="_handleIslandNameDoubleTap(event)" title="Right-click (or double-tap) to edit raw island data">Island</h1>
         <div class="slot-info" id="island-modal-sub"></div>
         <div class="island-modal-head-btns">
           <button class="btn" onclick="openWeeklyScorecardsModal(selectedIslandId)"><i class="ti ti-chart-line"></i> Weekly Scorecards</button>
@@ -3805,6 +3805,23 @@ const AUTO_PILOT_TIER_DESC = [
 // place, so this covers every current and future field for free
 // instead of needing its own form control added every time a new one
 // shows up.
+// Right-click doesn't exist on a touchscreen, so the same trigger is
+// also reachable by double-tapping the island name - two touchend
+// events on it within 400ms. preventDefault on the second tap both
+// stops iOS Safari's own double-tap-to-zoom gesture from firing at the
+// same time and keeps the touch from also registering as two ordinary
+// taps on whatever's underneath.
+let _islandNameLastTapAt = 0;
+function _handleIslandNameDoubleTap(e){
+  const now = Date.now();
+  if(now-_islandNameLastTapAt < 400){
+    e.preventDefault();
+    _islandNameLastTapAt = 0;
+    openIslandDebugEditModal(selectedIslandId);
+  } else {
+    _islandNameLastTapAt = now;
+  }
+}
 function openIslandDebugEditModal(islId){
   const isl = islands.find(function(i){ return i.id===islId; });
   if(!isl) return;
