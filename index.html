@@ -7592,11 +7592,12 @@ function _rollVisitor(isl){
   const helpCenterBonus = _islandTourismHelpCenterLevel(isl);
   const roll = _rollDice(1, cfg.die) + helpCenterBonus;
   let multiplier, activity;
-  if(roll<=2){ multiplier=1; activity='Quiet'; }
-  else if(roll<=5){ multiplier=2; activity='Normal'; }
-  else if(roll<=8){ multiplier=3; activity='Busy'; }
-  else if(roll<=10){ multiplier=4; activity='Crowded'; }
-  else { multiplier=6; activity='Festival / Trade Boom'; }
+  if(roll<=2){ multiplier=2; activity='Quiet'; }
+  else if(roll<=5){ multiplier=3; activity='Normal'; }
+  else if(roll<=8){ multiplier=4; activity='Busy'; }
+  else if(roll<=10){ multiplier=5; activity='Crowded'; }
+  else if(roll<=13){ multiplier=7; activity='Roaring Trade'; }
+  else { multiplier=10; activity='Festival / Trade Boom'; }
   const cruiseAndTraitEffects = _activeTraitEffects(isl).concat(_activeCruiseLineEffects(isl)).concat(_activeIslandEventEffects(isl)).concat(_activeBuildingBoostEffects(isl));
   // The Masquerade Isle. Every point of Crime above 10 adds straight
   // onto the multiplier instead of ever touching Happiness (see the
