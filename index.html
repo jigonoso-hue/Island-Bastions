@@ -404,6 +404,12 @@ body{background:var(--bg-body);color:var(--text-primary);font-family:-apple-syst
 .wf-cat-toggle{background:none;border:none;color:var(--text-teal-4);font-size:10px;font-weight:600;cursor:pointer;padding:6px 0 0;text-align:left;}
 .wf-cat-toggle:hover{text-decoration:underline;}
 .wf-building-list{margin-top:8px;padding-top:8px;border-top:1px dashed var(--border-card);display:flex;flex-direction:column;gap:5px;}
+.autopilot-tier-list{display:flex;flex-direction:column;gap:8px;margin-bottom:14px;}
+.autopilot-tier-btn{display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;background:var(--bg-card);border:1px solid var(--border-card);border-radius:10px;padding:10px 12px;cursor:pointer;font-family:inherit;}
+.autopilot-tier-btn:hover{background:var(--bg-highlight);}
+.autopilot-tier-btn.active{border-color:var(--border-gold);background:var(--bg-highlight);}
+.autopilot-tier-name{font-size:12px;font-weight:700;color:var(--text-primary);}
+.autopilot-tier-desc{font-size:10.5px;color:var(--text-muted);}
 .wf-building-row{display:flex;align-items:center;gap:10px;font-size:10.5px;color:var(--text-primary);}
 .wf-building-row.closed{opacity:.5;}
 .wf-building-name{flex:1;min-width:0;}
@@ -3754,6 +3760,7 @@ function renderDetail(){
     // Not yours to build on yet. Add Building only shows once Acquired.
     +(isl.owned!==false ? '<button class="btn btn-gold" id="tour-add-building" onclick="openAddBuildingModal()"><i class="ti ti-plus"></i> Add Building</button>': '')
     +(isl.owned!==false ? '<button class="btn" onclick="openWorkforceModal(\''+isl.id+'\')"><i class="ti ti-users"></i> Workforce</button>': '')
+    +(isl.owned!==false ? '<button class="btn'+(isl.autoActionTier?' btn-gold':'')+'" onclick="openAutoPilotModal(\''+isl.id+'\')"><i class="ti ti-robot"></i> Auto-Pilot'+(isl.autoActionTier?': Tier '+isl.autoActionTier:'')+'</button>': '')
     +(constructingCount ? '<button class="btn" onclick="openConstructionQueueModal()"><i class="ti ti-hammer"></i> Under Construction ('+constructingCount+')</button>': '')
   +'</div>';
   document.getElementById('island-modal-right').innerHTML = rightHead + _renderInfraTokens(isl);
@@ -3770,6 +3777,54 @@ function _toggleWorkforceCatExpand(islId, cat){
   _workforceExpandedCats[key] = !_workforceExpandedCats[key];
   const isl = islands.find(function(i){ return i.id===islId; });
   if(isl) _refreshWorkforceModal(isl);
+}
+// ── Auto-Pilot ───────────────────────────────────────────────────────
+// Every Recreational/Civic building with a niche (see _bastionActionsFor)
+// gets 4 Active Action choices each week, ordered from safest to
+// riskiest (Tier 1 always succeeds for the smallest reward, Tier 4 is a
+// coinflip-or-worse shot at the biggest one). Picking one by hand for
+// every such building every week is the single most repetitive part of
+// running an island. Auto-Pilot lets the player pick ONE tier (1-4) once,
+// and from then on every building that still has an untaken action when
+// the week resolves gets that same tier queued for it automatically -
+// exactly as if the player had clicked that option on all of them
+// themselves. A building the player already picked something for by
+// hand this turn is left alone; Auto-Pilot only fills in what's left.
+const AUTO_PILOT_TIER_DESC = [
+  'Always succeeds. The safest, smallest reward on the table.',
+  '75% chance to succeed. A modest reward for a little risk.',
+  '50% chance to succeed. A bigger reward, and a real chance of nothing.',
+  '25% chance to succeed. The biggest reward on the table, and the least likely to land.'
+];
+function openAutoPilotModal(islId){
+  const isl = islands.find(function(i){ return i.id===islId; });
+  if(!isl) return;
+  const bd = document.getElementById('modal-backdrop');
+  bd.style.display = 'flex';
+  bd.innerHTML = '<div class="modal" style="max-width:480px;">'
+    +'<h2>Auto-Pilot</h2>'
+    +'<p style="font-size:11px;color:var(--text-muted);margin:-6px 0 12px;">Every building with an Active Action that goes untaken by the end of the week gets this same tier queued for it automatically, instead of sitting idle. Pick one tier for all of them, or turn it off to go back to picking each one by hand.</p>'
+    +'<div class="autopilot-tier-list">'
+      +'<button class="autopilot-tier-btn'+(!isl.autoActionTier?' active':'')+'" onclick="_setAutoPilotTier(\''+isl.id+'\',null)">'
+        +'<span class="autopilot-tier-name">Off</span>'
+        +'<span class="autopilot-tier-desc">Nothing auto-picked. Untaken actions just sit idle this week.</span>'
+      +'</button>'
+      +[1,2,3,4].map(function(tier){
+        return '<button class="autopilot-tier-btn'+(isl.autoActionTier===tier?' active':'')+'" onclick="_setAutoPilotTier(\''+isl.id+'\','+tier+')">'
+          +'<span class="autopilot-tier-name">Tier '+tier+'</span>'
+          +'<span class="autopilot-tier-desc">'+AUTO_PILOT_TIER_DESC[tier-1]+'</span>'
+        +'</button>';
+      }).join('')
+    +'</div>'
+    +'<div class="modal-btns"><button class="btn btn-gold" onclick="closeAnyModal()">Close</button></div>'
+  +'</div>';
+}
+function _setAutoPilotTier(islId, tier){
+  const isl = islands.find(function(i){ return i.id===islId; });
+  if(!isl) return;
+  isl.autoActionTier = tier;
+  openAutoPilotModal(islId);
+  renderDetail();
 }
 function openWorkforceModal(islId){
   const isl = islands.find(function(i){ return i.id===islId; });
@@ -10329,6 +10384,34 @@ function _autoAssignUnownedActiveActions(){
     });
   });
 }
+// Owned islands with an Auto-Pilot tier set (see openAutoPilotModal) get
+// every still-untaken Active Action this turn QUEUED at that tier,
+// rather than resolved outright like the unowned pass above - so it
+// goes through the exact same _resolveQueuedBastionActions pass
+// everything else does, and its gold lands in the treasury like any
+// player-picked action would. A building the player already queued
+// something for by hand this turn is left alone (the actedThisTurn
+// check below), so Auto-Pilot only ever fills in what's left over.
+function _autoAssignOwnedActiveActions(){
+  islands.forEach(function(isl){
+    if(isl.owned===false) return;
+    if(!isl.autoActionTier) return;
+    isl.buildings.forEach(function(entry, idx){
+      if(typeof entry==='object' && entry.constructionWeeksLeft>0) return;
+      const b = BUILDINGS.find(function(x){ return x.id===_bid(entry); });
+      if(!b) return;
+      const actionsList = _bastionActionsFor(b) || [];
+      if(!actionsList.length) return;
+      const key = isl.id+'#'+idx;
+      if(_ledger.actedThisTurn && _ledger.actedThisTurn[key]) return;
+      const actionIdx = Math.min(isl.autoActionTier-1, actionsList.length-1);
+      isl.pendingBastionActions = isl.pendingBastionActions || [];
+      isl.pendingBastionActions.push({ idx: idx, actionIdx: actionIdx });
+      if(!_ledger.actedThisTurn) _ledger.actedThisTurn = {};
+      _ledger.actedThisTurn[key] = 'Queued';
+    });
+  });
+}
 // ── Grand Casino Resort. A real, playable gaming floor ─────────────
 // The one building in the game where the player is the one rolling the
 // dice, not the island. Betting straight against the real treasury,
@@ -12455,6 +12538,11 @@ function simulateWeek(weatherByIsland){
   // Unowned islands can't have their Active Actions hand-picked. Roll
   // this week's for them now, before anything below reads pendingNotes.
   _autoAssignUnownedActiveActions();
+  // Owned islands running on Auto-Pilot queue whatever's left untaken
+  // at their chosen tier, same timing as the unowned pass above - well
+  // before _resolveQueuedBastionActions (much later in this function)
+  // actually rolls every queued action for the week.
+  _autoAssignOwnedActiveActions();
   // Snapshot population (and Notoriety, which can move all week from
   // Active Actions/quests/crime-report flavor) before anything else
   // touches them, so the weekly report can show the actual +/- delta
