@@ -1829,7 +1829,7 @@ input[type=text]:focus,input[type=number]:focus,textarea:focus,select:focus{outl
     <button class="island-modal-close" onclick="closeIslandModal()">&times;</button>
     <div class="island-modal-head">
       <div class="island-modal-head-left">
-        <h1 id="island-modal-name">Island</h1>
+        <h1 id="island-modal-name" oncontextmenu="event.preventDefault();openIslandDebugEditModal(selectedIslandId);" title="Right-click to edit raw island data">Island</h1>
         <div class="slot-info" id="island-modal-sub"></div>
         <div class="island-modal-head-btns">
           <button class="btn" onclick="openWeeklyScorecardsModal(selectedIslandId)"><i class="ti ti-chart-line"></i> Weekly Scorecards</button>
@@ -3796,6 +3796,58 @@ const AUTO_PILOT_TIER_DESC = [
   '50% chance to succeed. A bigger reward, and a real chance of nothing.',
   '25% chance to succeed. The biggest reward on the table, and the least likely to land.'
 ];
+// ── Raw island edit (right-click the island name) ───────────────────
+// A single JSON textarea over the entire island object rather than a
+// bespoke form field for every one of the dozens of properties an
+// island can carry by this point (population, notoriety, species
+// distribution, traits, workforce state, action streaks, buildings,
+// and on). Saving just parses it back and replaces the island in
+// place, so this covers every current and future field for free
+// instead of needing its own form control added every time a new one
+// shows up.
+function openIslandDebugEditModal(islId){
+  const isl = islands.find(function(i){ return i.id===islId; });
+  if(!isl) return;
+  const bd = document.getElementById('modal-backdrop');
+  bd.style.display = 'flex';
+  bd.innerHTML = '<div class="modal" style="max-width:640px;">'
+    +'<h2>Edit Island Data</h2>'
+    +'<p style="font-size:10.5px;color:var(--text-muted);margin:-6px 0 10px;">Raw data for this island. Edit anything below and Save to apply it directly, no validation beyond it being valid JSON with the same id. Get this wrong and the island (or the whole game) can end up in a broken state.</p>'
+    +'<p id="island-debug-edit-error" style="display:none;font-size:11px;color:var(--text-red-muted);margin:-4px 0 8px;"></p>'
+    +'<textarea id="island-debug-edit-textarea" spellcheck="false" style="width:100%;min-height:400px;font-size:10.5px;font-family:monospace;resize:vertical;white-space:pre;">'+_escAttr(JSON.stringify(isl, null, 2))+'</textarea>'
+    +'<div class="modal-btns"><button class="btn" onclick="closeAnyModal()">Cancel</button><button class="btn btn-gold" onclick="_saveIslandDebugEdit(\''+islId+'\')">Save</button></div>'
+  +'</div>';
+}
+function _saveIslandDebugEdit(islId){
+  const errEl = document.getElementById('island-debug-edit-error');
+  const raw = document.getElementById('island-debug-edit-textarea').value;
+  let parsed;
+  try {
+    parsed = JSON.parse(raw);
+  } catch(e){
+    errEl.textContent = 'Invalid JSON: '+e.message;
+    errEl.style.display = 'block';
+    return;
+  }
+  if(!parsed || typeof parsed!=='object' || Array.isArray(parsed)){
+    errEl.textContent = 'Must be a single JSON object, not an array or a plain value.';
+    errEl.style.display = 'block';
+    return;
+  }
+  if(parsed.id!==islId){
+    errEl.textContent = 'The "id" field has to stay "'+islId+'" - changing it here would orphan this island instead of renaming it.';
+    errEl.style.display = 'block';
+    return;
+  }
+  const i = islands.findIndex(function(x){ return x.id===islId; });
+  if(i===-1) return;
+  islands[i] = parsed;
+  closeAnyModal();
+  renderIslandList();
+  renderWater();
+  renderTopStats();
+  if(selectedIslandId===islId) renderDetail();
+}
 function openAutoPilotModal(islId){
   const isl = islands.find(function(i){ return i.id===islId; });
   if(!isl) return;
