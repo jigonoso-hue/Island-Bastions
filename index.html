@@ -7267,6 +7267,15 @@ function _advanceIslandDemographics(isl){
   if(traitIds.indexOf('split_reef')!==-1 && traitIds.indexOf('ancestral_homeland')!==-1 && !(isl.traitResolved && isl.traitResolved.split_reef)){
     growthMult = 1 + (growthMult-1) * 0.5;
   }
+  // A more notable island draws new arrivals faster, and a genuinely
+  // happy one settles in without hesitation. Both scale growth speed on
+  // top of whatever traits/edicts already multiply it, rather than just
+  // gating growth on/off the way Happiness already does below 35/15.
+  // Pirate Havens don't track Happiness at all, so only Tier scales them.
+  const tierGrowthMult = 1 + (_notorietyTier(isl)-1) * 0.15;
+  const happinessGrowthMult = stats.happinessDisabled ? 1: 1 + Math.max(0, stats.happiness-35)/65*0.5;
+  growthMult *= tierGrowthMult * happinessGrowthMult;
+  aquaticGrowthMult *= tierGrowthMult * happinessGrowthMult;
   if(activeDecline){
     isl.population -= Math.max(1, Math.round(isl.population*0.05));
   } else if(gap > 0 && !noGrowth){
