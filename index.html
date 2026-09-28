@@ -4928,12 +4928,17 @@ function _renderBuildingCard(isl, entry, idx, b){
   if(participates){
     let actionBtnHtml = '';
     if(hasActions){
+      const resting = isl.actionRestingUntilWeek && isl.actionRestingUntilWeek[idx]!=null && _ledger.week===isl.actionRestingUntilWeek[idx];
+      const streak = (isl.actionStreaks && isl.actionStreaks[idx]) || 0;
+      const streakBadge = (streak>0 && !resting && !acted) ? ' 🔥'+streak: '';
       // Unowned (visited, not yet Acquired) islands manage their own
       // Active Actions. See _autoAssignUnownedActiveActions. So the
       // button here is just a read-only tag, never a picker.
-      actionBtnHtml = isl.owned===false
+      actionBtnHtml = resting
+        ? '<span class="btn" style="font-size:11px;padding:5px 10px;color:var(--text-muted);cursor:default;" title="Recovering from last week\'s loss. No Active Action until next week."><i class="ti ti-bolt-off"></i> Recovering</span>'
+       : isl.owned===false
         ? '<span class="btn" style="font-size:11px;padding:5px 10px;color:var(--text-muted);cursor:default;" title="Not yours to direct. This island manages its own Active Actions"><i class="ti ti-bolt"></i> '+(acted?'Auto: '+acted:'Auto-Managed')+'</span>'
-       : '<button class="btn'+(acted?'':' btn-gold')+'" id="tour-action-btn" style="font-size:11px;padding:5px 10px;" onclick="openBastionActionModal(\''+isl.id+'\','+idx+')"><i class="ti ti-bolt"></i> '+(acted?'Acted: '+acted:'Active Action')+'</button>';
+       : '<button class="btn'+(acted?'':' btn-gold')+'" id="tour-action-btn" style="font-size:11px;padding:5px 10px;" onclick="openBastionActionModal(\''+isl.id+'\','+idx+')"><i class="ti ti-bolt"></i> '+(acted?'Acted: '+acted:'Active Action'+streakBadge)+'</button>';
     }
     const maxLevel = b.maxLevel||5;
     html += '<div class="bldg-actions-row">'
@@ -7660,7 +7665,7 @@ function _runHousingBastion(b, entry, stats, isl, idx){
 function _bastionActionSuccessChance(action, level){
   return Math.max(0.05, Math.min(1, action.chance + (level-1)*0.08));
 }
-function _resolveBastionAction(isl, action, level){
+function _resolveBastionAction(isl, action, level, idx, actionIdx){
   const chance = _bastionActionSuccessChance(action, level);
   const success = Math.random() < chance;
   // action.vip marks an Active Action whose success is specifically a
@@ -7690,6 +7695,36 @@ function _resolveBastionAction(isl, action, level){
     if(action.happinessMod){
       isl.eventHappinessMod = (isl.eventHappinessMod||0) + action.happinessMod;
       result.rewards.push((action.happinessMod>0?'+':'')+action.happinessMod+' Happiness (fades over time)');
+    }
+  }
+  // Streaks and real failure consequences. Only Tier 3 (index 2) and
+  // Tier 4 (index 3) build or break a streak; Tier 1/2 and the
+  // breakout (index 4) just reset one in progress without building
+  // toward the next breakout themselves.
+  if(idx!=null && isl.buildings){
+    isl.actionStreaks = isl.actionStreaks || {};
+    if(actionIdx===2 || actionIdx===3){
+      if(success){
+        isl.actionStreaks[idx] = (isl.actionStreaks[idx]||0) + 1;
+      } else {
+        isl.actionStreaks[idx] = 0;
+        const isTierFour = actionIdx===3;
+        const happinessDip = isTierFour ? -(6+Math.floor(Math.random()*5)): -(3+Math.floor(Math.random()*3));
+        isl.eventHappinessMod = (isl.eventHappinessMod||0) + happinessDip;
+        result.rewards.push(happinessDip+' Happiness');
+        result.text += ' '+(isTierFour
+          ? "It's a real blow. The place needs a few days to recover before trying anything like that again."
+          : 'Word gets around, and it costs a little goodwill.');
+        if(isTierFour){
+          isl.actionRestingUntilWeek = isl.actionRestingUntilWeek || {};
+          isl.actionRestingUntilWeek[idx] = _ledger.week;
+        }
+      }
+    } else if(actionIdx!=null){
+      // Tier 1/2 and the breakout itself all reset the streak - a
+      // breakout is a capstone, not a plateau, so the next one has to
+      // be built up to again.
+      isl.actionStreaks[idx] = 0;
     }
   }
   return result;
@@ -9122,6 +9157,46 @@ function _bastionActionsFor(b){
   if(VISITING_SPECIALISTS[b.id]) return VISITING_SPECIALISTS[b.id].actions;
   return null;
 }
+// ── Streaks & momentum, and real failure consequences ──────────────
+// Tier 3 and Tier 4 (index 2 and 3) are the only two Active Action
+// choices that build or break a streak. Two wins in a row on either one
+// and a third success unlocks a 5th "breakout" option worth more than
+// Tier 4 itself, guaranteed, no roll. A loss on Tier 3 or 4 resets the
+// streak AND costs real happiness (worse on Tier 4), and a Tier 4 loss
+// also puts the building out of commission for the following week.
+// Picking Tier 1/2 also resets a streak in progress, and so does simply
+// not acting on the building at all that week (see the pass right
+// before _ledger.actedThisTurn clears at the end of simulateWeek).
+// Built dynamically off the building's own Tier 4 entry rather than
+// hand authoring one per building, since there's no reasonable way to
+// hand write a bespoke breakout event for every single building with
+// actions in this game.
+function _breakoutActionFor(tier4){
+  const goldHi = tier4.gold ? Math.max(Math.abs(tier4.gold[0]), Math.abs(tier4.gold[1])): 0;
+  return {
+    text: 'Go all in',
+    chance: 1,
+    gold: goldHi>0 ? [Math.round(goldHi*1.3), Math.round(goldHi*1.8)]: undefined,
+    notoriety: (tier4.notoriety||0) + 1,
+    happinessMod: (tier4.happinessMod||0) + 5,
+    successText: "A hot streak like this doesn't come along often, and this one tops every win before it.",
+    failText: 'N/A',
+    breakout: true
+  };
+}
+// The real per-island entry point: this island's own resting/streak
+// state layered on top of the building's plain action list. Resting
+// (a Tier 4 loss last week) returns an empty list - nothing offered
+// this week at all. A live streak of 3+ appends the breakout option on
+// top of the normal 4.
+function _bastionActionsForIsland(isl, idx, b){
+  const base = _bastionActionsFor(b);
+  if(!base) return null;
+  if(isl.actionRestingUntilWeek && isl.actionRestingUntilWeek[idx]!=null && _ledger.week===isl.actionRestingUntilWeek[idx]) return [];
+  const streak = (isl.actionStreaks && isl.actionStreaks[idx]) || 0;
+  if(streak<3 || base.length<4) return base;
+  return base.concat([_breakoutActionFor(base[3])]);
+}
 // Every building can level up EXCEPT Expansion. Housing/Farming grow
 // capacity, Production produces more per cycle, and Recreational/Civic
 // boosts its own primary roll (and gets an Active Action button once
@@ -10282,18 +10357,23 @@ function openBastionActionModal(islId, idx){
   const level = _blevel(entry);
   const key = islId+'#'+idx;
   const acted = _ledger.actedThisTurn && _ledger.actedThisTurn[key];
-  const actionsList = _bastionActionsFor(b) || [];
+  const resting = isl.actionRestingUntilWeek && isl.actionRestingUntilWeek[idx]!=null && _ledger.week===isl.actionRestingUntilWeek[idx];
+  const actionsList = _bastionActionsForIsland(isl, idx, b) || [];
+  const streak = (isl.actionStreaks && isl.actionStreaks[idx]) || 0;
   const bd = document.getElementById('modal-backdrop');
   bd.style.display = 'flex';
   let html = '<div class="modal" style="max-width:400px;"><h2>'+_buildingDisplayName(b, level)+'</h2>'
-    +'<p style="font-size:10px;color:var(--text-muted);margin-bottom:10px;">Choose one Active Action to take this Bastion Turn. Success chance rises as the building levels up.</p>';
-  if(acted){
+    +'<p style="font-size:10px;color:var(--text-muted);margin-bottom:10px;">Choose one Active Action to take this Bastion Turn. Success chance rises as the building levels up.</p>'
+    +(streak>0 && !resting ? '<p style="font-size:10.5px;color:var(--text-gold-2);margin:-4px 0 10px;">🔥 Tier 3/4 win streak: '+streak+(streak>=3?' (a breakout is on offer below)':' (2 more to unlock a breakout)')+'</p>': '');
+  if(resting){
+    html += '<p style="font-size:11px;color:var(--text-red-muted);">Recovering from last week\'s loss. No Active Action available until next week.</p>';
+  } else if(acted){
     html += '<p style="font-size:11px;color:var(--text-gold-2);">Already acted this turn: '+acted+'</p>';
   } else {
     html += actionsList.map(function(a,i){
       const chance = Math.round(_bastionActionSuccessChance(a, level)*100);
       const tipHtml = '<b style="color:var(--text-primary);">'+_escAttr(a.text)+'</b><br>'+_escAttr(_bastionActionTooltip(a, level));
-      return '<button class="btn" style="display:flex;justify-content:space-between;align-items:center;width:100%;text-align:left;margin-bottom:6px;" data-tip="'+_escAttr(tipHtml)+'" onmouseenter="_showTip(event, this.getAttribute(\'data-tip\'))" onmouseleave="hideTip()" onclick="_performBastionAction(\''+islId+'\','+idx+','+i+')"><span>'+a.text+'</span><span style="color:var(--text-muted);font-size:10px;">'+chance+'%</span></button>';
+      return '<button class="btn'+(a.breakout?' btn-gold':'')+'" style="display:flex;justify-content:space-between;align-items:center;width:100%;text-align:left;margin-bottom:6px;" data-tip="'+_escAttr(tipHtml)+'" onmouseenter="_showTip(event, this.getAttribute(\'data-tip\'))" onmouseleave="hideTip()" onclick="_performBastionAction(\''+islId+'\','+idx+','+i+')"><span>'+(a.breakout?'🔥 ':'')+a.text+'</span><span style="color:var(--text-muted);font-size:10px;">'+chance+'%</span></button>';
     }).join('');
   }
   html += '<div class="modal-btns"><button class="btn" onclick="closeAnyModal()">Close</button></div></div>';
@@ -10314,7 +10394,7 @@ function _performBastionAction(islId, idx, actionIdx){
   if(!entry) return;
   const b = BUILDINGS.find(function(x){ return x.id===_bid(entry); });
   if(!b) return;
-  const actionsList = _bastionActionsFor(b) || [];
+  const actionsList = _bastionActionsForIsland(isl, idx, b) || [];
   const action = actionsList[actionIdx];
   if(!action) return;
   const key = islId+'#'+idx;
@@ -10342,11 +10422,11 @@ function _resolveQueuedBastionActions(isl){
     if(!entry) return;
     const b = BUILDINGS.find(function(x){ return x.id===_bid(entry); });
     if(!b) return;
-    const actionsList = _bastionActionsFor(b) || [];
+    const actionsList = _bastionActionsForIsland(isl, pending.idx, b) || [];
     const action = actionsList[pending.actionIdx];
     if(!action) return;
     const level = _blevel(entry);
-    const result = _resolveBastionAction(isl, action, level);
+    const result = _resolveBastionAction(isl, action, level, pending.idx, pending.actionIdx);
     const key = isl.id+'#'+pending.idx;
     if(!_ledger.actedThisTurn) _ledger.actedThisTurn = {};
     _ledger.actedThisTurn[key] = action.text+(result.success?' ✓':' ✗');
@@ -10370,13 +10450,14 @@ function _autoAssignUnownedActiveActions(){
       if(typeof entry==='object' && entry.constructionWeeksLeft>0) return;
       const b = BUILDINGS.find(function(x){ return x.id===_bid(entry); });
       if(!b) return;
-      const actionsList = _bastionActionsFor(b) || [];
+      const actionsList = _bastionActionsForIsland(isl, idx, b) || [];
       if(!actionsList.length) return;
       const key = isl.id+'#'+idx;
       if(_ledger.actedThisTurn && _ledger.actedThisTurn[key]) return;
       const level = _blevel(entry);
-      const action = actionsList[Math.floor(Math.random()*actionsList.length)];
-      const result = _resolveBastionAction(isl, action, level);
+      const actionIdx = Math.floor(Math.random()*actionsList.length);
+      const action = actionsList[actionIdx];
+      const result = _resolveBastionAction(isl, action, level, idx, actionIdx);
       if(!_ledger.actedThisTurn) _ledger.actedThisTurn = {};
       _ledger.actedThisTurn[key] = action.text+(result.success?' ✓':' ✗');
       if(!_ledger.pendingNotes) _ledger.pendingNotes = [];
@@ -10392,6 +10473,11 @@ function _autoAssignUnownedActiveActions(){
 // player-picked action would. A building the player already queued
 // something for by hand this turn is left alone (the actedThisTurn
 // check below), so Auto-Pilot only ever fills in what's left over.
+// Auto-Pilot always picks its own chosen tier (1-4), never the
+// breakout option even when one's on offer - the player picked a tier,
+// not "whatever's best", and a breakout is meant to be a moment the
+// player actually sees and takes, not something that happens quietly
+// in the background.
 function _autoAssignOwnedActiveActions(){
   islands.forEach(function(isl){
     if(isl.owned===false) return;
@@ -10402,6 +10488,7 @@ function _autoAssignOwnedActiveActions(){
       if(!b) return;
       const actionsList = _bastionActionsFor(b) || [];
       if(!actionsList.length) return;
+      if(isl.actionRestingUntilWeek && isl.actionRestingUntilWeek[idx]!=null && _ledger.week===isl.actionRestingUntilWeek[idx]) return;
       const key = isl.id+'#'+idx;
       if(_ledger.actedThisTurn && _ledger.actedThisTurn[key]) return;
       const actionIdx = Math.min(isl.autoActionTier-1, actionsList.length-1);
@@ -12701,6 +12788,23 @@ function simulateWeek(weatherByIsland){
   });
   const actions = (_ledger.pendingNotes || []).concat(crimeActions).concat(traitActions);
   _ledger.pendingNotes = [];
+  // Any building capable of Active Actions that didn't take one this
+  // week at all (not queued, not auto-picked, not already resting) has
+  // its Tier 3/4 streak reset to 0 - a skipped week breaks momentum the
+  // same as an outright Tier 3/4 loss does. Has to run here, right
+  // before actedThisTurn clears for next week, since that's the only
+  // record of everything that DID act this week across every island.
+  islands.forEach(function(isl){
+    if(!isl.actionStreaks) return;
+    isl.buildings.forEach(function(entry, idx){
+      if(typeof entry==='object' && entry.constructionWeeksLeft>0) return;
+      const b = BUILDINGS.find(function(x){ return x.id===_bid(entry); });
+      if(!b || !_bastionActionsFor(b)) return;
+      const key = isl.id+'#'+idx;
+      if(_ledger.actedThisTurn && _ledger.actedThisTurn[key]) return;
+      isl.actionStreaks[idx] = 0;
+    });
+  });
   _ledger.actedThisTurn = {};
   // One Weekly Report per island (tabbed if there's more than one).
   // GP generated, population change, weather damage, and any quest
