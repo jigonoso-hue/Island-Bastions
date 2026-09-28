@@ -5680,7 +5680,17 @@ const BESPOKE_BUILDING_ICONS = {
   // (patch, boarded window, crooked chimney) concentrated on the tallest
   // middle unit so the two flanking ones stay simple silhouettes instead
   // of turning the whole thing into visual noise.
-  slums: '<path d="M1.3 20V15.6L4.8 12.6L8.3 15.3V20Z" fill="none" stroke-width="1.4" stroke-linejoin="round"/><rect x="5.6" y="13.9" width="1.7" height="1.7" fill="none" stroke-width="0.85"/><path d="M5.6 13.9l1.7 1.7M7.3 13.9l-1.7 1.7" fill="none" stroke-width="0.65"/><path d="M6.2 11.5V9.8L7.1 10.6" fill="none" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/><path d="M6 20.5V11.2L12.2 6.6L18.4 10.3V20.5Z" fill="none" stroke-width="1.65" stroke-linejoin="round"/><path d="M15.4 20.5v-5.6h2.8V20.5" fill="none" stroke-width="1.25" stroke-linejoin="round"/><rect x="9.4" y="12.8" width="3" height="3" fill="none" stroke-width="1.05" transform="rotate(-8 10.9 14.3)"/><path d="M12.2 6.6V3.1L13.6 4.3" fill="none" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 20V14.8L19.8 12L23 14.4V20Z" fill="none" stroke-width="1.4" stroke-linejoin="round"/><rect x="20.4" y="15.9" width="1.9" height="1.9" fill="none" stroke-width="0.85"/><path d="M20.4 15.9l1.9 1.9M22.3 15.9l-1.9 1.9" fill="none" stroke-width="0.65"/>',
+  // size. Redrawn as three shacks side by side along a shared party
+  // wall - never overlapping, so there's nothing hidden behind another
+  // shape's outline - at three distinctly different widths, heights,
+  // and roof shapes (a real peak, a single-slope lean-to, a stubby
+  // near-flat tilt) rather than three matched silhouettes in a row,
+  // which read as one symmetrical building instead of a ramshackle
+  // cluster. Detail (boarded window, crooked chimney) stays on the
+  // tallest left unit; the patch sits on the lean-to; the stub on the
+  // right stays a plain outline so the whole thing doesn't turn to
+  // visual noise.
+  slums: '<path d="M1 20V13L4.2 9.2L9 12.6V20Z" fill="none" stroke-width="1.5" stroke-linejoin="round"/><rect x="2.3" y="15" width="2" height="2" fill="none" stroke-width="0.85"/><path d="M2.3 15l2 2M4.3 15l-2 2" fill="none" stroke-width="0.65"/><path d="M4.2 9.2V6.2L5.5 7.4" fill="none" stroke-width="1.15" stroke-linecap="round" stroke-linejoin="round"/><path d="M9 20V13.6L16 16.4V20Z" fill="none" stroke-width="1.5" stroke-linejoin="round"/><rect x="10.6" y="16.6" width="2.6" height="2.6" fill="none" stroke-width="1" transform="rotate(-7 11.9 17.9)"/><path d="M16 20V17.3L19.6 15.6L23 17V20Z" fill="none" stroke-width="1.4" stroke-linejoin="round"/><path d="M20 20v-2.3h1.5V20" fill="none" stroke-width="1" stroke-linejoin="round"/>',
   // Cultural Institute. A small classical facade - pediment, entablature
   // band, a row of columns, and a plinth - reading as "museum/academy"
   // at a glance rather than another generic tourism building. The one
