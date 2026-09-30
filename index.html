@@ -4735,6 +4735,74 @@ let _popViewMode = 'unified';
 // the Population ring) rather than a right-column tab. Re-render it in
 // place when the Separate/Unified toggle changes.
 function setPopViewMode(mode){ _popViewMode = mode; if(selectedIslandId) openPopBreakdownModal(selectedIslandId); }
+// Every species' total headcount (general + Coral Spires' share + the
+// Native Coral Reservation), unified into one merged count per name -
+// the same merge _renderPopTab's own Unified view builds, pulled out
+// here so the Social Class overlay can split it by ratio without caring
+// which view mode the Species tab happens to be in.
+function _islandSpeciesTotalCounts(isl, stats){
+  if(!isl.speciesDist || !isl.speciesDist.general) isl.speciesDist = _generateSpeciesDist();
+  const spiresShare = stats.popCap>0 ? Math.min(1, stats.aquaticInGeneralCap/stats.popCap): 0;
+  const spiresPop = Math.round(stats.population * spiresShare);
+  const unrestrictedPop = stats.population - spiresPop;
+  const counts = {};
+  Object.keys(isl.speciesDist.general).forEach(function(name){
+    counts[name] = (counts[name]||0) + (isl.speciesDist.general[name]/100) * unrestrictedPop;
+  });
+  Object.keys(isl.speciesDist.aquatic).forEach(function(name){
+    counts[name] = (counts[name]||0) + (isl.speciesDist.aquatic[name]/100) * (spiresPop + stats.aquaticPopulation);
+  });
+  return Object.keys(counts).map(function(name){ return { name: name, count: counts[name] }; })
+    .filter(function(r){ return r.count>=0.5; })
+    .sort(function(a,b){ return b.count-a.count; });
+}
+// The Census "Social Class" overlay. Same Elite/Working Class/Unemployed
+// split _islandClassBreakdown computes for the island as a whole,
+// applied proportionally across every species at that same overall
+// rate - nothing tracks which species actually holds which specific
+// job, so this is the same kind of population-wide approximation the
+// Species tab's own Coral Spires split already leans on.
+function _renderClassOverlay(isl, stats){
+  const breakdown = _islandClassBreakdown(isl);
+  const total = stats.totalPopulation;
+  function pct(n){ return total>0 ? (n/total)*100: 0; }
+  function row(label, count, color){
+    if(count<=0) return '';
+    const p = pct(count);
+    return '<div style="margin-bottom:9px;">'
+      +'<div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-primary);margin-bottom:3px;"><span>'+label+'</span><span style="color:var(--text-muted);">'+Math.round(count).toLocaleString()+' ('+p.toFixed(1)+'%)</span></div>'
+      +'<div style="height:5px;background:var(--bg-card);border-radius:3px;overflow:hidden;"><div style="height:100%;width:'+Math.min(100,p*2.2)+'%;background:'+color+';"></div></div>'
+    +'</div>';
+  }
+  let html = '<div class="detail-section">'
+    +'<h3>Residents by Social Class</h3>'
+    +'<div style="font-size:10px;color:var(--text-muted);margin-bottom:10px;">Every staffed building carries a handful of ownership and management seats on top of its regular payroll, a few more the bigger and higher-Level it gets. Whoever fills one of those is Elite. Whoever fills the ordinary payroll (Reservation farmers included) is Working Class. Everyone else still looking for work is Unemployed.</div>'
+    + row('Elite', breakdown.elites, 'var(--text-gold)')
+    + row('Working Class', breakdown.workingClass, '#4fb896')
+    + row('Unemployed', breakdown.unemployed, 'var(--text-red-muted)')
+  +'</div>';
+  const speciesCounts = _islandSpeciesTotalCounts(isl, stats);
+  if(speciesCounts.length && total>0){
+    const eliteRatio = breakdown.elites/total, workingRatio = breakdown.workingClass/total, unemployedRatio = breakdown.unemployed/total;
+    html += '<div class="detail-section"><h3>Social Class by Species</h3>'
+      +'<div style="font-size:10px;color:var(--text-muted);margin-bottom:10px;">Split proportionally across every species at this island\'s own overall rate above.</div>'
+      + speciesCounts.map(function(s){
+        const elite = s.count*eliteRatio, working = s.count*workingRatio, unemployed = s.count*unemployedRatio;
+        return '<div style="margin-bottom:10px;">'
+          +'<div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-primary);margin-bottom:3px;"><span>'+s.name+'</span><span style="color:var(--text-muted);">'+Math.round(s.count).toLocaleString()+'</span></div>'
+          +'<div style="display:flex;height:6px;border-radius:3px;overflow:hidden;background:var(--bg-card);">'
+            +'<div style="height:100%;width:'+(s.count>0?(elite/s.count)*100:0)+'%;background:var(--text-gold);" title="Elite: '+Math.round(elite).toLocaleString()+'"></div>'
+            +'<div style="height:100%;width:'+(s.count>0?(working/s.count)*100:0)+'%;background:#4fb896;" title="Working Class: '+Math.round(working).toLocaleString()+'"></div>'
+            +'<div style="height:100%;width:'+(s.count>0?(unemployed/s.count)*100:0)+'%;background:var(--text-red-muted);" title="Unemployed: '+Math.round(unemployed).toLocaleString()+'"></div>'
+          +'</div>'
+        +'</div>';
+      }).join('')
+    +'</div>';
+  }
+  return html;
+}
+let _popOverlayMode = 'species';
+function setPopOverlayMode(mode){ _popOverlayMode = mode; if(selectedIslandId) openPopBreakdownModal(selectedIslandId); }
 // Reconstructs total population (general + aquatic) at the end of every
 // logged week, walking backward from the island's actual current
 // population. Weekly Scorecards only ever store each week's *delta*
@@ -4809,7 +4877,11 @@ function openPopBreakdownModal(islId){
   bd.style.display = 'flex';
   bd.innerHTML = '<div class="modal" style="max-width:520px;max-height:82vh;overflow-y:auto;"><h2>'+isl.name+'. Census Info</h2>'
     + _renderPopGrowthChart(isl)
-    + _renderPopTab(isl, stats)
+    + '<div style="display:flex;gap:6px;margin-bottom:4px;">'
+      +'<button class="btn'+(_popOverlayMode==='species'?' btn-gold':'')+'" style="font-size:10px;padding:5px 10px;flex:1;" onclick="setPopOverlayMode(\'species\')">By Species</button>'
+      +'<button class="btn'+(_popOverlayMode==='class'?' btn-gold':'')+'" style="font-size:10px;padding:5px 10px;flex:1;" onclick="setPopOverlayMode(\'class\')">By Social Class</button>'
+    +'</div>'
+    + (_popOverlayMode==='class' ? _renderClassOverlay(isl, stats): _renderPopTab(isl, stats))
     + '<div class="modal-btns"><button class="btn" onclick="closeAnyModal()">Close</button></div></div>';
 }
 // Fixed display order for the category headers in the Infrastructure list.
@@ -6974,6 +7046,50 @@ function _workforceOverworkedBuildings(isl){
     if(staffing[idxStr]<0.75) out.push(parseInt(idxStr,10));
   });
   return out;
+}
+// Elite positions. An extremely small pool per building - ownership,
+// management, whoever's actually pocketing the profits - separate from
+// the ordinary payroll workforce above. Scales a little with the
+// building's own size (b.workers) and grows further as it levels up (a
+// bigger, more established operation carries a few more seats at the
+// top), but stays tiny even at the very largest, highest-Level
+// buildings on purpose. Whoever fills one of these seats counts toward
+// the island's wealthy Elite class rather than Working Class, in the
+// Census "Social Class" overlay below.
+function _buildingEliteSlots(b, level){
+  if(!b.workers) return 0;
+  const sizeBonus = b.workers>=100 ? 1: 0;
+  return 1 + sizeBonus + Math.floor((level-1)/2);
+}
+function _islandEliteSlots(isl){
+  let total = 0;
+  (isl.buildings||[]).forEach(function(entry){
+    if(typeof entry==='object' && entry.constructionWeeksLeft>0) return;
+    const b = BUILDINGS.find(function(x){ return x.id===_bid(entry); });
+    if(!b) return;
+    total += _buildingEliteSlots(b, _blevel(entry));
+  });
+  return total;
+}
+// The island's labor pool split three ways: Elite (the small ownership/
+// management pool above), Working Class (the ordinary payroll - the
+// same demand _computeWorkforce already staffs against), and Unemployed
+// (whoever's left in the pool with nowhere to go). Native Coral
+// Reservation subsistence farmers never enter the labor pool at all
+// (see _islandWorkforcePool), so they're folded into Working Class here
+// rather than counted as Unemployed - self-sufficient is still working,
+// just not for a wage.
+function _islandClassBreakdown(isl){
+  const pool = _islandWorkforcePool(isl);
+  const eliteSlots = _islandEliteSlots(isl);
+  let totalDemand = 0;
+  WORKFORCE_CATEGORIES.forEach(function(cat){ totalDemand += _workforceCategoryDemand(isl, cat); });
+  const elites = Math.min(eliteSlots, pool);
+  const remaining = pool - elites;
+  const workingFromPool = Math.min(totalDemand, remaining);
+  const unemployed = Math.max(0, remaining - workingFromPool);
+  const reservationPop = _reservationPopulation(isl);
+  return { eliteSlots: eliteSlots, elites: elites, workingClass: workingFromPool + reservationPop, unemployed: unemployed };
 }
 // Economic Edict, for the 5 categories that now boost their own real
 // output/capacity number instead of a flat gp% (Housing/Farming/
