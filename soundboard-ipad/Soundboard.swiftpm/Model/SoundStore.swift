@@ -43,7 +43,7 @@ final class SoundStore: ObservableObject {
 
     /// Copies an audio file into the library, rejecting files the iPad can't play.
     @discardableResult
-    func addFile(at source: URL, name: String) throws -> Sound {
+    func addFile(at source: URL, name: String, source origin: SoundSource? = nil) throws -> Sound {
         let id = UUID()
         let ext = source.pathExtension.isEmpty ? "m4a" : source.pathExtension.lowercased()
         let fileName = "\(id.uuidString).\(ext)"
@@ -55,7 +55,7 @@ final class SoundStore: ObservableObject {
             try? FileManager.default.removeItem(at: destination)
             throw SoundError.unsupported(source.lastPathComponent)
         }
-        return insert(id: id, fileName: fileName, name: name, source: nil)
+        return insert(id: id, fileName: fileName, name: name, source: origin)
     }
 
     func update(_ sound: Sound) {

@@ -8,12 +8,16 @@ struct YouTubePanel: View {
     @State private var startText = "0:00.0"
     @State private var endText = "0:05.0"
     @State private var name = ""
+    @State private var listenWhileSaving = false
 
     var body: some View {
         VStack(spacing: 0) {
             navigationBar
+                .disabled(controller.isRecording)
             Divider()
             WebViewContainer(webView: controller.webView)
+                // Navigating away would stop a recording in progress.
+                .allowsHitTesting(!controller.isRecording)
             Divider()
             clipper
         }
@@ -94,6 +98,20 @@ struct YouTubePanel: View {
                 }
             }
 
+            HStack(spacing: 8) {
+                Button {
+                    controller.saveFullAudio(name: name.trimmingCharacters(in: .whitespaces), listen: listenWhileSaving)
+                    name = ""
+                } label: {
+                    Label("Save Full Audio", systemImage: "square.and.arrow.down")
+                }
+                .disabled(controller.isRecording || !controller.hasVideo)
+                Toggle("Play out loud", isOn: $listenWhileSaving)
+                    .fixedSize()
+                    .font(.subheadline)
+                    .disabled(controller.isRecording)
+            }
+
             status
         }
         .buttonStyle(.bordered)
@@ -113,13 +131,13 @@ struct YouTubePanel: View {
     private var status: some View {
         switch controller.capture {
         case .idle:
-            Text("Find a video, play it, then mark a start and end.")
+            Text("Mark a start and end to clip a sound, or save the whole video's audio. Keep the app open while it records.")
                 .font(.footnote)
                 .foregroundStyle(.secondary)
-        case .recording(let fraction):
+        case .recording(let fraction, let detail):
             VStack(alignment: .leading, spacing: 4) {
                 ProgressView(value: fraction)
-                Text("Recording… the clip plays in real time.")
+                Text(detail)
                     .font(.footnote)
                     .foregroundStyle(.secondary)
             }

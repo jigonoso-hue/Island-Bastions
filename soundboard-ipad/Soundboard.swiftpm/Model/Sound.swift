@@ -5,6 +5,8 @@ struct SoundSource: Codable, Equatable {
     var url: String
     var start: Double
     var end: Double
+    /// True when the whole video's audio was saved rather than a clip.
+    var full: Bool? = nil
 }
 
 struct Sound: Identifiable, Codable, Equatable {

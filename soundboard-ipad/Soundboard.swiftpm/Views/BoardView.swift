@@ -5,6 +5,7 @@ import UniformTypeIdentifiers
 struct BoardView: View {
     @ObservedObject var store: SoundStore
     @ObservedObject var player: SoundPlayer
+    @ObservedObject var ambience: AmbienceMixer
     @Binding var showBrowser: Bool
 
     @State private var filter = ""
@@ -29,6 +30,8 @@ struct BoardView: View {
         NavigationStack {
             ScrollView {
                 controls
+                AmbienceStrip(mixer: ambience, store: store)
+                Divider()
                 if store.sounds.isEmpty {
                     ContentUnavailableView(
                         "No sounds yet",
@@ -67,6 +70,7 @@ struct BoardView: View {
                     }
                 }
             }
+            .onChange(of: store.sounds) { _, _ in ambience.syncWithLibrary() }
             .sheet(item: $editing) { sound in
                 EditSoundView(
                     sound: sound,
@@ -157,6 +161,11 @@ struct BoardView: View {
                 } label: {
                     Label("Stop", systemImage: "stop.fill")
                 }
+            }
+            Button {
+                ambience.add(.sound, ref: sound.id.uuidString)
+            } label: {
+                Label("Add to Ambience", systemImage: "waveform")
             }
             Button(role: .destructive) {
                 player.stop(sound.id)

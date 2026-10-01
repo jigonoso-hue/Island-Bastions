@@ -4,12 +4,13 @@ struct ContentView: View {
     @StateObject private var store = SoundStore()
     @StateObject private var player = SoundPlayer()
     @StateObject private var youtube = YouTubeController()
+    @StateObject private var ambience = AmbienceMixer()
     @Environment(\.horizontalSizeClass) private var sizeClass
     @State private var showBrowser = false
 
     var body: some View {
         HStack(spacing: 0) {
-            BoardView(store: store, player: player, showBrowser: $showBrowser)
+            BoardView(store: store, player: player, ambience: ambience, showBrowser: $showBrowser)
                 .frame(maxWidth: .infinity)
             // On a full-width iPad the browser sits beside the board, like on the Mac.
             if showBrowser && sizeClass == .regular {
@@ -32,8 +33,9 @@ struct ContentView: View {
             }
         }
         .onAppear {
-            youtube.onCaptured = { wav, name, source in
-                _ = try store.add(data: wav, ext: "wav", name: name, source: source)
+            ambience.attach(to: store)
+            youtube.onCaptured = { file, name, source in
+                _ = try store.addFile(at: file, name: name, source: source)
             }
         }
     }

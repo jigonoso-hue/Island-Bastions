@@ -1,29 +1,55 @@
 import AVFoundation
 import Foundation
 
-enum WAV {
-    /// Wraps interleaved 16-bit little-endian PCM in a WAV header.
-    static func make(pcm16 pcm: Data, sampleRate: Int, channels: Int) -> Data {
-        var data = Data(capacity: 44 + pcm.count)
-        func append(_ string: String) { data.append(contentsOf: Array(string.utf8)) }
-        func append32(_ value: UInt32) { withUnsafeBytes(of: value.littleEndian) { data.append(contentsOf: $0) } }
-        func append16(_ value: UInt16) { withUnsafeBytes(of: value.littleEndian) { data.append(contentsOf: $0) } }
+/// Encodes captured 16-bit PCM to AAC (.m4a) as it streams in, so even
+/// hour-long captures never sit in memory.
+final class CaptureWriter {
+    let url: URL
+    private var file: AVAudioFile?
+    private let channels: Int
+    private(set) var frames = 0
+    let sampleRate: Double
 
-        append("RIFF")
-        append32(UInt32(36 + pcm.count))
-        append("WAVE")
-        append("fmt ")
-        append32(16)
-        append16(1) // PCM
-        append16(UInt16(channels))
-        append32(UInt32(sampleRate))
-        append32(UInt32(sampleRate * channels * 2))
-        append16(UInt16(channels * 2))
-        append16(16)
-        append("data")
-        append32(UInt32(pcm.count))
-        data.append(pcm)
-        return data
+    init(sampleRate: Double, channels: Int) throws {
+        self.sampleRate = sampleRate
+        self.channels = channels
+        url = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString)
+            .appendingPathExtension("m4a")
+        let settings: [String: Any] = [
+            AVFormatIDKey: kAudioFormatMPEG4AAC,
+            AVSampleRateKey: sampleRate,
+            AVNumberOfChannelsKey: channels,
+            AVEncoderBitRateKey: 192_000,
+        ]
+        file = try AVAudioFile(forWriting: url, settings: settings, commonFormat: .pcmFormatInt16, interleaved: true)
+    }
+
+    /// Appends interleaved little-endian Int16 samples.
+    func append(_ pcm: Data) throws {
+        guard let file else { return }
+        let frameCount = pcm.count / (2 * channels)
+        guard frameCount > 0,
+              let buffer = AVAudioPCMBuffer(pcmFormat: file.processingFormat, frameCapacity: AVAudioFrameCount(frameCount)),
+              let destination = buffer.int16ChannelData?[0] else { return }
+        buffer.frameLength = AVAudioFrameCount(frameCount)
+        pcm.withUnsafeBytes { raw in
+            guard let source = raw.baseAddress else { return }
+            memcpy(destination, source, frameCount * 2 * channels)
+        }
+        try file.write(from: buffer)
+        frames += frameCount
+    }
+
+    /// Finalises the file and returns its URL.
+    func finish() -> URL {
+        file = nil // releasing the AVAudioFile flushes and closes it
+        return url
+    }
+
+    func discard() {
+        file = nil
+        try? FileManager.default.removeItem(at: url)
     }
 }
 

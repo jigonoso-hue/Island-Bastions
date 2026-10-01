@@ -35,9 +35,9 @@ struct EditSoundView: View {
                     }
                 }
                 if let source = sound.source {
-                    Section("Clipped from") {
+                    Section("From YouTube") {
                         Text(source.title.isEmpty ? "YouTube video" : source.title)
-                        Text("\(TimeText.format(source.start)) – \(TimeText.format(source.end))")
+                        Text(source.full == true ? "Full audio" : "\(TimeText.format(source.start)) – \(TimeText.format(source.end))")
                             .foregroundStyle(.secondary)
                             .monospacedDigit()
                         if let url = URL(string: source.url) {
