@@ -29,6 +29,16 @@
         <button id="stop-all" class="danger">■ Stop All</button>
       </div>
 
+      <section id="ambience">
+        <div class="amb-header">
+          <button id="amb-collapse" class="plain" title="Show/hide ambience layers">▾ Ambience</button>
+          <label class="muted">Volume <input id="amb-volume" type="range" min="0" max="1" step="0.01" value="0.8"></label>
+          <select id="amb-add" title="Add an ambience layer"><option value="">+ Add layer…</option></select>
+          <button id="amb-stop">Stop Ambience</button>
+        </div>
+        <div id="amb-layers" class="amb-layers"></div>
+      </section>
+
       <div id="empty" class="empty hidden">
         <p>No sounds yet.</p>
         <p>Drop audio files here, click <b>+ Add Sounds</b>, or open the <b>YouTube</b> browser to clip a sound from a video.</p>
@@ -62,6 +72,7 @@
           <button id="preview-clip" title="Play the selected range in the video">Preview</button>
           <button id="capture-clip" class="primary">✂ Create Sound</button>
           <button id="cancel-capture" class="hidden">Cancel</button>
+          <button id="save-full" title="Download this video's whole audio track into your library">⬇ Save Full Audio</button>
         </div>
         <div id="clip-status" class="muted">Find a video, play it, then mark a start and end.</div>
         <div class="progress"><div id="clip-progress"></div></div>
@@ -87,6 +98,7 @@
       <div class="dialog-actions">
         <button type="button" id="edit-delete" class="danger">Delete</button>
         <button type="button" id="edit-reveal">Show in Finder</button>
+        <button type="button" id="edit-ambience" title="Loop this sound as a background layer">Add to Ambience</button>
         <span class="spacer"></span>
         <button value="cancel" formnovalidate>Cancel</button>
         <button value="save" class="primary">Save</button>
@@ -98,5 +110,6 @@
 
   <script src="audio-utils.js"></script>
   <script src="app.js"></script>
+  <script src="ambience.js"></script>
 </body>
 </html>

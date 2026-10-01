@@ -10,4 +10,13 @@ contextBridge.exposeInMainWorld('soundboard', {
   reveal: (id) => ipcRenderer.invoke('sounds:reveal', id),
   openExternal: (url) => ipcRenderer.invoke('shell:open-external', url),
   onHotkey: (callback) => ipcRenderer.on('hotkey:play', (_e, id) => callback(id)),
+  ambience: {
+    builtins: () => ipcRenderer.invoke('ambience:builtins'),
+    readBuiltin: (file) => ipcRenderer.invoke('ambience:read-builtin', file),
+    load: () => ipcRenderer.invoke('ambience:load'),
+    save: (state) => ipcRenderer.invoke('ambience:save', state),
+  },
+  downloadAudio: (jobId, url) => ipcRenderer.invoke('youtube:download-audio', { jobId, url }),
+  cancelDownload: (jobId) => ipcRenderer.invoke('youtube:cancel-download', jobId),
+  onDownloadProgress: (callback) => ipcRenderer.on('youtube:download-progress', (_e, jobId, progress) => callback(jobId, progress)),
 });

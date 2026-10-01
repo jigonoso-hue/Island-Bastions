@@ -3,7 +3,7 @@ const api = window.soundboard;
 const $ = (sel) => document.querySelector(sel);
 
 const COLORS = ['#ff5d73', '#ffb347', '#ffe156', '#6ee7b7', '#5ec8ff', '#8b8cff', '#d58bff', '#ff8fd1'];
-const AUDIO_EXTENSIONS = ['mp3', 'wav', 'm4a', 'aac', 'ogg', 'oga', 'opus', 'flac', 'webm', 'aiff', 'aif', 'caf'];
+const AUDIO_EXTENSIONS = ['mp3', 'wav', 'm4a', 'aac', 'ogg', 'oga', 'opus', 'flac', 'webm', 'aiff', 'aif', 'caf', 'mp4'];
 const MAX_CLIP_SECONDS = 300;
 const YOUTUBE_HOME = 'https://www.youtube.com/';
 
@@ -92,6 +92,7 @@ function render() {
   const visible = sounds.filter((s) => !filter || s.name.toLowerCase().includes(filter));
   for (const sound of visible) grid.appendChild(makeTile(sound));
   $('#empty').classList.toggle('hidden', sounds.length > 0);
+  if (typeof Ambience !== 'undefined') Ambience.syncSounds();
 }
 
 function makeTile(sound) {
@@ -158,8 +159,11 @@ function makeTile(sound) {
   return tile;
 }
 
+let soundsLoaded = false;
+
 async function refresh() {
   sounds = await api.list();
+  soundsLoaded = true;
   render();
 }
 
@@ -237,6 +241,7 @@ async function loadOutputDevices() {
 $('#output-device').addEventListener('change', (e) => {
   prefs.outputDevice = e.target.value;
   savePrefs();
+  Ambience.setOutputDevice(prefs.outputDevice);
 });
 navigator.mediaDevices?.addEventListener?.('devicechange', loadOutputDevices);
 
@@ -278,7 +283,9 @@ function openEditor(id) {
     swatches.appendChild(b);
   }
   const src = sound.source;
-  $('#edit-source').textContent = src && src.title ? `Clipped from “${src.title}” (${AudioUtils.formatTime(src.start)}–${AudioUtils.formatTime(src.end)})` : '';
+  $('#edit-source').textContent = !src || !src.title ? ''
+    : src.full ? `Full audio of “${src.title}”`
+    : `Clipped from “${src.title}” (${AudioUtils.formatTime(src.start)}–${AudioUtils.formatTime(src.end)})`;
   dialog.showModal();
 }
 
@@ -305,6 +312,10 @@ $('#edit-delete').addEventListener('click', async () => {
 });
 
 $('#edit-reveal').addEventListener('click', () => api.reveal(editingId));
+$('#edit-ambience').addEventListener('click', () => {
+  Ambience.addSoundLayer(editingId);
+  dialog.close('ambience');
+});
 $('#clear-hotkey').addEventListener('click', () => { editHotkey = null; $('#edit-hotkey').value = ''; });
 
 $('#edit-hotkey').addEventListener('keydown', (e) => {
@@ -480,6 +491,7 @@ function setCaptureUi(active, status) {
   $('#preview-clip').disabled = active;
   $('#set-start').disabled = active;
   $('#set-end').disabled = active;
+  $('#save-full').disabled = active;
   $('#cancel-capture').classList.toggle('hidden', !active);
   $('#clip-status').textContent = status;
   $('#clip-status').classList.remove('error-text');
@@ -517,6 +529,45 @@ async function finishCapture({ data, trimStart, trimEnd, title, url }) {
   await refresh();
   const tile = document.querySelector(`.tile[data-id="${sound.id}"]`);
   if (tile) { tile.scrollIntoView({ block: 'nearest' }); tile.classList.add('new'); }
+}
+
+// ---------- Full audio download ----------
+
+let downloadJob = null;
+
+$('#save-full').addEventListener('click', async () => {
+  if (downloadJob) {
+    api.cancelDownload(downloadJob);
+    return;
+  }
+  if (!ytState.hasVideo || !ytState.url) { toast('Open a YouTube video first.', true); return; }
+  const jobId = `dl-${Date.now()}`;
+  downloadJob = jobId;
+  setDownloadUi(true, 'Starting download…');
+  try {
+    const sound = await api.downloadAudio(jobId, ytState.url);
+    setDownloadUi(false, `Saved full audio “${sound.name}”.`);
+    await refresh();
+  } catch (err) {
+    setDownloadUi(false, String(err.message || err).replace(/^Error invoking remote method '[^']+': (Error: )?/, ''), true);
+  } finally {
+    downloadJob = null;
+  }
+});
+
+api.onDownloadProgress((jobId, progress) => {
+  if (jobId !== downloadJob) return;
+  const pct = Number.isFinite(progress.percent) ? ` ${progress.percent.toFixed(0)}%` : '';
+  $('#clip-status').textContent = `${progress.message}${pct}`;
+  if (Number.isFinite(progress.percent)) $('#clip-progress').style.width = `${progress.percent}%`;
+});
+
+function setDownloadUi(active, status, isError = false) {
+  $('#save-full').textContent = active ? 'Cancel Download' : '⬇ Save Full Audio';
+  $('#capture-clip').disabled = active;
+  $('#clip-status').textContent = status;
+  $('#clip-status').classList.toggle('error-text', isError);
+  if (!active) $('#clip-progress').style.width = '0';
 }
 
 // ---------- Startup ----------

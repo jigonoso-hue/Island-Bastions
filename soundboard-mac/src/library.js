@@ -4,7 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 
-const AUDIO_EXTENSIONS = ['mp3', 'wav', 'm4a', 'aac', 'ogg', 'oga', 'opus', 'flac', 'webm', 'aiff', 'aif', 'caf'];
+const AUDIO_EXTENSIONS = ['mp3', 'wav', 'm4a', 'aac', 'ogg', 'oga', 'opus', 'flac', 'webm', 'aiff', 'aif', 'caf', 'mp4'];
 
 const COLORS = ['#ff5d73', '#ffb347', '#ffe156', '#6ee7b7', '#5ec8ff', '#8b8cff', '#d58bff', '#ff8fd1'];
 
@@ -63,10 +63,14 @@ class Library {
     return { ...sound };
   }
 
-  addFromFile(filePath) {
+  addFromFile(filePath, { name, source } = {}) {
     const ext = path.extname(filePath).slice(1);
-    const name = path.basename(filePath, path.extname(filePath));
-    return this.add({ name, data: fs.readFileSync(filePath), ext });
+    return this.add({
+      name: name || path.basename(filePath, path.extname(filePath)),
+      data: fs.readFileSync(filePath),
+      ext,
+      source,
+    });
   }
 
   update(id, changes) {

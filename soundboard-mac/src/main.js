@@ -1,17 +1,23 @@
 const { app, BrowserWindow, ipcMain, dialog, protocol, net, shell, globalShortcut } = require('electron');
 const path = require('path');
 const { pathToFileURL } = require('url');
+const fs = require('fs');
 const { Library, AUDIO_EXTENSIONS } = require('./library');
+const { YtDlp } = require('./ytdlp');
 
-// Sounds are served to the renderer over sound://local/<file>.
+const AMBIENCE_DIR = path.join(__dirname, 'ambience');
+
+// Sounds are served to the renderer over sound://local/<file>, and the
+// built-in ambience loops over sound://builtin/<file>.
 protocol.registerSchemesAsPrivileged([
-  { scheme: 'sound', privileges: { standard: true, secure: true, stream: true, supportFetchAPI: true } },
+  { scheme: 'sound', privileges: { standard: true, secure: true, stream: true, supportFetchAPI: true, corsEnabled: true } },
 ]);
 
 // YouTube shows "browser not supported" banners to Electron's default UA.
 app.userAgentFallback = app.userAgentFallback.replace(/\s(Electron|clipboard-soundboard|Soundboard)\/\S+/gi, '');
 
 let library;
+let ytdlp;
 let mainWindow;
 
 function createWindow() {
@@ -109,6 +115,37 @@ function registerIpc() {
     else shell.openPath(library.dir);
   });
 
+  ipcMain.handle('ambience:builtins', () => fs.readdirSync(AMBIENCE_DIR)
+    .filter((f) => f.endsWith('.wav'))
+    .map((file) => ({ file, name: titleCase(file.replace(/\.wav$/, '').replace(/-/g, ' ')) })));
+
+  ipcMain.handle('ambience:read-builtin', (_e, file) => {
+    const resolved = resolveBuiltin(file);
+    if (!resolved) throw new Error('Unknown ambience loop');
+    return fs.readFileSync(resolved);
+  });
+
+  const ambiencePath = () => path.join(library.dir, 'ambience.json');
+  ipcMain.handle('ambience:load', () => {
+    try { return JSON.parse(fs.readFileSync(ambiencePath(), 'utf8')); } catch { return null; }
+  });
+  ipcMain.handle('ambience:save', (_e, state) => {
+    fs.writeFileSync(ambiencePath() + '.tmp', JSON.stringify(state, null, 2));
+    fs.renameSync(ambiencePath() + '.tmp', ambiencePath());
+  });
+
+  ipcMain.handle('youtube:download-audio', async (event, { jobId, url }) => {
+    const send = (progress) => { if (!event.sender.isDestroyed()) event.sender.send('youtube:download-progress', jobId, progress); };
+    const { file, title, cleanup } = await ytdlp.download(jobId, url, send);
+    try {
+      send({ message: 'Adding to your library…', percent: 100 });
+      return library.addFromFile(file, { name: title || 'YouTube audio', source: { title, url, full: true } });
+    } finally {
+      cleanup();
+    }
+  });
+  ipcMain.handle('youtube:cancel-download', (_e, jobId) => ytdlp.cancel(jobId));
+
   ipcMain.handle('shell:open-external', (_e, url) => {
     if (/^https:\/\//.test(url)) shell.openExternal(url);
   });
@@ -117,11 +154,18 @@ function registerIpc() {
 app.whenReady().then(() => {
   library = new Library(path.join(app.getPath('userData'), 'sounds'));
 
-  protocol.handle('sound', (request) => {
-    const file = decodeURIComponent(new URL(request.url).pathname.slice(1));
-    const resolved = library.resolveFile(file);
+  ytdlp = new YtDlp();
+
+  protocol.handle('sound', async (request) => {
+    const url = new URL(request.url);
+    const file = decodeURIComponent(url.pathname.slice(1));
+    const resolved = url.host === 'builtin' ? resolveBuiltin(file) : library.resolveFile(file);
     if (!resolved) return new Response('Not found', { status: 404 });
-    return net.fetch(pathToFileURL(resolved).toString(), { headers: request.headers });
+    const res = await net.fetch(pathToFileURL(resolved).toString(), { headers: request.headers });
+    // Allow the UI to decode sounds with Web Audio (used by ambience layers).
+    const headers = new Headers(res.headers);
+    headers.set('Access-Control-Allow-Origin', '*');
+    return new Response(res.body, { status: res.status, statusText: res.statusText, headers });
   });
 
   registerIpc();
@@ -132,6 +176,15 @@ app.whenReady().then(() => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
   });
 });
+
+function resolveBuiltin(file) {
+  const resolved = path.resolve(AMBIENCE_DIR, file);
+  return path.dirname(resolved) === AMBIENCE_DIR ? resolved : null;
+}
+
+function titleCase(text) {
+  return text.replace(/\b\w/g, (c) => c.toUpperCase());
+}
 
 app.on('will-quit', () => globalShortcut.unregisterAll());
 
