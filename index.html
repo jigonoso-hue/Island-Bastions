@@ -7219,13 +7219,14 @@ function calcIslandStats(isl){
   // happiness (see _decayEventModifiers). Folded in here so every stat
   // consumer (UI, Law & Order fines, etc.) sees the same live number.
   // A bigger population is simply harder to police. Every 50 residents
-  // (general + aquatic) sets a 1-point floor on Crime, capped at 40, that
-  // no amount of Watch Posts/Prison/Oculus Center can push below. Civic
-  // buildings still fight the crime ABOVE that floor same as always; they
-  // just stop being able to buy a sprawling metropolis all the way down
-  // to 0 the way they can a small village.
+  // (general + aquatic) sets a 1-point floor on Crime, capping out at a
+  // genuinely lawless 100 for the biggest cities, that no amount of
+  // Watch Posts/Prison/Oculus Center can push below. Civic buildings
+  // still fight the crime ABOVE that floor same as always; they just
+  // stop being able to buy a sprawling metropolis all the way down to 0
+  // the way they can a small village.
   const popForCrime = (isl.population||0) + (isl.aquaticPopulation||0);
-  const baselineCrime = Math.min(40, Math.floor(popForCrime/50));
+  const baselineCrime = Math.min(100, Math.floor(popForCrime/50));
   // Idle hands. A labor pool with nowhere to go doesn't just sit there -
   // past 15% Unemployed it starts actually feeding Crime (and, below,
   // Happiness), on top of whatever the buildings themselves already add.
