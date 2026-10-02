@@ -4756,12 +4756,64 @@ function _islandSpeciesTotalCounts(isl, stats){
     .filter(function(r){ return r.count>=0.5; })
     .sort(function(a,b){ return b.count-a.count; });
 }
+// A deterministic per-island, per-species bias on who actually lands
+// the tiny Elite pool. Hashed off the island's own id plus the species
+// name, so it's stable across re-renders but has nothing to do with
+// any fixed, world-wide ranking of species - a different island hashes
+// to an entirely different handful of over/under-represented species.
+// No single species reads as "naturally" the ruling class game-wide.
+function _speciesEliteAffinity(islId, speciesName){
+  let h = 0;
+  const s = (islId||'')+'|'+speciesName;
+  for(let i=0;i<s.length;i++){ h = (h*31 + s.charCodeAt(i)) >>> 0; }
+  return 0.35 + (h % 1000)/1000 * 1.75; // roughly 0.35x - 2.1x
+}
+// Splits the island's Elite/Working Class/Unemployed breakdown across
+// every species, Elite weighted by each species' own affinity above
+// instead of flat population share, so the Elite class ends up visibly
+// skewed toward a handful of species rather than evening out across
+// all of them. Working Class/Unemployed then split the REST of each
+// species' population at the island's overall rate for those two
+// (nothing tracks which species holds which specific ordinary job, so
+// that part stays the same population-wide approximation as before).
+// Bounded water-fill, same shape as _distributeWorkforceSurplus: no
+// species can be handed more Elites than it actually has residents: any
+// overflow from a capped species redistributes across the rest.
+function _islandSpeciesClassSplit(isl, stats, breakdown){
+  const speciesCounts = _islandSpeciesTotalCounts(isl, stats);
+  const pool = speciesCounts.map(function(s){
+    return { name: s.name, count: s.count, weight: s.count*_speciesEliteAffinity(isl.id, s.name), elite: 0, capped: false };
+  });
+  let remaining = breakdown.elites;
+  for(let pass=0; pass<4 && remaining>0.01; pass++){
+    const active = pool.filter(function(p){ return !p.capped; });
+    const activeWeight = active.reduce(function(s,p){ return s+p.weight; }, 0);
+    if(activeWeight<=0) break;
+    let given = 0;
+    active.forEach(function(p){
+      const give = Math.min(remaining*(p.weight/activeWeight), p.count-p.elite);
+      p.elite += give;
+      given += give;
+      if(p.count-p.elite<=0.01) p.capped = true;
+    });
+    remaining -= given;
+  }
+  const total = stats.totalPopulation;
+  const restTotal = total - breakdown.elites;
+  const workingRatio = restTotal>0 ? breakdown.workingClass/restTotal: 0;
+  const unemployedRatio = restTotal>0 ? breakdown.unemployed/restTotal: 0;
+  return pool.map(function(p){
+    const rest = p.count - p.elite;
+    return { name: p.name, count: p.count, elite: p.elite, working: rest*workingRatio, unemployed: rest*unemployedRatio };
+  }).sort(function(a,b){ return b.count-a.count; });
+}
 // The Census "Social Class" overlay. Same Elite/Working Class/Unemployed
 // split _islandClassBreakdown computes for the island as a whole,
-// applied proportionally across every species at that same overall
-// rate - nothing tracks which species actually holds which specific
-// job, so this is the same kind of population-wide approximation the
-// Species tab's own Coral Spires split already leans on.
+// broken out per species by _islandSpeciesClassSplit above - nothing
+// tracks which species actually holds which specific ordinary job, but
+// the Elite seats specifically DO skew per species (see that function),
+// same kind of population-wide approximation the Species tab's own
+// Coral Spires split already leans on for everything else.
 function _renderClassOverlay(isl, stats){
   const breakdown = _islandClassBreakdown(isl);
   const total = stats.totalPopulation;
@@ -4781,13 +4833,12 @@ function _renderClassOverlay(isl, stats){
     + row('Working Class', breakdown.workingClass, '#4fb896')
     + row('Unemployed', breakdown.unemployed, 'var(--text-red-muted)')
   +'</div>';
-  const speciesCounts = _islandSpeciesTotalCounts(isl, stats);
-  if(speciesCounts.length && total>0){
-    const eliteRatio = breakdown.elites/total, workingRatio = breakdown.workingClass/total, unemployedRatio = breakdown.unemployed/total;
+  const speciesSplit = _islandSpeciesClassSplit(isl, stats, breakdown);
+  if(speciesSplit.length && total>0){
     html += '<div class="detail-section"><h3>Social Class by Species</h3>'
-      +'<div style="font-size:10px;color:var(--text-muted);margin-bottom:10px;">Split proportionally across every species at this island\'s own overall rate above.</div>'
-      + speciesCounts.map(function(s){
-        const elite = s.count*eliteRatio, working = s.count*workingRatio, unemployed = s.count*unemployedRatio;
+      +'<div style="font-size:10px;color:var(--text-muted);margin-bottom:10px;">Elite seats skew toward a handful of species on this island rather than spreading evenly. Working Class/Unemployed still split the rest at the island\'s overall rate above.</div>'
+      + speciesSplit.map(function(s){
+        const elite = s.elite, working = s.working, unemployed = s.unemployed;
         return '<div style="margin-bottom:10px;">'
           +'<div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-primary);margin-bottom:3px;"><span>'+s.name+'</span><span style="color:var(--text-muted);">'+Math.round(s.count).toLocaleString()+'</span></div>'
           +'<div style="display:flex;height:6px;border-radius:3px;overflow:hidden;background:var(--bg-card);">'
@@ -7058,8 +7109,8 @@ function _workforceOverworkedBuildings(isl){
 // Census "Social Class" overlay below.
 function _buildingEliteSlots(b, level){
   if(!b.workers) return 0;
-  const sizeBonus = b.workers>=150 ? 3: b.workers>=100 ? 2: b.workers>=50 ? 1: 0;
-  return 2 + sizeBonus + (level-1);
+  const sizeBonus = b.workers>=150 ? 4: b.workers>=100 ? 3: b.workers>=50 ? 2: 0;
+  return 3 + sizeBonus + (level-1);
 }
 function _islandEliteSlots(isl){
   let total = 0;
