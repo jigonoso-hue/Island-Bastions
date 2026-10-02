@@ -7089,7 +7089,7 @@ function _islandClassBreakdown(isl){
   const workingFromPool = Math.min(totalDemand, remaining);
   const unemployed = Math.max(0, remaining - workingFromPool);
   const reservationPop = _reservationPopulation(isl);
-  return { eliteSlots: eliteSlots, elites: elites, workingClass: workingFromPool + reservationPop, unemployed: unemployed };
+  return { pool: pool, eliteSlots: eliteSlots, elites: elites, workingClass: workingFromPool + reservationPop, unemployed: unemployed };
 }
 // Economic Edict, for the 5 categories that now boost their own real
 // output/capacity number instead of a flat gp% (Housing/Farming/
@@ -7226,7 +7226,16 @@ function calcIslandStats(isl){
   // to 0 the way they can a small village.
   const popForCrime = (isl.population||0) + (isl.aquaticPopulation||0);
   const baselineCrime = Math.min(40, Math.floor(popForCrime/50));
-  crime = Math.round(Math.max(baselineCrime, Math.min(100, crime + (isl.eventCrimeMod||0))));
+  // Idle hands. A labor pool with nowhere to go doesn't just sit there -
+  // past 15% Unemployed it starts actually feeding Crime (and, below,
+  // Happiness), on top of whatever the buildings themselves already add.
+  // No civic building fixes this directly; the only real fix is more
+  // jobs (or fewer mouths), same as the Social Class overlay already
+  // implies.
+  const classBreakdown = _islandClassBreakdown(isl);
+  const unemployedPct = classBreakdown.pool>0 ? (classBreakdown.unemployed/classBreakdown.pool)*100: 0;
+  const unemploymentCrimeAdd = unemployedPct>15 ? Math.round((unemployedPct-15)/2): 0;
+  crime = Math.round(Math.max(baselineCrime, Math.min(100, crime + unemploymentCrimeAdd + (isl.eventCrimeMod||0))));
   if(isl.population===undefined) isl.population = 0;
   if(isl.aquaticPopulation===undefined) isl.aquaticPopulation = 0;
   if(isl.hunger===undefined) isl.hunger = 0;
@@ -7326,7 +7335,11 @@ function calcIslandStats(isl){
   // falls back to the target for an island that hasn't taken its first
   // weekly tick yet (a brand-new island shouldn't have to "catch up" to
   // its own starting happiness).
-  let targetHappiness = 50 + happinessBonus + Math.round(beauty/3) + beautyTierMod - Math.round(isl.hunger/2) - hungerTierPenalty - crimePenalty - crimeTierPenalty - overcrowdedPenalty + recreationEffect + (isl.eventHappinessMod||0) + (isl.mintInflationPenalty||0);
+  // Unemployment drags Happiness directly too, steeper than its Crime
+  // spillover above - nobody's cheered up by low Crime if they still
+  // can't find work.
+  const unemploymentHappinessPenalty = unemployedPct>15 ? Math.round((unemployedPct-15)/1.5): 0;
+  let targetHappiness = 50 + happinessBonus + Math.round(beauty/3) + beautyTierMod - Math.round(isl.hunger/2) - hungerTierPenalty - crimePenalty - crimeTierPenalty - overcrowdedPenalty - unemploymentHappinessPenalty + recreationEffect + (isl.eventHappinessMod||0) + (isl.mintInflationPenalty||0);
   targetHappiness = Math.max(0, Math.min(100, targetHappiness));
   const happiness = isl.happinessDisplay!=null ? isl.happinessDisplay: targetHappiness;
   const value = investedGp + totalPop*10 + happiness*50 + beauty*100;
