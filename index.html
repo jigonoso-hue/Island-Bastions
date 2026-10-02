@@ -7058,8 +7058,8 @@ function _workforceOverworkedBuildings(isl){
 // Census "Social Class" overlay below.
 function _buildingEliteSlots(b, level){
   if(!b.workers) return 0;
-  const sizeBonus = b.workers>=100 ? 1: 0;
-  return 1 + sizeBonus + Math.floor((level-1)/2);
+  const sizeBonus = b.workers>=150 ? 3: b.workers>=100 ? 2: b.workers>=50 ? 1: 0;
+  return 2 + sizeBonus + (level-1);
 }
 function _islandEliteSlots(isl){
   let total = 0;
