@@ -7218,7 +7218,15 @@ function calcIslandStats(isl){
   // Active Actions can push a temporary, decaying modifier onto crime or
   // happiness (see _decayEventModifiers). Folded in here so every stat
   // consumer (UI, Law & Order fines, etc.) sees the same live number.
-  crime = Math.round(Math.max(0, Math.min(100, crime + (isl.eventCrimeMod||0))));
+  // A bigger population is simply harder to police. Every 50 residents
+  // (general + aquatic) sets a 1-point floor on Crime, capped at 40, that
+  // no amount of Watch Posts/Prison/Oculus Center can push below. Civic
+  // buildings still fight the crime ABOVE that floor same as always; they
+  // just stop being able to buy a sprawling metropolis all the way down
+  // to 0 the way they can a small village.
+  const popForCrime = (isl.population||0) + (isl.aquaticPopulation||0);
+  const baselineCrime = Math.min(40, Math.floor(popForCrime/50));
+  crime = Math.round(Math.max(baselineCrime, Math.min(100, crime + (isl.eventCrimeMod||0))));
   if(isl.population===undefined) isl.population = 0;
   if(isl.aquaticPopulation===undefined) isl.aquaticPopulation = 0;
   if(isl.hunger===undefined) isl.hunger = 0;
