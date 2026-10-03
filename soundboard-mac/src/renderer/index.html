@@ -39,6 +39,15 @@
         <div id="amb-layers" class="amb-layers"></div>
       </section>
 
+      <section id="bashes">
+        <div class="bash-header">
+          <button id="bash-collapse" class="plain" title="Show/hide bashes">▾ Bashes</button>
+          <span class="muted small">Several sounds fired together with one click</span>
+          <button id="bash-new">+ New Bash</button>
+        </div>
+        <div id="bash-list" class="bash-list"></div>
+      </section>
+
       <div id="empty" class="empty hidden">
         <p>No sounds yet.</p>
         <p>Drop audio files here, click <b>+ Add Sounds</b>, or open the <b>YouTube</b> browser to clip a sound from a video.</p>
@@ -99,6 +108,7 @@
         <button type="button" id="edit-delete" class="danger">Delete</button>
         <button type="button" id="edit-reveal">Show in Finder</button>
         <button type="button" id="edit-ambience" title="Loop this sound as a background layer">Add to Ambience</button>
+        <select id="edit-bash" title="Add this sound to a bash"><option value="">Add to Bash…</option></select>
         <span class="spacer"></span>
         <button value="cancel" formnovalidate>Cancel</button>
         <button value="save" class="primary">Save</button>
@@ -106,10 +116,18 @@
     </form>
   </dialog>
 
+  <div id="bash-menu" class="popup-menu hidden" role="menu">
+    <button data-action="edit" role="menuitem">Edit…</button>
+    <button data-action="duplicate" role="menuitem">Duplicate</button>
+    <button data-action="delete" role="menuitem" class="danger">Delete</button>
+  </div>
+
   <div id="toast" class="hidden"></div>
 
   <script src="audio-utils.js"></script>
   <script src="app.js"></script>
   <script src="ambience.js"></script>
+  <script src="bash-common.js"></script>
+  <script src="bashes-board.js"></script>
 </body>
 </html>

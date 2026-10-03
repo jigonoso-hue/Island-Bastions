@@ -1,9 +1,10 @@
-const { app, BrowserWindow, ipcMain, dialog, protocol, net, shell, globalShortcut } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, protocol, net, shell, globalShortcut, nativeImage } = require('electron');
 const path = require('path');
 const { pathToFileURL } = require('url');
 const fs = require('fs');
 const { Library, AUDIO_EXTENSIONS } = require('./library');
 const { YtDlp } = require('./ytdlp');
+const { BashStore, COVER_TYPES } = require('./bashes');
 
 const AMBIENCE_DIR = path.join(__dirname, 'ambience');
 
@@ -17,7 +18,9 @@ protocol.registerSchemesAsPrivileged([
 app.userAgentFallback = app.userAgentFallback.replace(/\s(Electron|clipboard-soundboard|Soundboard)\/\S+/gi, '');
 
 let library;
+let bashes;
 let ytdlp;
+const editors = new Map(); // bash id -> editor window
 let mainWindow;
 
 function createWindow() {
@@ -60,6 +63,41 @@ app.on('web-contents-created', (_event, contents) => {
   }
 });
 
+// Tells every window except `except` (the one that made the change) to refresh.
+function broadcast(channel, payload, except) {
+  for (const win of BrowserWindow.getAllWindows()) {
+    if (!win.isDestroyed() && win.webContents !== except) win.webContents.send(channel, payload);
+  }
+}
+
+function openBashEditor(id) {
+  const existing = editors.get(id);
+  if (existing && !existing.isDestroyed()) {
+    existing.focus();
+    return;
+  }
+  const bash = bashes.get(id);
+  if (!bash) return;
+  const win = new BrowserWindow({
+    width: 1180,
+    height: 720,
+    minWidth: 760,
+    minHeight: 480,
+    title: `Bash — ${bash.name}`,
+    titleBarStyle: 'hiddenInset',
+    backgroundColor: '#14141c',
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.js'),
+      contextIsolation: true,
+      nodeIntegration: false,
+      sandbox: true,
+    },
+  });
+  win.loadFile(path.join(__dirname, 'renderer', 'bash-editor.html'), { query: { id } });
+  editors.set(id, win);
+  win.on('closed', () => editors.delete(id));
+}
+
 function syncHotkeys() {
   globalShortcut.unregisterAll();
   const failed = [];
@@ -80,8 +118,8 @@ function syncHotkeys() {
 function registerIpc() {
   ipcMain.handle('sounds:list', () => library.list());
 
-  ipcMain.handle('sounds:import-dialog', async () => {
-    const result = await dialog.showOpenDialog(mainWindow, {
+  ipcMain.handle('sounds:import-dialog', async (e) => {
+    const result = await dialog.showOpenDialog(BrowserWindow.fromWebContents(e.sender), {
       title: 'Add sounds',
       properties: ['openFile', 'multiSelections'],
       filters: [{ name: 'Audio', extensions: AUDIO_EXTENSIONS }],
@@ -91,20 +129,35 @@ function registerIpc() {
     for (const file of result.filePaths) {
       try { added.push(library.addFromFile(file)); } catch (err) { console.error(err); }
     }
+    if (added.length) broadcast('sounds:changed', null, e.sender);
     return added;
   });
 
-  ipcMain.handle('sounds:add', (_e, { name, data, ext, source }) => library.add({ name, data, ext, source }));
+  ipcMain.handle('sounds:add', (e, { name, data, ext, source }) => {
+    const sound = library.add({ name, data, ext, source });
+    broadcast('sounds:changed', null, e.sender);
+    return sound;
+  });
 
-  ipcMain.handle('sounds:update', (_e, id, changes) => {
+  // Raw bytes of a library sound, for decoding with Web Audio (bash playback and waveforms).
+  ipcMain.handle('sounds:read', (_e, id) => {
+    const sound = library.get(id);
+    if (!sound) throw new Error('Sound not found');
+    return fs.readFileSync(path.join(library.dir, sound.file));
+  });
+
+  ipcMain.handle('sounds:update', (e, id, changes) => {
     const sound = library.update(id, changes);
     const failed = 'hotkey' in changes ? syncHotkeys() : [];
+    broadcast('sounds:changed', null, e.sender);
     return { sound, sounds: library.list(), failedHotkeys: failed };
   });
 
-  ipcMain.handle('sounds:remove', (_e, id) => {
+  ipcMain.handle('sounds:remove', (e, id) => {
     library.remove(id);
     syncHotkeys();
+    broadcast('sounds:changed', null, e.sender);
+    if (bashes.pruneSound(id)) broadcast('bashes:changed', bashes.list());
   });
 
   ipcMain.handle('sounds:reorder', (_e, ids) => library.reorder(ids));
@@ -139,12 +192,72 @@ function registerIpc() {
     const { file, title, cleanup } = await ytdlp.download(jobId, url, send);
     try {
       send({ message: 'Adding to your library…', percent: 100 });
-      return library.addFromFile(file, { name: title || 'YouTube audio', source: { title, url, full: true } });
+      const sound = library.addFromFile(file, { name: title || 'YouTube audio', source: { title, url, full: true } });
+      broadcast('sounds:changed', null, event.sender);
+      return sound;
     } finally {
       cleanup();
     }
   });
   ipcMain.handle('youtube:cancel-download', (_e, jobId) => ytdlp.cancel(jobId));
+
+  // ---- Bashes ----
+  const bashesChanged = (sender) => broadcast('bashes:changed', bashes.list(), sender);
+
+  ipcMain.handle('bashes:list', () => bashes.list());
+  ipcMain.handle('bashes:get', (_e, id) => bashes.get(id));
+  ipcMain.handle('bashes:create', (e, options) => {
+    const bash = bashes.create(options);
+    bashesChanged(e.sender);
+    return bash;
+  });
+  ipcMain.handle('bashes:update', (e, id, changes) => {
+    const bash = bashes.update(id, changes);
+    bashesChanged(e.sender);
+    const editor = editors.get(id);
+    if (editor && !editor.isDestroyed()) editor.setTitle(`Bash — ${bash.name}`);
+    return bash;
+  });
+  ipcMain.handle('bashes:duplicate', (e, id) => {
+    const bash = bashes.duplicate(id);
+    bashesChanged(e.sender);
+    return bash;
+  });
+  ipcMain.handle('bashes:remove', (e, id) => {
+    bashes.remove(id);
+    const editor = editors.get(id);
+    if (editor && !editor.isDestroyed()) editor.close();
+    bashesChanged(e.sender);
+  });
+  ipcMain.handle('bashes:open-editor', (_e, id) => openBashEditor(id));
+
+  ipcMain.handle('bashes:choose-cover', async (e, id) => {
+    const result = await dialog.showOpenDialog(BrowserWindow.fromWebContents(e.sender), {
+      title: 'Choose a cover image',
+      properties: ['openFile'],
+      filters: [{ name: 'Images', extensions: COVER_TYPES }],
+    });
+    if (result.canceled || !result.filePaths.length) return null;
+    // Shrink big photos so covers load instantly.
+    const image = nativeImage.createFromPath(result.filePaths[0]);
+    if (image.isEmpty()) throw new Error("That image couldn't be opened.");
+    const { width, height } = image.getSize();
+    const scaled = Math.max(width, height) > 512
+      ? image.resize(width >= height ? { width: 512, quality: 'best' } : { height: 512, quality: 'best' })
+      : image;
+    const bash = bashes.setCoverImage(id, scaled.toPNG(), 'png');
+    bashesChanged(e.sender);
+    return bash;
+  });
+
+  // Cover images are handed to the UI as data: URLs.
+  ipcMain.handle('bashes:cover-data', (_e, file) => {
+    const p = bashes.coverPath(file);
+    if (!p || !fs.existsSync(p)) return null;
+    const ext = path.extname(p).slice(1).toLowerCase();
+    const mime = ext === 'jpg' ? 'jpeg' : ext;
+    return `data:image/${mime};base64,${fs.readFileSync(p).toString('base64')}`;
+  });
 
   ipcMain.handle('shell:open-external', (_e, url) => {
     if (/^https:\/\//.test(url)) shell.openExternal(url);
@@ -153,6 +266,7 @@ function registerIpc() {
 
 app.whenReady().then(() => {
   library = new Library(path.join(app.getPath('userData'), 'sounds'));
+  bashes = new BashStore(library.dir);
 
   ytdlp = new YtDlp();
 

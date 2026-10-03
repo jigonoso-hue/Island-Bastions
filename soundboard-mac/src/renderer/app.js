@@ -93,6 +93,7 @@ function render() {
   for (const sound of visible) grid.appendChild(makeTile(sound));
   $('#empty').classList.toggle('hidden', sounds.length > 0);
   if (typeof Ambience !== 'undefined') Ambience.syncSounds();
+  if (typeof Bashes !== 'undefined') Bashes.render();
 }
 
 function makeTile(sound) {

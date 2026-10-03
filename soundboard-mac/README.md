@@ -3,6 +3,7 @@
 A desktop soundboard for your Mac. You can:
 
 - **Add your own sounds.** Click **+ Add Sounds** or drag audio files (mp3, wav, m4a, aac, ogg, opus, flac, aiff, caf, webm) onto the board.
+- **Bashes.** Named groups of sounds that play together with one click, each with a cover image or icon. Every Bash opens in its own editor window, with a timeline for choosing when each sound starts and layering sounds.
 - **Ambience layers.** Loop background sounds under the soundboard, such as rain, campfire, wind, ocean, a forest stream, cave drips, night forest or a dark dungeon drone. Each layer has its own volume and fades in and out. Any sound in your library can also be a layer, such as a song you saved from YouTube.
 - **Save full audio from YouTube.** Save a whole video's audio track, such as a song or a one-hour tavern mix, to your library.
 - **Clip sounds from YouTube.** A built-in YouTube browser lets you search for a video, mark a start and end, and save that piece of audio as a new sound.
@@ -37,6 +38,23 @@ The DMG is written to `dist/`. Open it and drag **Soundboard** into Applications
 
 The app plays the selected range once and records the video's audio while it plays, so a 5-second clip takes about 5 seconds. It then trims the recording to the exact range and saves it as a WAV. Clips can be up to 5 minutes long. If an ad starts playing, the capture stops so you can retry after the ad.
 
+## Bashes
+
+A Bash plays several sounds at once from one card, for example "Ambush!" with a war horn, a battle cry and clashing swords. Bashes appear in the **Bashes** row above your sounds:
+
+- **Click a card** to play the Bash. Click it again, press **Stop All**, or press Esc to stop it.
+- **Double-click a card**, or use **⋯ → Edit…**, to open its editor in a new window. The **⋯** menu also has **Duplicate** and **Delete**. Deleting a Bash never deletes its sounds.
+- **+ New Bash** creates an empty Bash and opens its editor. You can also add a sound to a Bash from the sound's own editor, using **Add to Bash…**.
+
+In the editor window:
+
+- **Adding sounds:** click **+** next to a sound in the list on the left, or drag it onto the timeline. Sounds added with **+** start at 0:00, so by default everything plays at the same moment. Each sound gets its own layer (row).
+- **Timing and layering:** drag a clip **left or right** to change when it starts, or **up and down** to move it between layers. Clips snap to 0.1 s and to the edges of other clips. Hold ⌥ while dragging, or turn off **Snap**, for free positioning. You can also select a clip and type an exact start time, or use ←/→ to nudge it by 0.1 s (⇧ for 1 s) and ↑/↓ to change its layer.
+- **Per-clip controls:** each clip has its own **Volume**, plus **Duplicate** and **Remove** (Delete key).
+- **Playback:** Space or **▶ Play** plays from the playhead. Click the ruler to move the playhead.
+- **Cover and name:** click the cover at the top left to pick an icon and color, or **Upload image…** to use your own picture as album art. Edit the name next to the cover.
+- **Zoom** changes the timeline scale. Changes save automatically.
+
 ## Ambience
 
 The **Ambience** strip above the board lists the built-in loops. Click a layer's name to fade it in or out, and drag its slider to set its volume. **Volume** in the strip sets the level of all layers together, and **Stop Ambience** fades everything out. **Stop All** and Esc stop only soundboard effects, so you can fire off a spell effect without killing the rain.
@@ -69,7 +87,7 @@ The download runs in the background at full speed, not in real time, and the aud
 ## Development
 
 ```bash
-npm test   # unit tests for the library store and audio helpers
+npm test   # unit tests for the library, bashes and audio helpers
 ```
 
 | File | Purpose |
@@ -78,6 +96,10 @@ npm test   # unit tests for the library store and audio helpers
 | `src/library.js` | Sound storage (files + `library.json`) |
 | `src/preload.js` | Safe API exposed to the UI |
 | `src/ytdlp.js` | Runs your installed yt-dlp to save full audio |
+| `src/bashes.js` | Bash storage (`bashes.json` + `covers/`) |
+| `src/renderer/bashes-board.js` | Bash cards on the main board |
+| `src/renderer/bash-editor.*` | Bash editor window (timeline) |
+| `src/renderer/bash-common.js` | Bash playback engine, covers, waveforms |
 | `src/renderer/ambience.js` | Ambience mixer |
 | `src/ambience/` | Built-in ambience loops |
 | `src/youtube-preload.js` | Injected into the YouTube view; records the video's audio |
